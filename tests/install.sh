@@ -243,6 +243,42 @@ EOF
   rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
 }
 
+test_caveman_is_manual_only() {
+  run_test "caveman is reported as manual-only"
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+
+  for cmd in opencode uv npm rtk; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
+
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
+
+  local output
+  output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null 2>&1)"
+
+  if [[ "$output" == *"caveman is optional. Install it separately"* ]]; then
+    pass "reports caveman as manual-only"
+  else
+    fail "missing manual-only caveman guidance"
+  fi
+
+  if [[ "$output" == *"Install caveman? (y/N)"* ]]; then
+    fail "prompted to auto-install caveman"
+  else
+    pass "does not prompt to auto-install caveman"
+  fi
+
+  rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
+}
+
 main() {
   echo "Running GeneralPippy installer tests..."
   echo "Installer: $INSTALLER"
@@ -255,6 +291,7 @@ main() {
   test_install_creates_files
   test_install_backs_up_existing_config
   test_install_idempotent
+  test_caveman_is_manual_only
 
   echo ""
   echo "========================="

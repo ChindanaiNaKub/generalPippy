@@ -241,10 +241,6 @@ install_rtk() {
     && rtk init -g --opencode
 }
 
-install_caveman() {
-  curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash
-}
-
 install_optional() {
   local name="$1"
   local check_cmd="$2"
@@ -271,6 +267,21 @@ install_optional() {
   else
     info "Skipping $name — Pippy will degrade gracefully"
   fi
+}
+
+report_optional_manual() {
+  local name="$1"
+  local check_cmd="$2"
+  local install_url="$3"
+
+  if command -v "$check_cmd" &> /dev/null; then
+    success "$name found"
+    return 0
+  fi
+
+  warn "$name not found."
+  info "$name is optional. Install it separately if you want that integration:"
+  info "  $install_url"
 }
 
 main() {
@@ -316,7 +327,7 @@ main() {
 
   log "🔍 Checking optional dependencies..."
   install_optional "rtk" "rtk" install_rtk
-  install_optional "caveman" "caveman" install_caveman
+  report_optional_manual "caveman" "caveman" "https://github.com/JuliusBrussee/caveman"
   log ""
 
   info "ponytail is optional but cannot be auto-installed."
@@ -334,7 +345,7 @@ main() {
   log "  2. Pippy is now your default agent"
   log "  3. Use /goal \"<objective>\" to start a self-driving task"
   log "  4. Use /ship to prepare for PR"
-  log "  5. Use /budget to check token usage"
+  log "  5. Use OpenCode's usage display for exact tokens/cost, and /budget for routing guidance"
   log ""
   log "Models configured:"
   log "  • Planning: opencode-go/kimi-k2.7-code (strong)"
