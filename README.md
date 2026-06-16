@@ -16,7 +16,7 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 ### Commands
 - `/goal "<objective>"` — Start the self-driving loop
 - `/ship` — Review, verify, and prepare for PR
-- `/budget` — Show token usage and cost
+- `/budget` — Audit budget health and routing behavior
 
 ### Plugins
 - **jcodemunch-mcp** — AST code indexing (95%+ token savings)
@@ -29,13 +29,13 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 
 ## Models (opencode-go)
 
-Approximate costs per 1M tokens (input/output); verify at [OpenCode Go](https://opencode.ai/go):
+GeneralPippy routes work by role. Check [OpenCode Go](https://opencode.ai/go) or OpenCode's session usage display for current pricing and actual spend.
 
-| Role | Model | ~Cost (per 1M) |
-|------|-------|---------------|
-| Planning | `opencode-go/kimi-k2.7-code` | $0.95 / $4.00 |
-| Implementation | `opencode-go/mimo-v2.5` | $0.14 / $0.28 |
-| System tasks | `opencode-go/deepseek-v4-flash` | $0.14 / $0.28 |
+| Role | Model |
+|------|-------|
+| Planning | `opencode-go/kimi-k2.7-code` |
+| Implementation | `opencode-go/mimo-v2.5` |
+| System tasks | `opencode-go/deepseek-v4-flash` |
 
 ## Installation
 
@@ -59,7 +59,7 @@ cp -r config/* ~/.config/opencode/
 2. Pippy is your default agent
 3. Run `/goal "add error handling to the API layer"` — Pippy drives to completion
 4. Run `/ship` when ready for PR
-5. Run `/budget` to check token usage
+5. Use OpenCode's session usage display for exact tokens/cost, and run `/budget` for routing and efficiency guidance
 
 ## The Self-Driving Loop
 
@@ -91,6 +91,10 @@ Ask first:
 - **Cheap model default** — Strong model only for planning/diagnosis
 - **rtk** — Token-efficient bash commands
 - **caveman** — Compressed build output
+
+## Budget Guidance
+
+OpenCode's built-in session usage display is the authoritative source for exact token usage and cost. GeneralPippy's `/budget` command does not estimate spend; it audits whether Pippy used the intended low-cost routing and token-efficiency practices.
 
 ## License
 
