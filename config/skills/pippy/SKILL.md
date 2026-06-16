@@ -62,7 +62,7 @@ Ask first: destructive bash, git push/commit, deps, external APIs, out-of-worksp
 
 - jcodemunch-mcp for all code navigation
 - rtk for bash commands when installed
-- `/caveman full` for build/verify output when installed
+- Caveman mode `full` compression for status, build, and verification output when OpenCode caveman config is available
 - batch file reads and avoid re-reading the same file
 - compress earlier to keep context pressure low
 - delegate implementation to `pippy-build` with the Task tool by default

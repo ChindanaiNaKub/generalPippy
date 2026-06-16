@@ -243,12 +243,13 @@ EOF
   rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
 }
 
-test_caveman_is_manual_only() {
-  run_test "caveman is reported as manual-only"
+test_caveman_mode_is_opencode_config() {
+  run_test "caveman mode is detected from OpenCode config"
   local tmp_home
   tmp_home="$(mktemp -d)"
   local tmp_bin
   tmp_bin="$(mktemp -d)"
+  local config_dir="$tmp_home/.config/opencode"
 
   for cmd in opencode uv npm rtk; do
     cat > "$tmp_bin/$cmd" <<EOF
@@ -258,16 +259,23 @@ EOF
     chmod +x "$tmp_bin/$cmd"
   done
 
+  mkdir -p "$config_dir/commands"
+  cat > "$config_dir/commands/caveman.md" <<'EOF'
+---
+description: Activate caveman compression mode
+---
+EOF
+
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
 
   local output
   output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null 2>&1)"
 
-  if [[ "$output" == *"caveman is optional. Install it separately"* ]]; then
-    pass "reports caveman as manual-only"
+  if [[ "$output" == *"Caveman mode found"* ]]; then
+    pass "detects OpenCode caveman mode"
   else
-    fail "missing manual-only caveman guidance"
+    fail "missing OpenCode caveman mode detection"
   fi
 
   if [[ "$output" == *"Install caveman? (y/N)"* ]]; then
@@ -291,7 +299,7 @@ main() {
   test_install_creates_files
   test_install_backs_up_existing_config
   test_install_idempotent
-  test_caveman_is_manual_only
+  test_caveman_mode_is_opencode_config
 
   echo ""
   echo "========================="

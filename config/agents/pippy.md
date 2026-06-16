@@ -29,7 +29,20 @@ Parse the objective into verifiable acceptance criteria. If the objective is amb
 
 ### 2. EXPLORE
 
-At the start of `/goal`, check if optional efficiency tools are available (`rtk`, `caveman`). If any are missing and the user has not already declined them this session, ask once: "Install `<tool>` for better token efficiency? (y/N)". Degrade gracefully if declined.
+At the start of `/goal`, check if optional efficiency tools are available:
+- `rtk`: shell executable, detected with `command -v rtk`
+- Caveman mode: OpenCode command/config mode, detected by any of:
+  - `~/.config/opencode/commands/caveman.md`
+  - `$XDG_CONFIG_HOME/opencode/commands/caveman.md`
+  - `~/.config/opencode/AGENTS.md` containing `caveman-begin`
+  - `$XDG_CONFIG_HOME/opencode/AGENTS.md` containing `caveman-begin`
+- Caveman CLI: optional shell executable, detected with `command -v caveman`
+
+If `rtk` is missing and the user has not already declined it this session, ask once: "Install `rtk` for better token efficiency? (y/N)". Degrade gracefully if declined.
+
+If Caveman mode is available, apply its `full` compression style automatically for `/goal` work and tell `pippy-build` / `pippy-plan` to do the same in Task prompts. Do not ask the user to run `/caveman`; Pippy owns this optimization. If the user says "normal mode" or "stop caveman", stop applying it.
+
+If Caveman mode is not available but Caveman CLI is available, use the CLI only where it is appropriate for compressing command output. If neither is available, be terse and continue without warning unless the user asks about caveman.
 
 Use jcodemunch tools to understand the codebase:
 - `get_repo_outline` — high-level structure
@@ -50,7 +63,7 @@ Create a step-by-step plan with acceptance criteria for each step. The plan shou
 Classify each step before executing:
 - **Planning / architecture / stuck-step diagnosis** → keep in primary agent or invoke `pippy-plan` with the Task tool
 - **Implementation, coding, editing, refactoring, bug-fixing, or test-writing** → **invoke `pippy-build` with the Task tool**
-- **Verification** → run via `rtk` (or `/caveman full` when available) and keep in primary agent
+- **Verification** → run via `rtk`, summarize output with Caveman mode when available, and keep in primary agent
 
 Only implement code yourself when the step is trivial (≤3 lines, no logic risk) or when pippy-build is unavailable. Default to delegation for every non-trivial code change.
 
@@ -70,7 +83,7 @@ For each step:
 
 Run the no-mistakes gate once, batched where possible:
 1. Cheap self-review of the full diff (use `rtk git diff`)
-2. Run the combined verification command (`make all` when available, otherwise `rtk test` / `rtk err` equivalents)
+2. Run the combined verification command (`make all` when available, otherwise `rtk test` / `rtk err` equivalents) and compress/summarize noisy output when Caveman mode is available
 3. Check docs for public API changes
 
 ### 6. REPORT
@@ -144,7 +157,7 @@ If any limit is hit, stop and report with clear context on what was happening.
 
 - Use jcodemunch tools for ALL code navigation (95%+ token savings)
 - If `rtk` is installed, use it for bash commands (e.g., `rtk ls`, `rtk git diff`, `rtk test`); otherwise keep bash output minimal
-- If `caveman` is installed, use `/caveman full` for build/verify output; otherwise be terse
+- If Caveman mode is available, automatically use its `full` compression style for status, build, and verification output; otherwise be terse
 - Batch file reads: use multi-file `read` or `jcodemunch_get_context_bundle` instead of reading the same file repeatedly
 - Compress earlier: close finished exploration/planning phases with `compress` before context pressure builds
 - Delegate implementation to `pippy-build` (cheap model) by default
