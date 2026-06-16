@@ -1,0 +1,51 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // GeneralPippy — Orchestrator Agent
+  // Default agent: auto-routes planning → strong model, implementation → cheap model
+  "default_agent": "orchestrator",
+
+  // Models
+  "model": "opencode-go/kimi-k2.7-code",        // Planning: strong, code-specialized
+  "small_model": "opencode-go/deepseek-v4-flash", // System tasks: titles, summaries, compaction
+
+  // Plugins
+  "plugin": [
+    "@tarquinen/opencode-dcp@latest"
+  ],
+
+  // MCP servers
+  "mcp": {
+    "jcodemunch": {
+      "type": "local",
+      "command": ["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git", "jcodemunch-mcp"],
+      "enabled": true
+    }
+  },
+
+  // Compaction
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
+
+  // Formatters
+  "formatter": true,
+
+  // Agent definitions
+  "agent": {
+    "orchestrator": {
+      "mode": "primary",
+      "description": "Smart routing agent — auto-delegates planning to strong model, implementation to cheap model"
+    },
+    "orchestrator-plan": {
+      "mode": "subagent",
+      "description": "Planning and architecture — uses strong model for design and analysis"
+    },
+    "orchestrator-build": {
+      "mode": "subagent",
+      "description": "Implementation — uses cheap model for coding tasks"
+    }
+  }
+}
