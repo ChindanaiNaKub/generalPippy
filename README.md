@@ -96,6 +96,10 @@ Ask first:
 
 OpenCode's built-in session usage display is the authoritative source for exact token usage and cost. GeneralPippy's `/budget` command does not estimate spend; it audits whether Pippy used the intended low-cost routing and token-efficiency practices.
 
+## Routing Smoke Test
+
+After installing, use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on `opencode-go/mimo-v2.5`.
+
 ## License
 
 MIT
