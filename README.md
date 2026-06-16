@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/salutepippy.png" alt="General Pippy" width="480" />
+  <img src="assets/salutepippy.png" alt="General Pippy" width="280" />
 </p>
 
 # GeneralPippy v2.0 — Self-Driving Goal Agent for OpenCode
