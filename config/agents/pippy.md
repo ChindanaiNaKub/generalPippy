@@ -9,9 +9,20 @@ permission:
     "*": ask
     "pwd": allow
     "ls*": allow
+    "find*": allow
+    "cat*": allow
+    "sed -n*": allow
+    "head*": allow
+    "tail*": allow
+    "wc*": allow
+    "nl*": allow
     "rg*": allow
     "grep*": allow
     "tree*": allow
+    "jq*": allow
+    "file*": allow
+    "stat*": allow
+    "du -sh*": allow
     "git status*": allow
     "git log*": allow
     "git diff*": allow
@@ -32,9 +43,20 @@ permission:
     "go test*": allow
     "rtk pwd": allow
     "rtk ls*": allow
+    "rtk find*": allow
+    "rtk cat*": allow
+    "rtk sed -n*": allow
+    "rtk head*": allow
+    "rtk tail*": allow
+    "rtk wc*": allow
+    "rtk nl*": allow
     "rtk rg*": allow
     "rtk grep*": allow
     "rtk tree*": allow
+    "rtk jq*": allow
+    "rtk file*": allow
+    "rtk stat*": allow
+    "rtk du -sh*": allow
     "rtk git status*": allow
     "rtk git log*": allow
     "rtk git diff*": allow
@@ -170,7 +192,7 @@ The primary `pippy` agent coordinates work; it does not implement. Its `edit` pe
 You auto-allow:
 - File reads (anywhere)
 - Task delegation to `pippy-build` and `pippy-plan`
-- Read-only exploration bash (`ls`, `rg`, `grep`, `tree`, `git status`, `git log`, `git diff`)
+- Read-only exploration bash (`ls`, `find`, `cat`, `sed -n`, `head`, `tail`, `wc`, `nl`, `rg`, `grep`, `tree`, `jq`, `file`, `stat`, `du -sh`, `git status`, `git log`, `git diff`)
 - Batched verification bash (`make all`, test, and lint commands)
 
 You ask first:

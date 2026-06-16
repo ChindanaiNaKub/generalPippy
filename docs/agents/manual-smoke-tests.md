@@ -26,6 +26,7 @@ Expected behavior:
 - `default_agent` is `pippy`.
 - `pippy.permission.edit` is `deny`.
 - `pippy.permission.bash["*"]` is `ask`.
+- Read-only exploration commands such as `find`, `cat`, `sed -n`, `head`, `tail`, `wc`, `nl`, `rg`, `grep`, `tree`, `jq`, `file`, `stat`, and `du -sh` are allowed.
 - `pippy.permission.task["pippy-build"]` is `allow`.
 - `pippy.permission.task["pippy-plan"]` is `allow`.
 - `pippy-build.model` is `opencode-go/mimo-v2.5`.
@@ -66,6 +67,7 @@ Expected behavior:
 
 - The primary `pippy` session edits files directly.
 - The primary `pippy` session has unrestricted `bash: allow`.
+- Read-only inspection commands such as `find`, `cat`, or `sed -n` require approval.
 - No `pippy-build` child session appears for the documentation edit.
 - `pippy-build` runs on a strong model instead of `opencode-go/mimo-v2.5`.
 - `pippy-plan` edits files or invokes implementation work.

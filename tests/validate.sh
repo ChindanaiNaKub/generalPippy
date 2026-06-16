@@ -125,10 +125,13 @@ test_subagent_routing_config() {
   if grep -q "edit: deny" "$pippy" &&
      grep -q "bash:" "$pippy" &&
      grep -q '"\*": ask' "$pippy" &&
+     grep -q '"find\*": allow' "$pippy" &&
+     grep -q '"cat\*": allow' "$pippy" &&
+     grep -q '"sed -n\*": allow' "$pippy" &&
      ! grep -q "bash: allow" "$pippy"; then
-    pass "primary pippy cannot auto-edit and uses granular bash permissions"
+    pass "primary pippy cannot auto-edit and uses granular read-only bash permissions"
   else
-    fail "primary pippy must deny edit and use granular bash instead of bash: allow"
+    fail "primary pippy must deny edit and allow granular read-only bash instead of bash: allow"
   fi
 
   if grep -q "Do not implement code in the primary agent" "$pippy" &&
@@ -166,6 +169,7 @@ test_subagent_routing_config() {
 
   if grep -q "Primary Pippy must not have auto edit permissions" "$smoke" &&
      grep -q "Primary bash should be granular rather than unrestricted" "$smoke" &&
+     grep -q "common read-only inspection commands are auto-allowed" "$smoke" &&
      grep -q "\`pippy-plan\` remains read-only" "$smoke" &&
      grep -q "opencode-go/mimo-v2.5" "$smoke" &&
      grep -q "\`pippy-build\` remains the implementation subagent" "$smoke"; then
@@ -177,6 +181,7 @@ test_subagent_routing_config() {
   if [[ -f "$manual_smoke" ]] &&
      grep -q "opencode debug config" "$manual_smoke" &&
      grep -q "pippy.permission.edit" "$manual_smoke" &&
+     grep -q "Read-only exploration commands" "$manual_smoke" &&
      grep -q "pippy-build.model" "$manual_smoke" &&
      grep -q '/goal "make a harmless one-line documentation wording improvement' "$manual_smoke" &&
      grep -q "/budget" "$manual_smoke"; then
