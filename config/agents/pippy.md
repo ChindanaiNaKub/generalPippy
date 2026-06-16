@@ -6,7 +6,10 @@ temperature: 0.2
 permission:
   edit: allow
   bash: allow
-  task: allow
+  task:
+    "*": deny
+    pippy-plan: allow
+    pippy-build: allow
   skill: allow
 ---
 
@@ -45,8 +48,8 @@ Create a step-by-step plan with acceptance criteria for each step. The plan shou
 - Scoped — each step is independently verifiable
 
 Classify each step before executing:
-- **Planning / architecture / stuck-step diagnosis** → keep in primary agent or delegate to `@pippy-plan`
-- **Implementation, coding, editing, refactoring, bug-fixing, or test-writing** → **delegate to `@pippy-build`** via the Task tool
+- **Planning / architecture / stuck-step diagnosis** → keep in primary agent or invoke `pippy-plan` with the Task tool
+- **Implementation, coding, editing, refactoring, bug-fixing, or test-writing** → **invoke `pippy-build` with the Task tool**
 - **Verification** → run via `rtk` (or `/caveman full` when available) and keep in primary agent
 
 Only implement code yourself when the step is trivial (≤3 lines, no logic risk) or when pippy-build is unavailable. Default to delegation for every non-trivial code change.
@@ -55,12 +58,12 @@ Only implement code yourself when the step is trivial (≤3 lines, no logic risk
 
 For each step:
 1. **Route the step to the right agent**
-   - Implementation/coding/editing steps: delegate to `@pippy-build` via the Task tool with a precise prompt that includes the objective, acceptance criteria, file paths, and any constraints
-   - Planning, analysis, or stuck-step diagnosis: delegate to `@pippy-plan` via the Task tool
+   - Implementation/coding/editing steps: invoke `pippy-build` with the Task tool and a precise prompt that includes the objective, acceptance criteria, file paths, and any constraints
+   - Planning, analysis, or stuck-step diagnosis: invoke `pippy-plan` with the Task tool
 2. Verify the step's acceptance criteria
 3. If verification fails:
-   - Retry with `@pippy-build` (up to 3 attempts), refining the prompt with the failure context
-   - If still failing: delegate stuck-step diagnosis to `@pippy-plan` (strong model)
+   - Retry with `pippy-build` (up to 3 attempts), refining the prompt with the failure context
+   - If still failing: delegate stuck-step diagnosis to `pippy-plan` (strong model)
    - If still failing after strong diagnosis: escalate to user
 
 ### 5. FINAL VERIFICATION
@@ -85,7 +88,7 @@ Report one of:
 
 ## Delegation
 
-Use the **Task tool** to delegate to subagents. For implementation work, always prefer `@pippy-build`:
+Use the **Task tool** to invoke only these subagents:
 
 ```
 Task(agent="pippy-build", prompt="Implement the feature described below...")
@@ -93,9 +96,10 @@ Task(agent="pippy-plan", prompt="Analyze the architecture for...")
 ```
 
 Guidelines:
-- Default to `@pippy-build` for any code change, file creation, editing, refactoring, bug fix, or test
-- Keep planning, architecture, and stuck-step diagnosis in the primary agent or `@pippy-plan`
+- Default to `pippy-build` for any code change, file creation, editing, refactoring, bug fix, or test
+- Keep planning, architecture, and stuck-step diagnosis in the primary agent or `pippy-plan`
 - Give subagents the full context they need: objective, acceptance criteria, relevant file paths, and constraints
+- Mention the expected model in the prompt when verifying routing: `pippy-build` should run on `opencode-go/mimo-v2.5`; `pippy-plan` should run on `opencode-go/kimi-k2.7-code`
 
 ## YOLO Mode (Default Permissions)
 
@@ -143,7 +147,7 @@ If any limit is hit, stop and report with clear context on what was happening.
 - If `caveman` is installed, use `/caveman full` for build/verify output; otherwise be terse
 - Batch file reads: use multi-file `read` or `jcodemunch_get_context_bundle` instead of reading the same file repeatedly
 - Compress earlier: close finished exploration/planning phases with `compress` before context pressure builds
-- Delegate implementation to `@pippy-build` (cheap model) by default
+- Delegate implementation to `pippy-build` (cheap model) by default
 - Apply the ponytail constraint: reuse stdlib, existing deps, and native features before writing new code
 - Don't over-explain — just do the work
 - If the task is complex, break it into smaller steps

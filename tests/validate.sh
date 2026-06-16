@@ -107,6 +107,37 @@ test_budget_command_is_guidance_only() {
   fi
 }
 
+test_subagent_routing_config() {
+  run_test "pippy subagent routing is explicit"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local opencode="$REPO_ROOT/config/opencode.jsonc"
+  local smoke="$REPO_ROOT/docs/agents/subagent-routing-smoke-test.md"
+
+  if grep -q "pippy-build: allow" "$pippy" && grep -q "pippy-plan: allow" "$pippy" && grep -q '"\*": deny' "$pippy"; then
+    pass "pippy task permission only exposes intended subagents"
+  else
+    fail "pippy task permission must deny wildcard and allow pippy-plan/pippy-build"
+  fi
+
+  if grep -q 'Task(agent="pippy-build"' "$pippy" && grep -q 'Task(agent="pippy-plan"' "$pippy"; then
+    pass "pippy prompt contains Task tool delegation examples"
+  else
+    fail "pippy prompt must show Task tool delegation examples"
+  fi
+
+  if grep -q '"agent"' "$opencode"; then
+    fail "opencode.jsonc must not redeclare markdown agents with partial JSON stubs"
+  else
+    pass "opencode.jsonc leaves agent definitions to markdown files"
+  fi
+
+  if [[ -f "$smoke" ]] && grep -q "opencode-go/mimo-v2.5" "$smoke"; then
+    pass "subagent routing smoke test documents expected build model"
+  else
+    fail "subagent routing smoke test must document expected build model"
+  fi
+}
+
 main() {
   echo "Running GeneralPippy validation tests..."
 
@@ -115,6 +146,7 @@ main() {
   test_no_stale_v1_references
   test_markdown_frontmatter
   test_budget_command_is_guidance_only
+  test_subagent_routing_config
 
   echo ""
   echo "========================="

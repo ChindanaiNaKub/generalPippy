@@ -31,21 +31,9 @@
   },
 
   // Formatters
-  "formatter": true,
+  "formatter": true
 
-  // Agent definitions
-  "agent": {
-    "pippy": {
-      "mode": "primary",
-      "description": "Self-driving goal agent — plan, execute, verify, iterate until objective is met"
-    },
-    "pippy-plan": {
-      "mode": "subagent",
-      "description": "Planning and architecture — uses strong model for design and stuck-step diagnosis"
-    },
-    "pippy-build": {
-      "mode": "subagent",
-      "description": "Implementation — uses cheap model for coding tasks"
-    }
-  }
+  // Agent definitions live in agents/*.md.
+  // Do not redeclare them here: partial JSON agent stubs can shadow markdown
+  // frontmatter such as model, permission.task, and prompts.
 }
