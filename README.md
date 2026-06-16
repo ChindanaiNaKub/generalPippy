@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/salutepippy.png" alt="General Pippy" width="280" />
+  <img src="assets/pippygirlgeneral.png" alt="General Pippy" width="280" />
 </p>
 
 # GeneralPippy v2.0 — Self-Driving Goal Agent for OpenCode
@@ -29,7 +29,7 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 
 ## Models (opencode-go)
 
-Approximate costs per 1M tokens (input/output); verify at [opencode.ai](https://opencode.ai):
+Approximate costs per 1M tokens (input/output); verify at [OpenCode Go](https://opencode.ai/go):
 
 | Role | Model | ~Cost (per 1M) |
 |------|-------|---------------|
