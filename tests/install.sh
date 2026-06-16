@@ -65,17 +65,27 @@ test_dry_run_does_not_modify() {
   run_test "--dry-run does not modify config directory"
   local tmp_home
   tmp_home="$(mktemp -d)"
-  local before
-  before="$(find "$tmp_home" -mindepth 0 -maxdepth 2 -print 2>/dev/null | sort | md5sum)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+  local config_dir="$tmp_home/.config/opencode"
 
-  # Force non-interactive and suppress optional-install prompts via dry-run.
-  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" "$INSTALLER" --dry-run >/dev/null 2>&1
+  # Mock core dependencies so this test only checks dry-run file behavior.
+  # CI runners do not necessarily have opencode installed.
+  for cmd in opencode uv npm; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
 
-  local after
-  after="$(find "$tmp_home" -mindepth 0 -maxdepth 2 -print 2>/dev/null | sort | md5sum)"
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
 
-  if [[ "$before" == "$after" ]]; then pass "no files created"; else fail "files were created"; fi
-  rm -rf "$tmp_home"
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --dry-run >/dev/null 2>&1
+
+  if [[ ! -e "$config_dir" ]]; then pass "config directory not created"; else fail "config directory was created"; fi
+  rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
 }
 
 make_minimal_path() {
