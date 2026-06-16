@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/salutepippy.png" alt="General Pippy" width="480" />
+</p>
+
 # GeneralPippy v2.0 — Self-Driving Goal Agent for OpenCode
 
 Take a verifiable objective, and Pippy drives to completion — plan, execute, verify, iterate.
