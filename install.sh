@@ -71,6 +71,18 @@ cp "$SCRIPT_DIR/config/skills/verify/SKILL.md" ~/.config/opencode/skills/verify/
 
 echo "✅ Files copied"
 
+# Remove obsolete v1.0 files
+rm -f ~/.config/opencode/agents/orchestrator.md
+rm -f ~/.config/opencode/agents/orchestrator-plan.md
+rm -f ~/.config/opencode/agents/orchestrator-build.md
+rm -f ~/.config/opencode/commands/think.md
+rm -f ~/.config/opencode/commands/verify.md
+rm -f ~/.config/opencode/commands/cheap.md
+rm -f ~/.config/opencode/commands/smart.md
+rm -rf ~/.config/opencode/skills/orchestrate
+
+echo "🗑️  Removed obsolete v1.0 files"
+
 # Check optional dependencies
 # These are installed AFTER config copy so they can patch opencode.jsonc if needed.
 echo ""
