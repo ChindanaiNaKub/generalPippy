@@ -16,13 +16,15 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 | **YOLO mode** | Default permission mode that auto-allows file reads, workspace edits, and read-only bash, while asking before destructive actions. |
 | **Hard limits** | The safety bounds: 50 iterations, 30 minutes wall time, 5 consecutive failures before escalation. |
 | **jcodemunch** | The MCP server that indexes the codebase for token-efficient navigation. |
-| **rtk / caveman / ponytail** | Optional efficiency tools: token-compressed bash, compressed build output, and stdlib-reuse planning constraint. |
+| **Caveman mode** | An OpenCode prompt/command compression mode that makes Pippy and its subagents communicate tersely while preserving technical accuracy. _Avoid_: caveman CLI, build-output compressor |
+| **Caveman CLI** | An optional shell executable named `caveman`, if a user installs one separately. It is not required for Caveman mode. |
+| **rtk / ponytail** | Optional efficiency tools: token-compressed bash and stdlib-reuse planning constraint. |
 
 ## Invariants
 
 1. **Prompts are the product.** The repo's value is in the agent/command/skill prompts and the installer that places them in `~/.config/opencode/`.
 2. **No runtime code.** GeneralPippy does not ship a long-running service; it ships configuration consumed by OpenCode.
-3. **Graceful degradation.** Optional tools (rtk, caveman, ponytail) improve efficiency but are not required.
+3. **Graceful degradation.** Optional tools and modes (rtk, Caveman mode, Caveman CLI, ponytail) improve efficiency but are not required.
 4. **Safety over speed.** Auto-allow reads/edits inside the workspace, but ask before destructive bash, git commits, dependency installs, or external API calls.
 5. **Versioned backups.** The installer must back up existing user config before overwriting it and must be able to roll back on failure.
 

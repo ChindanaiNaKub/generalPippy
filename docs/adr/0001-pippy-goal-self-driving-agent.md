@@ -97,7 +97,7 @@ User can promote any category to permanent auto-allow via `Y` + "always".
 | jcodemunch-mcp | All code navigation (AST indexing) |
 | opencode-dcp | Conversation pruning |
 | rtk | Wraps every bash command |
-| caveman | Build/verify output (full level) |
+| Caveman mode | OpenCode terse-response mode for status, build, and verification summaries (full level) |
 | ponytail | Planning constraint — reuse stdlib/existing deps |
 
 ### Budget Policy

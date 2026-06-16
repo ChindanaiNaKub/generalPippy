@@ -269,6 +269,22 @@ install_optional() {
   fi
 }
 
+report_caveman_mode() {
+  local config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+  local opencode_config="$config_home/opencode"
+  local command_file="$opencode_config/commands/caveman.md"
+  local agents_file="$opencode_config/AGENTS.md"
+
+  if [[ -f "$command_file" ]] || { [[ -f "$agents_file" ]] && grep -q "caveman-begin" "$agents_file"; }; then
+    success "Caveman mode found"
+    return 0
+  fi
+
+  warn "Caveman mode not found."
+  info "Caveman mode is optional OpenCode config, not required shell CLI."
+  info "Install or copy a /caveman OpenCode command if you want automatic terse output."
+}
+
 report_optional_manual() {
   local name="$1"
   local check_cmd="$2"
@@ -327,7 +343,8 @@ main() {
 
   log "🔍 Checking optional dependencies..."
   install_optional "rtk" "rtk" install_rtk
-  report_optional_manual "caveman" "caveman" "https://github.com/JuliusBrussee/caveman"
+  report_caveman_mode
+  report_optional_manual "Caveman CLI" "caveman" "https://github.com/JuliusBrussee/caveman"
   log ""
 
   info "ponytail is optional but cannot be auto-installed."
@@ -358,7 +375,8 @@ main() {
   log ""
   log "Optional tools (install for best experience):"
   log "  • rtk — Token-efficient bash wrapper"
-  log "  • caveman — Compressed build output"
+  log "  • Caveman mode — Terse OpenCode responses and compressed build output"
+  log "  • Caveman CLI — Optional shell executable for extra compression workflows"
   log "  • ponytail — Lazy senior-dev planning constraint (manual install)"
   log ""
   log "For more info: https://github.com/ChindanaiNaKub/generalPippy"

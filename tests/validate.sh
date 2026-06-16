@@ -138,6 +138,41 @@ test_subagent_routing_config() {
   fi
 }
 
+test_caveman_mode_not_cli_only() {
+  run_test "caveman mode is not treated as CLI-only"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local budget="$REPO_ROOT/config/commands/budget.md"
+  local context="$REPO_ROOT/CONTEXT.md"
+  local smoke="$REPO_ROOT/docs/agents/caveman-mode-smoke-test.md"
+
+  if grep -q "Caveman mode: OpenCode command/config mode" "$pippy" &&
+     grep -q "Do not ask the user to run" "$pippy"; then
+    pass "pippy owns Caveman mode activation"
+  else
+    fail "pippy must detect and apply OpenCode Caveman mode automatically"
+  fi
+
+  if grep -q "Do not report Caveman mode as missing merely because" "$budget"; then
+    pass "budget distinguishes Caveman mode from CLI"
+  else
+    fail "budget must not equate Caveman mode with command -v caveman"
+  fi
+
+  if grep -q "Caveman mode" "$context" && grep -q "Caveman CLI" "$context"; then
+    pass "domain glossary distinguishes Caveman mode and Caveman CLI"
+  else
+    fail "CONTEXT.md must distinguish Caveman mode and Caveman CLI"
+  fi
+
+  if [[ -f "$smoke" ]] &&
+     grep -q "command -v caveman" "$smoke" &&
+     grep -q "must not treat that as Caveman mode missing" "$smoke"; then
+    pass "caveman smoke test covers OpenCode mode vs CLI"
+  else
+    fail "caveman smoke test must cover OpenCode mode vs CLI"
+  fi
+}
+
 main() {
   echo "Running GeneralPippy validation tests..."
 
@@ -147,6 +182,7 @@ main() {
   test_markdown_frontmatter
   test_budget_command_is_guidance_only
   test_subagent_routing_config
+  test_caveman_mode_not_cli_only
 
   echo ""
   echo "========================="

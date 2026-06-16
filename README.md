@@ -24,7 +24,7 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 
 ### Optional Tools
 - **rtk** — Token-efficient bash wrapper
-- **caveman** — Compressed build/verify output
+- **Caveman mode** — Terse OpenCode responses and compressed build/verify summaries
 - **ponytail** — Planning constraint (reuse stdlib)
 
 ## Models (opencode-go)
@@ -90,7 +90,7 @@ Ask first:
 - **Compaction** — Auto-compress long conversations
 - **Cheap model default** — Strong model only for planning/diagnosis
 - **rtk** — Token-efficient bash commands
-- **caveman** — Compressed build output
+- **Caveman mode** — Terse OpenCode responses and compressed build/verify summaries
 
 ## Budget Guidance
 
@@ -99,6 +99,8 @@ OpenCode's built-in session usage display is the authoritative source for exact 
 ## Routing Smoke Test
 
 After installing, use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on `opencode-go/mimo-v2.5`.
+
+Use [docs/agents/caveman-mode-smoke-test.md](docs/agents/caveman-mode-smoke-test.md) to verify that Pippy detects OpenCode Caveman mode and does not require a `caveman` shell executable.
 
 ## License
 
