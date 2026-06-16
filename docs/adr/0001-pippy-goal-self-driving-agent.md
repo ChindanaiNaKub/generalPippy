@@ -33,7 +33,7 @@ Pippy becomes the default agent with a `/goal` command as the primary interface.
 |---------|---------|
 | `/goal "<objective>"` | Primary self-driving mode — plan, execute, verify, iterate |
 | `/ship` | Alias for `/goal "review, verify, and prepare this branch for PR"` |
-| `/budget` | Show token/cost usage |
+| `/budget` | Audit budget health and routing behavior |
 
 Removed: `/think`, `/verify`, `/cheap`, `/smart`.
 
@@ -105,7 +105,8 @@ User can promote any category to permanent auto-allow via `Y` + "always".
 - Default: cheap model
 - Strong model: planning + stuck-step diagnosis only
 - Warn at 50k input / 20k output tokens
-- Report cost/token mix at end
+- Exact tokens and cost are authoritative only when shown by OpenCode's own session usage display
+- `/budget` must not estimate spend from conversation volume; it reports routing and efficiency guidance instead
 
 ### Operational Defaults
 

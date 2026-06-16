@@ -90,6 +90,23 @@ test_markdown_frontmatter() {
   done
 }
 
+test_budget_command_is_guidance_only() {
+  run_test "/budget avoids fake cost estimates"
+  local file="$REPO_ROOT/config/commands/budget.md"
+
+  if grep -qi "authoritative source" "$file" && grep -qi "Do \\*\\*not\\*\\* estimate" "$file"; then
+    pass "budget command states authoritative source and no-estimate rule"
+  else
+    fail "budget command must state authoritative source and no-estimate rule"
+  fi
+
+  if grep -qE '\\$[0-9]+(\\.[0-9]+)?\\s*/\\s*\\$[0-9]+(\\.[0-9]+)?' "$file"; then
+    fail "budget command contains static pricing table"
+  else
+    pass "budget command has no static pricing table"
+  fi
+}
+
 main() {
   echo "Running GeneralPippy validation tests..."
 
@@ -97,6 +114,7 @@ main() {
   test_opencode_jsonc_valid
   test_no_stale_v1_references
   test_markdown_frontmatter
+  test_budget_command_is_guidance_only
 
   echo ""
   echo "========================="

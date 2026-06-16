@@ -1,25 +1,29 @@
 ---
-description: Show token usage, cost, and model stats
+description: Audit budget health and routing behavior
 ---
 
 ## Budget Report
 
-Show current session token usage and cost estimates.
+Audit the current session for budget health, routing behavior, and token-efficiency opportunities.
 
-Analyze the current session and report:
-1. Total tokens used (input + output)
-2. Which models were used (planning vs implementation)
-3. Estimated cost based on opencode-go pricing
-4. Token breakdown by agent/subagent
-5. Suggestions for optimization
+Do **not** estimate tokens, model usage, agent usage, or cost from conversation volume. OpenCode's TUI/session usage display is the authoritative source for actual tokens and spend. If live usage data is not available in this command context, say so directly and point the user to OpenCode's built-in usage/cost display.
 
-**Approximate Model Pricing (opencode-go):**
-- Kimi K2.7 Code: ~$0.95 / $4.00 per 1M tokens (planning)
-- MiMo V2.5: ~$0.14 / $0.28 per 1M tokens (implementation)
-- DeepSeek V4 Flash: ~$0.14 / $0.28 per 1M tokens (system tasks)
+Report only what can be grounded in the visible session:
+1. Whether the task should have delegated implementation to `pippy-build`
+2. Whether planning or stuck-step diagnosis should have used `pippy-plan`
+3. Whether the conversation appears to be running too long before compaction
+4. Whether `rtk`, `/caveman full`, and jcodemunch were used where appropriate
+5. Whether verification was batched (e.g., `make all`) instead of running separate redundant commands
+6. Specific optimization suggestions for the next step
 
-Verify current rates at [opencode.ai](https://opencode.ai).
+If the user asks for exact spend, answer:
 
-**Warn at:** 50k input tokens / 20k output tokens
+> I cannot measure exact token usage or cost from this command. Use OpenCode's built-in session usage/cost display for authoritative numbers.
+
+**Warn qualitatively when:**
+- Implementation appears to be happening in the primary strong-model agent instead of `pippy-build`
+- No subagent delegation happened for a straightforward coding/editing task
+- Large file reads, repeated diffs, or verbose test output are inflating context
+- Verification commands are run redundantly instead of batched safely (e.g., prefer `make all` over separate `make test` + `make lint`)
 
 **Usage:** /budget

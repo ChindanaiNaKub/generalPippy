@@ -47,7 +47,7 @@ UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL �
 |---------|---------|
 | `/goal "<objective>"` | Start the self-driving loop |
 | `/ship` | Alias for `/goal "review, verify, and prepare this branch for PR"` |
-| `/budget` | Show token usage and cost |
+| `/budget` | Audit budget health and routing behavior |
 
 ## YOLO Mode (Default)
 
@@ -62,5 +62,9 @@ Ask first: destructive bash, git push/commit, deps, external APIs, out-of-worksp
 
 - jcodemunch-mcp for all code navigation
 - rtk for bash commands when installed
-- caveman for build/verify output when installed
+- `/caveman full` for build/verify output when installed
+- batch file reads and avoid re-reading the same file
+- compress earlier to keep context pressure low
+- delegate implementation to `@pippy-build` by default
 - ponytail constraint: reuse stdlib, existing deps, and native features before writing new code
+- OpenCode's built-in usage display is authoritative for exact tokens and cost; `/budget` should not estimate them
