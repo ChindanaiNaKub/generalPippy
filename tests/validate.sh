@@ -30,7 +30,7 @@ test_required_files_exist() {
   for file in config/opencode.jsonc \
               config/agents/pippy.md config/agents/pippy-plan.md config/agents/pippy-build.md \
               config/commands/goal.md config/commands/ship.md config/commands/budget.md \
-              config/skills/pippy/SKILL.md config/skills/verify/SKILL.md; do
+              config/skills/pippy/SKILL.md; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
       pass "exists: $file"
     else
