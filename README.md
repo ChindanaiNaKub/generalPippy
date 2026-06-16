@@ -78,10 +78,15 @@ Pippy:
 ## YOLO Mode
 
 Default permissions (auto-allow):
-- File reads, file edits, read-only bash
+- File reads
+- Delegation to `pippy-build` and `pippy-plan`
+- Read-only exploration bash
+- Batched verification bash
 
 Ask first:
-- Destructive bash, git push/commit, deps, external APIs
+- Destructive bash, git push/commit, deps, external APIs, unusual primary-agent bash
+
+Pippy's primary agent coordinates and verifies. Workspace edits, file copies, config changes, bug fixes, refactors, and tests route to `pippy-build` on `opencode-go/mimo-v2.5`.
 
 ## Token Efficiency
 
@@ -101,6 +106,8 @@ OpenCode's built-in session usage display is the authoritative source for exact 
 After installing, use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on `opencode-go/mimo-v2.5`.
 
 Use [docs/agents/caveman-mode-smoke-test.md](docs/agents/caveman-mode-smoke-test.md) to verify that Pippy detects OpenCode Caveman mode and does not require a `caveman` shell executable.
+
+Use [docs/agents/manual-smoke-tests.md](docs/agents/manual-smoke-tests.md) for a manual OpenCode checklist that verifies resolved config, child-session routing, and `/budget` behavior.
 
 ## License
 

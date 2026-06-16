@@ -108,10 +108,13 @@ test_budget_command_is_guidance_only() {
 }
 
 test_subagent_routing_config() {
-  run_test "pippy subagent routing is explicit"
+  run_test "pippy routing boundary is explicit"
   local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local pippy_plan="$REPO_ROOT/config/agents/pippy-plan.md"
+  local pippy_build="$REPO_ROOT/config/agents/pippy-build.md"
   local opencode="$REPO_ROOT/config/opencode.jsonc"
   local smoke="$REPO_ROOT/docs/agents/subagent-routing-smoke-test.md"
+  local manual_smoke="$REPO_ROOT/docs/agents/manual-smoke-tests.md"
 
   if grep -q "pippy-build: allow" "$pippy" && grep -q "pippy-plan: allow" "$pippy" && grep -q '"\*": deny' "$pippy"; then
     pass "pippy task permission only exposes intended subagents"
@@ -119,10 +122,40 @@ test_subagent_routing_config() {
     fail "pippy task permission must deny wildcard and allow pippy-plan/pippy-build"
   fi
 
-  if grep -q 'Task(agent="pippy-build"' "$pippy" && grep -q 'Task(agent="pippy-plan"' "$pippy"; then
-    pass "pippy prompt contains Task tool delegation examples"
+  if grep -q "edit: deny" "$pippy" &&
+     grep -q "bash:" "$pippy" &&
+     grep -q '"\*": ask' "$pippy" &&
+     ! grep -q "bash: allow" "$pippy"; then
+    pass "primary pippy cannot auto-edit and uses granular bash permissions"
   else
-    fail "pippy prompt must show Task tool delegation examples"
+    fail "primary pippy must deny edit and use granular bash instead of bash: allow"
+  fi
+
+  if grep -q 'Do not implement code in the primary agent' "$pippy" &&
+     grep -q 'If `pippy-build` is unavailable, stop and report `Blocked`' "$pippy"; then
+    pass "pippy prompt forbids primary implementation fallback"
+  else
+    fail "pippy prompt must forbid primary implementation fallback"
+  fi
+
+  if grep -q "edit: deny" "$pippy_plan" && grep -q '"\*": ask' "$pippy_plan" && grep -q 'git diff\*": allow' "$pippy_plan"; then
+    pass "pippy-plan remains read-only with granular bash access"
+  else
+    fail "pippy-plan must remain read-only with granular bash access"
+  fi
+
+  if grep -q 'model: opencode-go/mimo-v2.5' "$pippy_build" &&
+     grep -q 'edit: allow' "$pippy_build" &&
+     grep -q 'task: deny' "$pippy_build"; then
+    pass "pippy-build remains the implementation subagent on opencode-go/mimo-v2.5"
+  else
+    fail "pippy-build must remain the implementation subagent on opencode-go/mimo-v2.5 and not delegate further"
+  fi
+
+  if grep -q 'task: deny' "$pippy_plan"; then
+    pass "pippy-plan cannot spawn implementation work directly"
+  else
+    fail "pippy-plan must not spawn implementation work directly"
   fi
 
   if grep -q '"agent"' "$opencode"; then
@@ -131,10 +164,25 @@ test_subagent_routing_config() {
     pass "opencode.jsonc leaves agent definitions to markdown files"
   fi
 
-  if [[ -f "$smoke" ]] && grep -q "opencode-go/mimo-v2.5" "$smoke"; then
-    pass "subagent routing smoke test documents expected build model"
+  if grep -q "Primary Pippy must not have auto edit permissions" "$smoke" &&
+     grep -q "Primary bash should be granular rather than unrestricted" "$smoke" &&
+     grep -q '`pippy-plan` remains read-only' "$smoke" &&
+     grep -q "opencode-go/mimo-v2.5" "$smoke" &&
+     grep -q '`pippy-build` remains the implementation subagent' "$smoke"; then
+    pass "subagent routing smoke test documents the stricter boundary"
   else
-    fail "subagent routing smoke test must document expected build model"
+    fail "subagent routing smoke test must document the stricter boundary"
+  fi
+
+  if [[ -f "$manual_smoke" ]] &&
+     grep -q "opencode debug config" "$manual_smoke" &&
+     grep -q "pippy.permission.edit" "$manual_smoke" &&
+     grep -q "pippy-build.model" "$manual_smoke" &&
+     grep -q '/goal "make a harmless one-line documentation wording improvement' "$manual_smoke" &&
+     grep -q "/budget" "$manual_smoke"; then
+    pass "manual smoke test covers config, routing, and budget checks"
+  else
+    fail "manual smoke test must cover config, routing, and budget checks"
   fi
 }
 

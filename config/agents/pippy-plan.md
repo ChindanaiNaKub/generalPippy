@@ -15,7 +15,7 @@ permission:
     "grep*": allow
     "cat*": allow
     "tree*": allow
-  task: allow
+  task: deny
   skill: allow
 ---
 

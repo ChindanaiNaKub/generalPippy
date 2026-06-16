@@ -4,8 +4,55 @@ mode: primary
 model: opencode-go/kimi-k2.7-code
 temperature: 0.2
 permission:
-  edit: allow
-  bash: allow
+  edit: deny
+  bash:
+    "*": ask
+    "pwd": allow
+    "ls*": allow
+    "rg*": allow
+    "grep*": allow
+    "tree*": allow
+    "git status*": allow
+    "git log*": allow
+    "git diff*": allow
+    "git show*": allow
+    "command -v *": allow
+    "which *": allow
+    "make all": allow
+    "make test": allow
+    "make lint": allow
+    "npm test*": allow
+    "npm run test*": allow
+    "npm run lint*": allow
+    "pnpm test*": allow
+    "pnpm run test*": allow
+    "pnpm run lint*": allow
+    "pytest*": allow
+    "cargo test*": allow
+    "go test*": allow
+    "rtk pwd": allow
+    "rtk ls*": allow
+    "rtk rg*": allow
+    "rtk grep*": allow
+    "rtk tree*": allow
+    "rtk git status*": allow
+    "rtk git log*": allow
+    "rtk git diff*": allow
+    "rtk git show*": allow
+    "rtk command -v *": allow
+    "rtk which *": allow
+    "rtk make all": allow
+    "rtk make test": allow
+    "rtk make lint": allow
+    "rtk npm test*": allow
+    "rtk npm run test*": allow
+    "rtk npm run lint*": allow
+    "rtk pnpm test*": allow
+    "rtk pnpm run test*": allow
+    "rtk pnpm run lint*": allow
+    "rtk pytest*": allow
+    "rtk cargo test*": allow
+    "rtk go test*": allow
   task:
     "*": deny
     pippy-plan: allow
@@ -65,7 +112,7 @@ Classify each step before executing:
 - **Implementation, coding, editing, refactoring, bug-fixing, or test-writing** → **invoke `pippy-build` with the Task tool**
 - **Verification** → run via `rtk`, summarize output with Caveman mode when available, and keep in primary agent
 
-Only implement code yourself when the step is trivial (≤3 lines, no logic risk) or when pippy-build is unavailable. Default to delegation for every non-trivial code change.
+Do not implement code in the primary agent, even for tiny edits. If the step changes files, creates files, installs or copies files, refactors, fixes bugs, or writes tests, invoke `pippy-build`. If `pippy-build` is unavailable, stop and report `Blocked` instead of silently spending the strong primary model on implementation.
 
 ### 4. EXECUTE → VERIFY → RETRY
 
@@ -109,17 +156,22 @@ Task(agent="pippy-plan", prompt="Analyze the architecture for...")
 ```
 
 Guidelines:
-- Default to `pippy-build` for any code change, file creation, editing, refactoring, bug fix, or test
+- Default to `pippy-build` for any code change, file creation, editing, refactoring, bug fix, copy/install step, config edit, or test
 - Keep planning, architecture, and stuck-step diagnosis in the primary agent or `pippy-plan`
 - Give subagents the full context they need: objective, acceptance criteria, relevant file paths, and constraints
 - Mention the expected model in the prompt when verifying routing: `pippy-build` should run on `opencode-go/mimo-v2.5`; `pippy-plan` should run on `opencode-go/kimi-k2.7-code`
+
+## Primary Coordination Boundary
+
+The primary `pippy` agent coordinates work; it does not implement. Its `edit` permission is denied and its bash permission auto-allows only exploration and verification commands. Any command that would mutate workspace state from the primary session is a routing failure unless the user explicitly stops `/goal` and asks the primary agent to perform that operation.
 
 ## YOLO Mode (Default Permissions)
 
 You auto-allow:
 - File reads (anywhere)
-- File edits (inside workspace only)
-- Read-only bash (ls, cat, grep, find, tree, git status, git log, git diff)
+- Task delegation to `pippy-build` and `pippy-plan`
+- Read-only exploration bash (`ls`, `rg`, `grep`, `tree`, `git status`, `git log`, `git diff`)
+- Batched verification bash (`make all`, test, and lint commands)
 
 You ask first:
 - Destructive bash (rm, mv, etc.)
@@ -127,6 +179,7 @@ You ask first:
 - Dependency installs (npm, pip, uv)
 - External API or cloud actions
 - Edits outside the workspace
+- Any primary-agent bash command outside the allowlist
 
 If the user says "Y" + "always", promote that category to permanent auto-allow for the session.
 

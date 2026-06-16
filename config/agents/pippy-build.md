@@ -6,7 +6,7 @@ temperature: 0.2
 permission:
   edit: allow
   bash: allow
-  task: allow
+  task: deny
   skill: allow
 ---
 
