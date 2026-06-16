@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted; permission boundary updated by ADR-0002.
 
 ## Context
 
@@ -62,8 +62,9 @@ UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL �
 | Category | Behavior |
 |----------|----------|
 | File reads | Auto-allow |
-| File edits (in workspace) | Auto-allow |
-| Read-only bash | Auto-allow |
+| Implementation edits | Auto-allow only inside `pippy-build` |
+| Primary-agent edits | Deny |
+| Primary-agent exploration and verification bash | Auto-allow |
 | Destructive bash | Ask first |
 | git push/commit | Ask first |
 | Dependency installs | Ask first |
@@ -124,7 +125,7 @@ User can promote any category to permanent auto-allow via `Y` + "always".
 ### Negative
 - Complex internal state machine
 - May need tuning for retry limits and time budgets
-- YOLO mode reduces safety guardrails (mitigated by category-based permission gates)
+- YOLO mode needs careful routing boundaries so the primary strong model does not perform implementation work
 
 ### Risks
 - Agent may loop without progress (mitigated by hard limits)

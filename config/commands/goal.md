@@ -30,7 +30,7 @@ Pippy will:
 
 ### Notes
 
-- YOLO mode is on by default (auto-allow reads/edits/read-only bash; ask before destructive actions).
+- YOLO mode is on by default (auto-allow reads, subagent routing, exploration bash, and verification bash; implementation edits route to `pippy-build`).
 - Pippy stops only when acceptance criteria are met by evidence.
 - Use `/ship` as a shortcut for PR prep.
 - Use OpenCode's session usage display for exact tokens/cost, and `/budget` for routing and efficiency guidance.

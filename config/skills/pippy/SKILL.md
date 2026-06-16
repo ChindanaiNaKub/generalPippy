@@ -51,8 +51,8 @@ UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL �
 
 ## YOLO Mode (Default)
 
-Auto-allow: file reads, file edits, read-only bash.
-Ask first: destructive bash, git push/commit, deps, external APIs, out-of-workspace edits.
+Auto-allow: file reads, subagent routing, read-only exploration bash, and batched verification bash.
+Ask first: destructive bash, git push/commit, deps, external APIs, out-of-workspace edits, and unusual primary-agent bash.
 
 ## Hard Limits
 
@@ -65,6 +65,6 @@ Ask first: destructive bash, git push/commit, deps, external APIs, out-of-worksp
 - Caveman mode `full` compression for status, build, and verification output when OpenCode caveman config is available
 - batch file reads and avoid re-reading the same file
 - compress earlier to keep context pressure low
-- delegate implementation to `pippy-build` with the Task tool by default
+- delegate all implementation to `pippy-build` with the Task tool; the primary agent coordinates and verifies
 - ponytail constraint: reuse stdlib, existing deps, and native features before writing new code
 - OpenCode's built-in usage display is authoritative for exact tokens and cost; `/budget` should not estimate them
