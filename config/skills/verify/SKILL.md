@@ -27,7 +27,7 @@ Use this when:
 
 ## How to use me
 
-1. Run `/verify` or ask the Orchestrator to verify
+1. Run `/verify` or ask Pippy to verify
 2. I'll run all checks in sequence
 3. I'll report any issues found
 4. I'll fix issues if possible
