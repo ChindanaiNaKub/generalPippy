@@ -1,10 +1,10 @@
 #!/bin/bash
-# GeneralPippy v2.1 — Self-Driving Goal Agent for OpenCode
+# GeneralPippy v2.2 — Self-Driving Goal Agent for OpenCode
 # Install script: copies config files to ~/.config/opencode/
 
 set -euo pipefail
 
-VERSION="2.1.0"
+VERSION="2.2.0"
 DRY_RUN=0
 
 # XDG Base Directory support: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html

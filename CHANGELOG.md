@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-06-17
+
 ### Added
 - Reusable GitHub issue template for triage and agent-ready issue reports.
 
