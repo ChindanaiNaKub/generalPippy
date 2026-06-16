@@ -10,11 +10,16 @@ Analyze the current session and report:
 1. Total tokens used (input + output)
 2. Which models were used (planning vs implementation)
 3. Estimated cost based on opencode-go pricing
-4. Suggestions for optimization
+4. Token breakdown by agent/subagent
+5. Suggestions for optimization
 
-**Model Pricing (opencode-go):**
-- Kimi K2.7 Code: $0.95/$4.00 per 1M tokens (planning)
-- MiMo V2.5: $0.14/$0.28 per 1M tokens (implementation)
-- DeepSeek V4 Flash: $0.14/$0.28 per 1M tokens (system tasks)
+**Approximate Model Pricing (opencode-go):**
+- Kimi K2.7 Code: ~$0.95 / $4.00 per 1M tokens (planning)
+- MiMo V2.5: ~$0.14 / $0.28 per 1M tokens (implementation)
+- DeepSeek V4 Flash: ~$0.14 / $0.28 per 1M tokens (system tasks)
+
+Verify current rates at [opencode.ai](https://opencode.ai).
+
+**Warn at:** 50k input tokens / 20k output tokens
 
 **Usage:** /budget

@@ -1,33 +1,37 @@
-# GeneralPippy — Orchestrator Agent for OpenCode
+# GeneralPippy v2.0 — Self-Driving Goal Agent for OpenCode
 
-Smart routing agent that auto-delegates planning to strong models and implementation to cheap models.
+Take a verifiable objective, and Pippy drives to completion — plan, execute, verify, iterate.
 
 ## What's Included
 
 ### Agents
-- **orchestrator** — Primary agent, auto-routes tasks based on intent
-- **orchestrator-plan** — Planning subagent (Kimi K2.7 Code, read-only)
-- **orchestrator-build** — Build subagent (MiMo V2.5, full edit)
+- **pippy** — Primary self-driving goal agent
+- **pippy-plan** — Planning subagent (Kimi K2.7 Code, read-only)
+- **pippy-build** — Build subagent (MiMo V2.5, full edit)
 
 ### Commands
-- `/think` — Deep analysis with strong model (no edits)
-- `/verify` — Run tests/lint/typecheck
-- `/ship` — Review + test + commit prep
+- `/goal "<objective>"` — Start the self-driving loop
+- `/ship` — Review, verify, and prepare for PR
 - `/budget` — Show token usage and cost
-- `/cheap` — Force budget model for everything
-- `/smart` — Force strong model for everything
 
 ### Plugins
 - **jcodemunch-mcp** — AST code indexing (95%+ token savings)
 - **opencode-dcp** — Dynamic context pruning
 
+### Optional Tools
+- **rtk** — Token-efficient bash wrapper
+- **caveman** — Compressed build/verify output
+- **ponytail** — Planning constraint (reuse stdlib)
+
 ## Models (opencode-go)
 
-| Role | Model | Cost (per 1M) |
-|------|-------|--------------|
-| Planning | `opencode-go/kimi-k2.7-code` | $0.95/$4.00 |
-| Implementation | `opencode-go/mimo-v2.5` | $0.14/$0.28 |
-| System tasks | `opencode-go/deepseek-v4-flash` | $0.14/$0.28 |
+Approximate costs per 1M tokens (input/output); verify at [opencode.ai](https://opencode.ai):
+
+| Role | Model | ~Cost (per 1M) |
+|------|-------|---------------|
+| Planning | `opencode-go/kimi-k2.7-code` | $0.95 / $4.00 |
+| Implementation | `opencode-go/mimo-v2.5` | $0.14 / $0.28 |
+| System tasks | `opencode-go/deepseek-v4-flash` | $0.14 / $0.28 |
 
 ## Installation
 
@@ -48,29 +52,41 @@ cp -r config/* ~/.config/opencode/
 ## Usage
 
 1. Run `opencode` to start
-2. The Orchestrator is your default agent
-3. Just describe what you want — it auto-routes:
-   - "Plan the architecture" → @orchestrator-plan
-   - "Fix this bug" → @orchestrator-build
-   - "Find all tests" → @explore
-4. Use Tab to switch agents manually
-5. Use commands: `/think`, `/verify`, `/ship`, `/budget`, `/cheap`, `/smart`
+2. Pippy is your default agent
+3. Run `/goal "add error handling to the API layer"` — Pippy drives to completion
+4. Run `/ship` when ready for PR
+5. Run `/budget` to check token usage
 
-## How Routing Works
+## The Self-Driving Loop
 
-| Intent | Route to | Model |
-|--------|----------|-------|
-| Plan, design, architect | @orchestrator-plan | Kimi K2.7 Code |
-| Implement, build, fix | @orchestrator-build | MiMo V2.5 |
-| Find, search, explore | @explore | (built-in) |
-| Research, docs | @scout | (built-in) |
+```
+UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL → REPORT
+```
+
+Pippy:
+- Parses your objective into acceptance criteria
+- Explores the codebase with jcodemunch
+- Plans with step-by-step verification
+- Executes and verifies each step
+- Retries failures (3 cheap + 1 strong diagnosis)
+- Reports done/blocked/partial
+
+## YOLO Mode
+
+Default permissions (auto-allow):
+- File reads, file edits, read-only bash
+
+Ask first:
+- Destructive bash, git push/commit, deps, external APIs
 
 ## Token Efficiency
 
 - **jcodemunch-mcp** — 95%+ savings on code reading
 - **DCP** — Dynamic context pruning
 - **Compaction** — Auto-compress long conversations
-- **Model routing** — Use cheap models when possible
+- **Cheap model default** — Strong model only for planning/diagnosis
+- **rtk** — Token-efficient bash commands
+- **caveman** — Compressed build output
 
 ## License
 
