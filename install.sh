@@ -21,7 +21,6 @@ declare -a COPY_TARGETS=(
   "config/commands/ship.md:$OPENCODE_CONFIG/commands/ship.md"
   "config/commands/budget.md:$OPENCODE_CONFIG/commands/budget.md"
   "config/skills/pippy/SKILL.md:$OPENCODE_CONFIG/skills/pippy/SKILL.md"
-  "config/skills/verify/SKILL.md:$OPENCODE_CONFIG/skills/verify/SKILL.md"
 )
 
 # v1.0 files to remove
@@ -34,6 +33,7 @@ declare -a OBSOLETE_FILES=(
   "$OPENCODE_CONFIG/commands/cheap.md"
   "$OPENCODE_CONFIG/commands/smart.md"
   "$OPENCODE_CONFIG/skills/orchestrate"
+  "$OPENCODE_CONFIG/skills/verify"
 )
 
 # Tracks files we backed up so we can restore on failure: target:backup_path
@@ -319,12 +319,11 @@ main() {
 
   log "📁 Preparing directories..."
   if [[ $DRY_RUN -eq 1 ]]; then
-    info "Would create: $OPENCODE_CONFIG/{agents,commands,skills/pippy,skills/verify}"
+    info "Would create: $OPENCODE_CONFIG/{agents,commands,skills/pippy}"
   else
     mkdir -p "$OPENCODE_CONFIG/agents" \
              "$OPENCODE_CONFIG/commands" \
-             "$OPENCODE_CONFIG/skills/pippy" \
-             "$OPENCODE_CONFIG/skills/verify"
+             "$OPENCODE_CONFIG/skills/pippy"
   fi
   log ""
 

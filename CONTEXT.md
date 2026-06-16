@@ -12,7 +12,7 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 | **Command** | A slash command registered with OpenCode (e.g., `/goal`, `/ship`, `/budget`). |
 | **Budget guidance** | Non-authoritative advice from `/budget` about model routing and token efficiency. Exact token usage and cost belong to OpenCode's own session usage display. |
 | **Primary coordination boundary** | The rule that Pippy coordinates, plans, and verifies while delegating workspace mutation to `pippy-build`. _Avoid_: primary implementation, tiny-edit exception |
-| **Skill** | A reusable instruction card loaded by agent skills (e.g., `pippy`, `verify`). |
+| **Skill** | A reusable instruction card loaded by agent skills (e.g., `pippy`). |
 | **Self-driving loop** | The fixed workflow `UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL → REPORT`. |
 | **YOLO mode** | Default permission mode that auto-allows file reads, subagent routing, and verification bash while keeping implementation edits inside `pippy-build`. |
 | **Hard limits** | The safety bounds: 50 iterations, 30 minutes wall time, 5 consecutive failures before escalation. |

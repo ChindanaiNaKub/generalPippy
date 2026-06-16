@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `install.sh` now uses `set -euo pipefail`, quotes all variables, validates source files, and avoids `eval` for optional dependency installation.
 - Plugin install errors are now logged to a temp file instead of being swallowed by `2>/dev/null`.
-- `verify/SKILL.md` updated to reference Pippy instead of the obsolete Orchestrator.
+- `verify` skill retired (verification now lives in Pippy's self-driving loop, not a standalone skill).
 
 ### Fixed
 - Backup file no longer silently overwrites previous backups on repeated installs.
@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GeneralPippy v2.0 self-driving `/goal` agent.
 - Agents: `pippy`, `pippy-plan`, `pippy-build`.
 - Commands: `/goal`, `/ship`, `/budget`.
-- Skills: `pippy`, `verify`.
+- Skills: `pippy` (`verify` later retired into Pippy's self-driving loop).
 - `install.sh` for one-command setup.
 
 ### Changed

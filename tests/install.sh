@@ -158,7 +158,7 @@ EOF
 
   for file in opencode.jsonc agents/pippy.md agents/pippy-plan.md agents/pippy-build.md \
               commands/goal.md commands/ship.md commands/budget.md \
-              skills/pippy/SKILL.md skills/verify/SKILL.md; do
+              skills/pippy/SKILL.md; do
     if [[ -f "$config_dir/$file" ]]; then
       pass "created $file"
     else
