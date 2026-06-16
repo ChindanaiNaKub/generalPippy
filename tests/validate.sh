@@ -131,8 +131,8 @@ test_subagent_routing_config() {
     fail "primary pippy must deny edit and use granular bash instead of bash: allow"
   fi
 
-  if grep -q 'Do not implement code in the primary agent' "$pippy" &&
-     grep -q 'If `pippy-build` is unavailable, stop and report `Blocked`' "$pippy"; then
+  if grep -q "Do not implement code in the primary agent" "$pippy" &&
+     grep -q "If \`pippy-build\` is unavailable, stop and report \`Blocked\`" "$pippy"; then
     pass "pippy prompt forbids primary implementation fallback"
   else
     fail "pippy prompt must forbid primary implementation fallback"
@@ -166,9 +166,9 @@ test_subagent_routing_config() {
 
   if grep -q "Primary Pippy must not have auto edit permissions" "$smoke" &&
      grep -q "Primary bash should be granular rather than unrestricted" "$smoke" &&
-     grep -q '`pippy-plan` remains read-only' "$smoke" &&
+     grep -q "\`pippy-plan\` remains read-only" "$smoke" &&
      grep -q "opencode-go/mimo-v2.5" "$smoke" &&
-     grep -q '`pippy-build` remains the implementation subagent' "$smoke"; then
+     grep -q "\`pippy-build\` remains the implementation subagent" "$smoke"; then
     pass "subagent routing smoke test documents the stricter boundary"
   else
     fail "subagent routing smoke test must document the stricter boundary"
