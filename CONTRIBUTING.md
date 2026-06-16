@@ -62,8 +62,14 @@ This runs `./install.sh` and installs GeneralPippy into your `~/.config/opencode
 
 ## Reporting Issues
 
-Use GitHub Issues. Include:
+Use GitHub Issues and follow the reusable template in `.github/ISSUE_TEMPLATE/issue.md`.
+
+The template asks for:
+- Issue type and summary
+- Context and related docs
 - OpenCode version
 - GeneralPippy version (`./install.sh --version`)
-- Steps to reproduce
+- Steps to reproduce, when relevant
 - Expected vs. actual behavior
+- Acceptance criteria
+- Agent readiness details for issues that should be picked up by an agent
