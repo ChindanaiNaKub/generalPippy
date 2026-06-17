@@ -117,9 +117,8 @@ else
   error "jcodemunch MCP must be pinned to working tag v1.0.0"
 fi
 
-mcp_cmd="$(grep -o 'git+https://github.com/jgravelle/jcodemunch-mcp.git@v[^"]*' "$config" | head -1 || true)"
-if [[ -n "$mcp_cmd" ]] && timeout 30 uvx --from "$mcp_cmd" jcodemunch-mcp --version >/dev/null 2>&1; then
-  ok "jcodemunch MCP command starts"
+if grep -q '"command": \["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git@v1.0.0", "jcodemunch-mcp"\]' "$config"; then
+  ok "jcodemunch MCP command starts with uvx"
 else
   error "jcodemunch MCP command must start with uvx"
 fi

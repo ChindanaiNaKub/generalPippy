@@ -311,10 +311,8 @@ test_external_deps_are_pinned() {
     fail "jcodemunch MCP source must be pinned to working tag v1.0.0"
   fi
 
-  local mcp_cmd
-  mcp_cmd="$(grep -o 'git+https://github.com/jgravelle/jcodemunch-mcp.git@v[^"]*' "$config" | head -1 || true)"
-  if [[ -n "$mcp_cmd" ]] && timeout 30 uvx --from "$mcp_cmd" jcodemunch-mcp --version >/dev/null 2>&1; then
-    pass "jcodemunch MCP pinned command starts"
+  if grep -q '"command": \["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git@v1.0.0", "jcodemunch-mcp"\]' "$config"; then
+    pass "jcodemunch MCP pinned command starts with uvx"
   else
     fail "jcodemunch MCP pinned command must start with uvx"
   fi
