@@ -22,6 +22,9 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 - **[jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp)** — AST code indexing (95%+ token savings)
 - **[opencode-dcp](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)** — Dynamic context pruning
 
+### References
+- **opencode-docs** — Local OpenCode reference pack for config, providers, references, permissions, and troubleshooting
+
 ### Optional Tools
 - **[rtk](https://github.com/rtk-ai/rtk)** — Token-efficient bash wrapper
 - **[Caveman mode](https://github.com/juliusbrussee/caveman)** — Terse OpenCode responses and compressed build/verify summaries
@@ -63,6 +66,10 @@ The installer handles:
 3. Run `/goal "add error handling to the API layer"` — Pippy drives to completion
 4. Run `/ship` when ready for PR
 5. Use OpenCode's session usage display for exact tokens/cost, and run `/budget` for routing and efficiency guidance
+
+The installer also registers `@opencode-docs`, a local reference directory that
+Pippy can use when editing OpenCode config, providers, references, permissions,
+or troubleshooting guidance.
 
 ## The Self-Driving Loop
 

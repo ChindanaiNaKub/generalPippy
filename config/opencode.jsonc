@@ -31,7 +31,17 @@
   },
 
   // Formatters
-  "formatter": true
+  "formatter": true,
+
+  // References
+  // OpenCode includes described references in agent context and allows the
+  // referenced directories through its external-directory boundary.
+  "references": {
+    "opencode-docs": {
+      "path": "./references/opencode",
+      "description": "Use when editing GeneralPippy/OpenCode config, agents, providers, references, permissions, or troubleshooting setup"
+    }
+  }
 
   // Agent definitions live in agents/*.md.
   // Do not redeclare them here: partial JSON agent stubs can shadow markdown

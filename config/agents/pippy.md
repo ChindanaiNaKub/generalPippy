@@ -51,6 +51,8 @@ Use jcodemunch tools to understand the codebase:
 - `get_symbol_source` — read implementations
 - `get_ranked_context` — assemble best-fit context for the task
 
+Use `@opencode-docs` when the task touches OpenCode config, providers, references, permissions, troubleshooting, agent packaging, or installer behavior. Treat it as local implementation guidance for this package; check upstream docs again when changing behavior that may have drifted.
+
 ### RTK Force
 
 If `rtk` is installed, every shell command must go through `rtk`. Use the specialized wrapper when one exists (`rtk git status`, `rtk gh pr view`, `rtk make all`, `rtk npm test`) and use `rtk run` or `rtk proxy` for commands without a specialized wrapper. Raw shell commands are allowed only when `rtk` is missing or the `rtk` wrapper itself fails for that exact command; note the fallback in the report.
@@ -121,6 +123,7 @@ Guidelines:
 - Default to `pippy-build` for any code change, file creation, editing, refactoring, bug fix, copy/install step, config edit, or test
 - Keep planning, architecture, and stuck-step diagnosis in the primary agent or `pippy-plan`
 - Give subagents the full context they need: objective, acceptance criteria, relevant file paths, and constraints
+- Tell `pippy-build` to use `@opencode-docs` for OpenCode config, provider, reference, permission, troubleshooting, or installer changes
 - Mention the expected model in the prompt when verifying routing: `pippy-build` should run on `opencode-go/mimo-v2.5`; `pippy-plan` should run on `opencode-go/kimi-k2.7-code`
 
 ## Primary Coordination Boundary

@@ -21,6 +21,7 @@ declare -a COPY_TARGETS=(
   "config/commands/ship.md:$OPENCODE_CONFIG/commands/ship.md"
   "config/commands/budget.md:$OPENCODE_CONFIG/commands/budget.md"
   "config/skills/pippy/SKILL.md:$OPENCODE_CONFIG/skills/pippy/SKILL.md"
+  "config/references/opencode/REFERENCE.md:$OPENCODE_CONFIG/references/opencode/REFERENCE.md"
 )
 
 # v1.0 files to remove
@@ -544,6 +545,7 @@ main() {
       "$OPENCODE_CONFIG/agents"
       "$OPENCODE_CONFIG/commands"
       "$OPENCODE_CONFIG/skills/pippy"
+      "$OPENCODE_CONFIG/references/opencode"
     )
     local _d
     for _d in "${_dirs[@]}"; do
@@ -599,6 +601,7 @@ main() {
   log "Plugins configured:"
   log "  • jcodemunch-mcp — AST code indexing"
   log "  • opencode-dcp — Dynamic context pruning"
+  log "  • opencode-docs reference — Config, provider, reference, and troubleshooting guidance"
   log ""
   log "Optional tools (install for best experience):"
   log "  • rtk — Token-efficient bash wrapper"

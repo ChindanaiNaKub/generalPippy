@@ -23,6 +23,7 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 | **Primary coordination boundary** | The rule that Pippy coordinates, plans, and verifies while delegating workspace mutation to `pippy-build`. _Avoid_: primary implementation, tiny-edit exception |
 | **Pippy loop stack** | The product framing for stacking loops around Pippy while keeping GeneralPippy config-only: the self-driving loop, verification feedback, optional external triggering, and human-reviewed improvement from run evidence. _Avoid_: runtime loop engine, built-in scheduler |
 | **Skill** | A reusable instruction card loaded by agent skills (e.g., `pippy`). |
+| **OpenCode reference pack** | A packaged local `references/opencode` directory registered as `@opencode-docs`, used when Pippy edits OpenCode config, provider, reference, permission, troubleshooting, or installer behavior. _Avoid_: web-only dependency, hidden prompt memory |
 | **Self-driving loop** | The fixed workflow `UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL → REPORT`. |
 | **YOLO mode** | Default permission mode that auto-allows file reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`. Safety comes from scoped agent workflow and reporting, not command approval prompts. |
 | **Hard limits** | The safety bounds: 50 iterations, 30 minutes wall time, 5 consecutive failures before escalation. |

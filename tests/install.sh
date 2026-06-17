@@ -163,7 +163,7 @@ EOF
 
   for file in opencode.jsonc agents/pippy.md agents/pippy-plan.md agents/pippy-build.md \
               commands/goal.md commands/ship.md commands/budget.md \
-              skills/pippy/SKILL.md; do
+              skills/pippy/SKILL.md references/opencode/REFERENCE.md; do
     if [[ -f "$config_dir/$file" ]]; then
       pass "created $file"
     else
@@ -436,6 +436,12 @@ EOF
     pass "agents/pippy.md removed after rollback"
   else
     fail "agents/pippy.md still present after rollback"
+  fi
+
+  if [[ ! -f "$config_dir/references/opencode/REFERENCE.md" ]]; then
+    pass "references/opencode/REFERENCE.md removed after rollback"
+  else
+    fail "references/opencode/REFERENCE.md still present after rollback"
   fi
 
   # The pre-existing directory itself remains (it was not created by install).

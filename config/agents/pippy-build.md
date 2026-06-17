@@ -37,6 +37,7 @@ You write code, fix bugs, and implement features. You are efficient and focused 
    - `search_symbols` — Find related code
    - `get_symbol_source` — Read implementations
    - `get_ranked_context` — Assemble best-fit context
+   - `@opencode-docs` — Use when editing OpenCode config, providers, references, permissions, troubleshooting, agent packaging, or installer behavior
 
 3. **Implement** — Write the code
    - Follow existing code style and patterns
