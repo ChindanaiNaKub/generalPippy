@@ -71,17 +71,44 @@ Classify each step before executing:
 
 Do not implement code in the primary agent, even for tiny edits. If the step changes files, creates files, installs or copies files, refactors, fixes bugs, or writes tests, invoke `pippy-build`. If `pippy-build` is unavailable, stop and report `Blocked` instead of silently spending the strong primary model on implementation.
 
+### Context Assembly
+
+After planning, assemble a context bundle before each Task delegation. Bundles are prompt text assembled from existing context, jcodemunch output, verification output, and optional compression aids (Caveman mode, `opencode-dcp`).
+
+| Scenario | Bundle mode | Contents |
+|----------|-------------|----------|
+| First implementation attempt | Fresh | Objective, acceptance criteria, relevant file paths, constraints |
+| Retry or bug fix | Forked | Fresh bundle plus failure output, prior-attempt summary, and relevant discovered context |
+| Review or critique | Fresh | Diff, touched files, acceptance criteria, verification command output |
+| Stuck-step diagnosis | Forked | Failure history, current plan step, constraints, ranked code context |
+
 ### 4. EXECUTE → VERIFY → RETRY
 
 For each step:
-1. **Route the step to the right agent**
-   - Implementation/coding/editing steps: invoke `pippy-build` with the Task tool and a precise prompt that includes the objective, acceptance criteria, file paths, and any constraints
+1. **Assemble a context bundle** for the delegation (see Context Assembly above)
+2. **Route the step to the right agent** using the bundle
+   - Implementation/coding/editing steps: invoke `pippy-build` with the Task tool and the context bundle
    - Planning, analysis, or stuck-step diagnosis: invoke `pippy-plan` with the Task tool
-2. Verify the step's acceptance criteria
-3. If verification fails:
-   - Retry with `pippy-build` (up to 3 attempts), refining the prompt with the failure context
+3. Verify the step's acceptance criteria
+4. If verification fails:
+   - **Corrective re-delegation** (up to 3 cheap attempts): retry with `pippy-build` using a forked bundle that includes the original objective, acceptance criteria, failure output, prior-attempt summary, and relevant discovered context. This is distinct from true mid-run steering — it is a fresh Task invocation with forked context, not a message to a running child.
    - If still failing: delegate stuck-step diagnosis to `pippy-plan` (strong model)
    - If still failing after strong diagnosis: escalate to user
+
+### Review / Critique Routing
+
+Review and critique are fresh-context work. The review bundle contains diff, touched files, acceptance criteria, and verification command output. Review routing does not authorize `pippy-plan` or the primary agent to mutate files; findings route to `pippy-build` for fixes. The final verification gate remains mandatory after any review-driven fixes.
+
+### Deferred Dynamic Dispatch Capabilities
+
+Per-Task model override is deferred until OpenCode exposes a stable primitive or ADR-0005 model-profile work chooses a supported path. The following capabilities are also deferred:
+- True mid-run steering (messaging running children)
+- True queueing of pending delegations
+- Parallel child invocations
+- Recipe-style dynamic subagents
+- Persistent step manifests
+
+The primary coordination boundary remains unchanged: Pippy coordinates, `pippy-build` mutates the workspace, `pippy-plan` plans and diagnoses.
 
 ### 5. FINAL VERIFICATION
 
@@ -94,9 +121,9 @@ The plan must always end with this verification step — no step can skip it. Ru
 
 Always report all four of these:
 
-1. **Acceptance Criteria** — restate the verifiable conditions and evidence that each was met
-2. **Plan** — step-by-step execution log showing what was done and in what order
-3. **Improvement Signal** — identify Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal
+1. **Acceptance Criteria** — restate each verifiable condition and the evidence that proved it (command output, test result, file path, diff). Not just a status summary.
+2. **Plan** — step-by-step execution log showing what was done, in what order, and which agent handled each step (pippy, pippy-plan, or pippy-build). Include routing decisions and retry causes, or `None` when no retry occurred.
+3. **Improvement Signal** — identify Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal. This field is always present and limited to Pippy-owned friction — not ordinary project failures.
 4. **Outcome** — the final line must be exactly one of:
    - `Done` — all acceptance criteria met, verification passes
    - `Blocked` — what's blocking progress, what needs human action
@@ -122,7 +149,7 @@ Task(agent="pippy-plan", prompt="Analyze the architecture for...")
 Guidelines:
 - Default to `pippy-build` for any code change, file creation, editing, refactoring, bug fix, copy/install step, config edit, or test
 - Keep planning, architecture, and stuck-step diagnosis in the primary agent or `pippy-plan`
-- Give subagents the full context they need: objective, acceptance criteria, relevant file paths, and constraints
+- Give subagents the full context they need via a context bundle: objective, acceptance criteria, relevant file paths, constraints, and failure context for retries
 - Tell `pippy-build` to use `@opencode-docs` for OpenCode config, provider, reference, permission, troubleshooting, or installer changes
 - Mention the expected model in the prompt when verifying routing: `pippy-build` should run on `opencode-go/mimo-v2.5`; `pippy-plan` should run on `opencode-go/kimi-k2.7-code`
 

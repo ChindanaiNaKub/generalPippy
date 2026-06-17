@@ -91,8 +91,8 @@ GeneralPippy stays config-only, but frames Pippy as a stack of useful loops:
 
 - **Self-driving loop** — `/goal` plans, executes, verifies, retries, and reports.
 - **Verification feedback** — acceptance criteria, verification evidence, and retry context keep each run grounded.
-- **External trigger recipes** — future docs can show cron, GitHub Actions, or shell workflows invoking `/goal` from outside Pippy.
-- **Pippy improvement loop** — goal run reports expose human-reviewed improvement signals for better prompts, routing, and verification habits.
+- **External trigger recipes** — cron, CI, or shell workflows invoking `/goal` from outside Pippy. See [external-trigger-recipe.md](docs/agents/external-trigger-recipe.md).
+- **Pippy improvement loop** — goal run reports expose human-reviewed improvement signals for better prompts, routing, and verification habits. See [pippy-improvement-loop.md](docs/agents/pippy-improvement-loop.md).
 
 ## YOLO Mode
 

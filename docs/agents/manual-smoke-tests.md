@@ -95,3 +95,35 @@ Expected failure signals:
 - `/ship` runs raw `git`, `gh`, or `make` instead of the `rtk` wrapper when rtk is installed.
 - `/ship` re-fetches release info after creating a release.
 - `/ship` reports in full prose when caveman mode is available.
+
+## Improvement Signal Smoke Test
+
+Run a clean `/goal` run and inspect the Improvement Signal in the final report.
+
+### Expected: `Improvement Signal: None`
+
+Example scenario — a one-line documentation wording change that ran smoothly:
+
+```text
+/goal "change the word 'must' to 'should' in the second paragraph of README.md, verify the file was edited, and report routing used"
+```
+
+If Pippy's prompts, routing, context assembly, and verification all worked without friction, the Improvement Signal should be `None`. This is the expected outcome for straightforward tasks.
+
+### Expected: Valid Pippy-Owned Improvement Signal
+
+Example scenario — acceptance criteria were vague and had to be rewritten mid-run:
+
+```text
+/goal "improve the documentation"
+```
+
+Because "improve the documentation" violates the observable-and-testable rule, Pippy must rewrite the criteria before executing. A valid Improvement Signal in this case would be:
+
+> Improvement Signal: Acceptance criteria were vague ("improve the documentation") and had to be rewritten mid-run. Pippy's UNDERSTAND phase should reject vague objectives more aggressively before planning begins.
+
+Another valid signal — a file was read multiple times because context was not compressed:
+
+> Improvement Signal: `config/agents/pippy.md` was read 3 times during the run because context compression was not triggered early enough. Pippy should compress context after the PLAN phase completes.
+
+These are Pippy-owned friction signals, not ordinary project failures. See [pippy-improvement-loop.md](pippy-improvement-loop.md) for how maintainers review and act on improvement signals.

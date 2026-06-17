@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `docs/agents/pippy-improvement-loop.md` — human-reviewed improvement loop documentation.
+- `docs/agents/external-trigger-recipe.md` — recurring `/goal` recipe patterns.
+- Manual smoke tests for Improvement Signal (None and Pippy-owned signal examples).
+- `tests/validate.sh` checks for issues #41, #42, #43, #44, #46, #47, #48, #49.
+
+### Changed
+- Prompt/skill instructions: Context Assembly section (fresh/forked bundles), corrective re-delegation vs mid-run steering, review/critique routing as fresh-context work, deferred dynamic dispatch.
+- `/goal` report evidence: per-acceptance-criterion evidence, routing decisions, retry causes/None, always-present Improvement Signal limited to Pippy-owned friction.
+
 ## [2.4.0] - 2026-06-17
 
 ### Added

@@ -15,10 +15,11 @@ Pippy will:
 1. Parse the objective into acceptance criteria (each must be observable and testable — e.g., "a test passes", "a file exists", "a command produces expected output"; vague criteria like "make it better" are banned)
 2. Explore the codebase with jcodemunch
 3. Plan step-by-step, in execution order, with a single independently verifiable deliverable per step
-4. Execute and verify each step
-5. Retry failures (3 cheap + 1 strong diagnosis)
-6. Run the final no-mistakes gate
-7. Report outcome as exactly one of `Done`, `Blocked`, or `Partial`
+4. Assemble a context bundle (fresh or forked) for each delegation
+5. Execute and verify each step
+6. Corrective re-delegate failures (3 cheap + 1 strong diagnosis)
+7. Run the final no-mistakes gate
+8. Report outcome as exactly one of `Done`, `Blocked`, or `Partial`
 
 ### Acceptance Criteria Rules
 
@@ -37,8 +38,8 @@ The plan must list steps **in execution order** with dependencies respected. Eac
 
 Every `/goal` run must report four things at the end:
 
-1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against evidence
-2. **Plan** — the step-by-step execution log showing what was done and in what order
+1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against evidence; each criterion must include the evidence (command output, test result, file path, diff)
+2. **Plan** — the step-by-step execution log showing what was done and in what order; include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened
 3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal
 4. **Outcome** — one of:
    - `Done` — all acceptance criteria met, verification passes
