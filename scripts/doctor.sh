@@ -6,7 +6,6 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 INSTALLED_CONFIG="${OPENCODE_CONFIG:-}"
 SOURCE_CONFIG="$REPO_ROOT/config"
 
