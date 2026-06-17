@@ -20,6 +20,7 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 - `/goal "<objective>"` — Start the self-driving loop
 - `/ship` — Review, verify, and prepare for PR
 - `/budget` — Audit budget health and routing behavior
+- `/advice <adapter>` — Request read-only advice from an advisor adapter
 
 ### Plugins
 - **[jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp)** — AST code indexing (95%+ token savings)
@@ -33,15 +34,36 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 - **[Caveman mode](https://github.com/juliusbrussee/caveman)** — Terse OpenCode responses and compressed build/verify summaries
 - **[ponytail](https://github.com/DietrichGebert/ponytail)** — Planning constraint (reuse stdlib)
 
-## Models (opencode-go)
+## Model Profiles
 
-GeneralPippy routes work by role. Check [OpenCode Go](https://opencode.ai/go) or OpenCode's session usage display for current pricing and actual spend.
+GeneralPippy routes work by role. The installer offers model profiles so you can choose your preferred models or customize them.
+
+### Balanced (default)
+
+Current tested defaults. Recommended for most users.
 
 | Role | Model |
 |------|-------|
 | Planning | `opencode-go/kimi-k2.7-code` |
 | Implementation | `opencode-go/mimo-v2.5` |
 | System tasks | `opencode-go/deepseek-v4-flash` |
+
+### Custom
+
+Choose your own models during installation. The installer prompts for:
+- Planning model
+- Implementation model
+- System-tasks model
+
+Check [OpenCode Go](https://opencode.ai/go) or OpenCode's session usage display for current pricing and actual spend.
+
+The installer records your selected profile in `~/.config/opencode/generalpippy/profile.json`.
+
+## Advisor Adapters
+
+GeneralPippy can request read-only advice from external AI coding tools (claude-code, aider, codex, gemini) through advisor adapters. These are detected during installation but disabled by default to avoid surprising cost or privacy behavior.
+
+To enable an adapter, edit `~/.config/opencode/generalpippy/advisors.json` and set `"enabled": true` for the desired adapter. Use `/advice <adapter-name>` to request advice from an enabled adapter.
 
 ## Installation
 

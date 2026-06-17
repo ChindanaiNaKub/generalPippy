@@ -72,6 +72,10 @@ Expected behavior:
 - `/budget` reports that implementation was delegated to `pippy-build`.
 - `/budget` points to OpenCode's built-in usage/cost display for exact spend.
 - `/budget` does not estimate exact tokens, model usage, or cost from conversation volume.
+- `/budget` distinguishes ponytail constraint (stdlib reuse behavior) from ponytail plugin (optional OpenCode plugin).
+- `/budget` uses optional-tool status language: "not applicable" when tool was not needed, "not visibly exercised" when evidence is missing, "missed opportunity" when tool should have been used.
+- `/budget` includes an explicit compression recommendation when a finished work block is obvious.
+- `/budget` distinguishes Caveman mode (OpenCode command/config) from Caveman CLI (shell executable), and does not report Caveman mode as missing based on `command -v caveman`.
 
 ## 3. Failure Signals
 

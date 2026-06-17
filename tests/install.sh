@@ -71,7 +71,7 @@ test_dry_run_does_not_modify() {
 
   # Mock core dependencies so this test only checks dry-run file behavior.
   # CI runners do not necessarily have opencode installed.
-  for cmd in opencode uv npm; do
+  for cmd in opencode uv npm codex aider; do
     cat > "$tmp_bin/$cmd" <<EOF
 #!/bin/bash
 echo "fake $cmd"
@@ -148,7 +148,7 @@ test_install_creates_files() {
   local config_dir="$tmp_home/.config/opencode"
 
   # Mock all core deps so install can proceed without real opencode/uv/npm.
-  for cmd in opencode uv npm; do
+  for cmd in opencode uv npm codex aider; do
     cat > "$tmp_bin/$cmd" <<EOF
 #!/bin/bash
 echo "fake $cmd"
@@ -162,7 +162,7 @@ EOF
   HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
 
   for file in opencode.jsonc agents/pippy.md agents/pippy-plan.md agents/pippy-build.md \
-              commands/goal.md commands/ship.md commands/budget.md \
+              commands/goal.md commands/ship.md commands/budget.md commands/advice.md \
               skills/pippy/SKILL.md references/opencode/REFERENCE.md; do
     if [[ -f "$config_dir/$file" ]]; then
       pass "created $file"
@@ -454,6 +454,77 @@ EOF
   rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
 }
 
+test_install_records_profile_and_advisors() {
+  run_test "install writes profile.json and advisors.json metadata"
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+  local config_dir="$tmp_home/.config/opencode"
+
+  for cmd in opencode uv npm codex aider; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
+
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
+
+  # Check profile.json
+  local profile_file="$config_dir/generalpippy/profile.json"
+  if [[ -f "$profile_file" ]]; then
+    pass "profile.json created"
+    if grep -q '"profile"' "$profile_file" && grep -q '"models"' "$profile_file"; then
+      pass "profile.json has profile and models keys"
+    else
+      fail "profile.json missing profile or models keys"
+    fi
+    if grep -q '"opencode-go/kimi-k2.7-code"' "$profile_file" && \
+       grep -q '"opencode-go/mimo-v2.5"' "$profile_file" && \
+       grep -q '"opencode-go/deepseek-v4-flash"' "$profile_file"; then
+      pass "profile.json contains default model values"
+    else
+      fail "profile.json missing default model values"
+    fi
+  else
+    fail "profile.json not created"
+  fi
+
+  # Check advisors.json
+  local advisors_file="$config_dir/generalpippy/advisors.json"
+  if [[ -f "$advisors_file" ]]; then
+    pass "advisors.json created"
+    if grep -q '"adapters"' "$advisors_file"; then
+      pass "advisors.json has adapters key"
+    else
+      fail "advisors.json missing adapters key"
+    fi
+    if grep -q '"codex"' "$advisors_file" && grep -q '"aider"' "$advisors_file"; then
+      pass "advisors.json records detected advisor CLIs"
+    else
+      fail "advisors.json missing detected advisor CLIs"
+    fi
+    if grep -q '"enabled": false' "$advisors_file"; then
+      pass "advisors are disabled by default"
+    else
+      fail "advisors should be disabled by default"
+    fi
+    if grep -q -- '--full-auto' "$advisors_file"; then
+      fail "advisors.json should not suggest auto-execution flags"
+    else
+      pass "advisors.json does not suggest auto-execution flags"
+    fi
+  else
+    fail "advisors.json not created"
+  fi
+
+  rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
+}
+
 main() {
   echo "Running GeneralPippy installer tests..."
   echo "Installer: $INSTALLER"
@@ -470,6 +541,7 @@ main() {
   test_install_npm_optional
   test_install_preserves_existing_plugins
   test_install_rollbacks_on_failure
+  test_install_records_profile_and_advisors
 
   echo ""
   echo "========================="
