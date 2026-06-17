@@ -280,30 +280,30 @@ test_pippy_build_bash_permissions() {
 }
 
 test_goal_output_format() {
-  run_test "/goal output includes acceptance criteria, plan, and outcome format"
+  run_test "/goal output includes acceptance criteria, plan, improvement signal, and outcome format"
   local goal="$REPO_ROOT/config/commands/goal.md"
   local pippy="$REPO_ROOT/config/agents/pippy.md"
   local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
 
-  # goal.md must have the three output elements
-  if grep -q "Acceptance Criteria" "$goal" && grep -q "Plan" "$goal" && grep -q "Outcome" "$goal"; then
-    pass "goal.md includes acceptance criteria, plan, and outcome"
+  # goal.md must have the four output elements
+  if grep -q "Acceptance Criteria" "$goal" && grep -q "Plan" "$goal" && grep -q "Improvement Signal" "$goal" && grep -q "Outcome" "$goal"; then
+    pass "goal.md includes acceptance criteria, plan, improvement signal, and outcome"
   else
-    fail "goal.md must include acceptance criteria, plan, and outcome"
+    fail "goal.md must include acceptance criteria, plan, improvement signal, and outcome"
   fi
 
-  # pippy.md must have the three REPORT elements
-  if grep -q "Acceptance Criteria" "$pippy" && grep -q "Plan" "$pippy" && grep -q "Outcome" "$pippy"; then
-    pass "pippy.md REPORT includes acceptance criteria, plan, and outcome"
+  # pippy.md must have the four REPORT elements
+  if grep -q "Acceptance Criteria" "$pippy" && grep -q "Plan" "$pippy" && grep -q "Improvement Signal" "$pippy" && grep -q "Outcome" "$pippy"; then
+    pass "pippy.md REPORT includes acceptance criteria, plan, improvement signal, and outcome"
   else
-    fail "pippy.md REPORT must include acceptance criteria, plan, and outcome"
+    fail "pippy.md REPORT must include acceptance criteria, plan, improvement signal, and outcome"
   fi
 
-  # SKILL.md must have the three output elements
-  if grep -q "Acceptance Criteria" "$skill" && grep -q "Plan" "$skill" && grep -q "Outcome" "$skill"; then
-    pass "SKILL.md includes acceptance criteria, plan, and outcome"
+  # SKILL.md must have the four output elements
+  if grep -q "Acceptance Criteria" "$skill" && grep -q "Plan" "$skill" && grep -q "Improvement Signal" "$skill" && grep -q "Outcome" "$skill"; then
+    pass "SKILL.md includes acceptance criteria, plan, improvement signal, and outcome"
   else
-    fail "SKILL.md must include acceptance criteria, plan, and outcome"
+    fail "SKILL.md must include acceptance criteria, plan, improvement signal, and outcome"
   fi
 }
 
