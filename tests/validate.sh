@@ -123,15 +123,10 @@ test_subagent_routing_config() {
   fi
 
   if grep -q "edit: deny" "$pippy" &&
-     grep -q "bash:" "$pippy" &&
-     grep -q '"\*": ask' "$pippy" &&
-     grep -q '"find\*": allow' "$pippy" &&
-     grep -q '"cat\*": allow' "$pippy" &&
-     grep -q '"sed -n\*": allow' "$pippy" &&
-     ! grep -q "bash: allow" "$pippy"; then
-    pass "primary pippy cannot auto-edit and uses granular read-only bash permissions"
+     grep -q "^  bash: allow$" "$pippy"; then
+    pass "primary pippy cannot auto-edit and uses unrestricted YOLO bash"
   else
-    fail "primary pippy must deny edit and allow granular read-only bash instead of bash: allow"
+    fail "primary pippy must deny edit and allow unrestricted YOLO bash"
   fi
 
   if grep -q "Do not implement code in the primary agent" "$pippy" &&
@@ -168,20 +163,20 @@ test_subagent_routing_config() {
   fi
 
   if grep -q "Primary Pippy must not have auto edit permissions" "$smoke" &&
-     grep -q "Primary bash should be granular rather than unrestricted" "$smoke" &&
-     grep -q "common read-only inspection commands are auto-allowed" "$smoke" &&
+     grep -q "Primary bash is unrestricted for YOLO mode" "$smoke" &&
+     grep -q "without approval prompts" "$smoke" &&
      grep -q "\`pippy-plan\` remains read-only" "$smoke" &&
      grep -q "opencode-go/mimo-v2.5" "$smoke" &&
      grep -q "\`pippy-build\` remains the implementation subagent" "$smoke"; then
-    pass "subagent routing smoke test documents the stricter boundary"
+    pass "subagent routing smoke test documents YOLO bash plus routing boundary"
   else
-    fail "subagent routing smoke test must document the stricter boundary"
+    fail "subagent routing smoke test must document YOLO bash plus routing boundary"
   fi
 
   if [[ -f "$manual_smoke" ]] &&
      grep -q "opencode debug config" "$manual_smoke" &&
      grep -q "pippy.permission.edit" "$manual_smoke" &&
-     grep -q "Read-only exploration commands" "$manual_smoke" &&
+     grep -q "pippy.permission.bash" "$manual_smoke" &&
      grep -q "pippy-build.model" "$manual_smoke" &&
      grep -q '/goal "make a harmless one-line documentation wording improvement' "$manual_smoke" &&
      grep -q "/budget" "$manual_smoke"; then
@@ -254,21 +249,19 @@ test_external_deps_are_pinned() {
 }
 
 test_pippy_build_bash_permissions() {
-  run_test "pippy-build uses granular bash permissions with gated-action model"
+  run_test "pippy-build uses unrestricted YOLO bash permissions"
   local file="$REPO_ROOT/config/agents/pippy-build.md"
 
-  # Must NOT have unrestricted bash: allow
   if grep -q '^  bash: allow$' "$file"; then
-    fail "pippy-build must not have unrestricted bash: allow"
+    pass "pippy-build has unrestricted bash: allow"
   else
-    pass "pippy-build has no unrestricted bash: allow"
+    fail "pippy-build must have unrestricted bash: allow"
   fi
 
-  # Must have gated-action documentation
-  if grep -q "Gated Actions" "$file" && grep -q "Destructive actions" "$file"; then
-    pass "pippy-build documents gated-action model"
+  if grep -q "YOLO Bash" "$file" && grep -q "without approval prompts" "$file"; then
+    pass "pippy-build documents YOLO bash model"
   else
-    fail "pippy-build must document gated-action model"
+    fail "pippy-build must document YOLO bash model"
   fi
 
   # Must retain edit: allow
@@ -356,11 +349,14 @@ test_ship_guidance() {
   run_test "/ship includes rtk routing, caveman reports, compress, and release confirmation"
   local file="$REPO_ROOT/config/commands/ship.md"
 
-  # #18: rtk routing
-  if grep -q "rtk" "$file" && grep -q "read-only git" "$file"; then
-    pass "/ship routes git operations through rtk"
+  # #18: rtk force routing
+  if grep -q "RTK Force" "$file" &&
+     grep -q "MUST route every shell command through \`rtk\`" "$file" &&
+     grep -q "rtk gh" "$file" &&
+     grep -q "rtk make all" "$file"; then
+    pass "/ship forces shell/git/gh/make operations through rtk"
   else
-    fail "/ship must route git operations through rtk when installed"
+    fail "/ship must force shell/git/gh/make operations through rtk when installed"
   fi
 
   # #17: caveman-full style
@@ -518,10 +514,10 @@ test_ship_budget_efficiency_smoke_test() {
   fi
 
   # Check for the four required /ship checks
-  if grep -q "rtk git status\|rtk for git" "$file"; then
-    pass "/ship smoke test checks rtk for git/status"
+  if grep -q "RTK Force\|rtk git status\|rtk gh\|rtk make all" "$file"; then
+    pass "/ship smoke test checks RTK Force for git/gh/make"
   else
-    fail "/ship smoke test must check rtk for git/status"
+    fail "/ship smoke test must check RTK Force for git/gh/make"
   fi
 
   if grep -qi "compress.*context\|context.*compress\|compression before" "$file"; then

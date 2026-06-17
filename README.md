@@ -83,11 +83,11 @@ Pippy:
 Default permissions (auto-allow):
 - File reads
 - Delegation to `pippy-build` and `pippy-plan`
-- Read-only exploration bash
-- Batched verification bash
+- Unrestricted bash for `pippy` and `pippy-build`
+- Git, gh, make, dependency, and repo-local commands without approval prompts
+- Implementation edits inside `pippy-build`
 
-Ask first:
-- Destructive bash, git push/commit, deps, external APIs, unusual primary-agent bash
+YOLO mode keeps safety in the workflow instead of permission prompts: Pippy stays scoped to the objective, reports risky commands, and does not auto-push or auto-PR unless explicitly requested.
 
 Pippy's primary agent coordinates and verifies. Workspace edits, file copies, config changes, bug fixes, refactors, and tests route to `pippy-build` on `opencode-go/mimo-v2.5`.
 
@@ -97,7 +97,7 @@ Pippy's primary agent coordinates and verifies. Workspace edits, file copies, co
 - **DCP** — Dynamic context pruning
 - **Compaction** — Auto-compress long conversations
 - **Cheap model default** — Strong model only for planning/diagnosis
-- **rtk** — Token-efficient bash commands
+- **rtk** — Token-efficient bash commands; when installed, Pippy forces shell commands through `rtk`
 - **Caveman mode** — Terse OpenCode responses and compressed build/verify summaries
 
 ## Budget Guidance

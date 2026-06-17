@@ -68,8 +68,8 @@ Verification is the **FINAL step** of `/goal`, not a standalone command. The pla
 
 ## YOLO Mode (Default)
 
-Auto-allow: file reads, subagent routing, read-only exploration bash, and batched verification bash.
-Ask first: destructive bash, git push/commit, deps, external APIs, out-of-workspace edits, and unusual primary-agent bash.
+Auto-allow: file reads, subagent routing, unrestricted bash in `pippy` and `pippy-build`, and implementation edits inside `pippy-build`.
+Do not ask before git, gh, make, dependency, or repo-local commands. Keep safety in the workflow: inspect intent, stay scoped to the objective, report risky commands, and never auto-push or auto-PR unless explicitly requested.
 
 ## Hard Limits
 
@@ -78,7 +78,7 @@ Ask first: destructive bash, git push/commit, deps, external APIs, out-of-worksp
 ## Token Efficiency
 
 - jcodemunch-mcp for all code navigation
-- rtk for bash commands when installed
+- force all bash commands through rtk when installed
 - Caveman mode `full` compression for status, build, and verification output when OpenCode caveman config is available
 - batch file reads and avoid re-reading the same file
 - compress earlier to keep context pressure low

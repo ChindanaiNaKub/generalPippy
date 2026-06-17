@@ -8,16 +8,16 @@ agent: pippy
 An alias for `/goal "review, verify, and prepare this branch for PR"`.
 
 Pippy will:
-1. Review all changes (git diff)
+1. Review all changes (`rtk git diff` when `rtk` is installed)
 2. Run the full verification gate (tests, lint, typecheck)
 3. Check for security issues
 4. Check docs for public API changes
 5. Prepare a commit message and PR description
 6. Report readiness — no auto-push
 
-### Git Operations via rtk
+### RTK Force
 
-Prefer `rtk` for read-only git/status/diff/list operations when `rtk` is installed (detect with `command -v rtk`). Fall back to plain bash only if `rtk` is missing.
+When `rtk` is installed, `/ship` MUST route every shell command through `rtk`. Use `rtk git status`, `rtk git log`, `rtk git diff`, `rtk gh ...`, and `rtk make all` instead of raw `git`, `gh`, or `make`. For commands without a specialized wrapper, use `rtk run` or `rtk proxy`. Fall back to raw shell only if `rtk` is missing or the wrapper fails for that exact command, and mention the fallback in the report.
 
 ### Early Context Compression
 

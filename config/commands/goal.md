@@ -47,8 +47,8 @@ Every `/goal` run must report three things at the end:
 ### Verification
 
 Verification is the **FINAL step** of `/goal`, not a standalone command. The plan must always end with this verification gate before reporting outcome. After all steps complete:
-1. Cheap self-review of the full diff (use `rtk git diff`)
-2. Run the combined verification command (`make all` when available, otherwise `rtk test` / `rtk err` equivalents)
+1. Cheap self-review of the full diff (use `rtk git diff` when `rtk` is installed)
+2. Run the combined verification command (`rtk make all` when `rtk` and `make all` are available, otherwise `rtk test` / `rtk err` equivalents)
 3. Check docs for public API changes
 
 ### Examples
@@ -61,7 +61,7 @@ Verification is the **FINAL step** of `/goal`, not a standalone command. The pla
 
 ### Notes
 
-- YOLO mode is on by default (auto-allow reads, subagent routing, exploration bash, and verification bash; implementation edits route to `pippy-build`).
+- YOLO mode is on by default (auto-allow reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`; command output should go through `rtk` when installed).
 - Pippy stops only when acceptance criteria are met by evidence.
 - Use `/ship` as a shortcut for PR prep.
 - Use OpenCode's session usage display for exact tokens/cost, and `/budget` for routing and efficiency guidance.

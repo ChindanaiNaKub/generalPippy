@@ -35,12 +35,12 @@ Expected behavior:
 
 - `default_agent` is `pippy`.
 - `pippy.permission.edit` is `deny`.
-- `pippy.permission.bash["*"]` is `ask`.
-- Read-only exploration commands such as `find`, `cat`, `sed -n`, `head`, `tail`, `wc`, `nl`, `rg`, `grep`, `tree`, `jq`, `file`, `stat`, and `du -sh` are allowed.
+- `pippy.permission.bash` is `allow`.
 - `pippy.permission.task["pippy-build"]` is `allow`.
 - `pippy.permission.task["pippy-plan"]` is `allow`.
 - `pippy-build.model` is `opencode-go/mimo-v2.5`.
 - `pippy-build.permission.edit` is `allow`.
+- `pippy-build.permission.bash` is `allow`.
 - `pippy-build.permission.task` is `deny`.
 - `pippy-plan.permission.edit` is `deny`.
 - `pippy-plan.permission.task` is `deny`.
@@ -76,8 +76,7 @@ Expected behavior:
 ## 3. Failure Signals
 
 - The primary `pippy` session edits files directly.
-- The primary `pippy` session has unrestricted `bash: allow`.
-- Read-only inspection commands such as `find`, `cat`, or `sed -n` require approval.
+- The primary `pippy` session or `pippy-build` asks before running git, gh, make, dependency, or repo-local commands in YOLO mode.
 - No `pippy-build` child session appears for the documentation edit.
 - `pippy-build` runs on a strong model instead of `opencode-go/mimo-v2.5`.
 - `pippy-plan` edits files or invokes implementation work.
@@ -87,12 +86,12 @@ Expected behavior:
 
 Run `/ship` in OpenCode and verify these budget-efficiency behaviors:
 
-- **rtk for git/status**: `/ship` uses `rtk git status`, `rtk git log`, and `rtk git diff` instead of raw git commands for read-only operations.
+- **RTK Force**: `/ship` uses `rtk git status`, `rtk git log`, `rtk git diff`, `rtk gh ...`, and `rtk make all` instead of raw git, gh, or make when `rtk` is installed.
 - **Context compression before final gate**: `/ship` compresses context (via caveman mode or explicit compress) before the final verification gate to reduce token usage.
 - **Caveman-full reporting**: When caveman mode is available, `/ship` reports in caveman-full compression style for status, build, and verification output.
 - **No re-fetch of releases**: After `gh release create` succeeds, `/ship` trusts the exit status and does not re-fetch the release metadata to confirm it exists.
 
 Expected failure signals:
-- `/ship` runs raw `git status` instead of `rtk git status` when rtk is installed.
+- `/ship` runs raw `git`, `gh`, or `make` instead of the `rtk` wrapper when rtk is installed.
 - `/ship` re-fetches release info after creating a release.
 - `/ship` reports in full prose when caveman mode is available.

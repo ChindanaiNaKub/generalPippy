@@ -46,11 +46,11 @@ pippy="$REPO_ROOT/config/agents/pippy.md"
 pippy_plan="$REPO_ROOT/config/agents/pippy-plan.md"
 pippy_build="$REPO_ROOT/config/agents/pippy-build.md"
 
-# Primary pippy: edit deny, bash granular (no unrestricted bash: allow)
-if grep -q 'edit: deny' "$pippy" && ! grep -q '^  bash: allow$' "$pippy"; then
-  ok "pippy: edit deny, no unrestricted bash"
+# Primary pippy: edit deny, bash unrestricted for YOLO mode
+if grep -q 'edit: deny' "$pippy" && grep -q '^  bash: allow$' "$pippy"; then
+  ok "pippy: edit deny, unrestricted bash for YOLO mode"
 else
-  error "pippy must deny edit and avoid unrestricted bash: allow"
+  error "pippy must deny edit and allow unrestricted bash for YOLO mode"
 fi
 
 # pippy: task routing
@@ -74,18 +74,18 @@ else
   error "pippy-build must allow edit, deny task, use mimo-v2.5"
 fi
 
-# pippy-build: bash must be granular (no unrestricted bash: allow)
+# pippy-build: bash must be unrestricted for YOLO mode
 if grep -q '^  bash: allow$' "$pippy_build"; then
-  error "pippy-build must not have unrestricted bash: allow (use gated-action model)"
+  ok "pippy-build: unrestricted bash for YOLO mode"
 else
-  ok "pippy-build: bash uses granular permissions"
+  error "pippy-build must allow unrestricted bash for YOLO mode"
 fi
 
-# pippy-build: gated-action language present
-if grep -q "Gated Actions" "$pippy_build" && grep -q "Destructive actions" "$pippy_build"; then
-  ok "pippy-build: gated-action documentation present"
+# pippy-build: YOLO language present
+if grep -q "YOLO Bash" "$pippy_build" && grep -q "without approval prompts" "$pippy_build"; then
+  ok "pippy-build: YOLO bash documentation present"
 else
-  error "pippy-build must document gated-action model (Destructive actions)"
+  error "pippy-build must document YOLO bash model"
 fi
 
 # --- 3. Stale v1.0 references ---
