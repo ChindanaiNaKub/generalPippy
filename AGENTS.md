@@ -12,7 +12,7 @@ Five canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-f
 
 Single-context — `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
 
-### GeneralPippy v2.3
+### GeneralPippy v2.4
 
 Self-driving goal agent. Primary interface: `/goal "<verifiable objective>"`.
 Agent: `pippy` (default), subagents: `pippy-plan`, `pippy-build`.
