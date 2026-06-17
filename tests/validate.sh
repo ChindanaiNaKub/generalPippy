@@ -625,6 +625,217 @@ test_adr_bump_process() {
   fi
 }
 
+test_context_assembly() {
+  run_test "#41 context assembly is documented in pippy.md and SKILL.md"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+
+  for file in "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+
+    if grep -q "Context Assembly" "$file"; then
+      pass "$label contains 'Context Assembly'"
+    else
+      fail "$label must contain 'Context Assembly'"
+    fi
+
+    if grep -q "fresh bundle\|Fresh" "$file" && grep -q "forked bundle\|Forked" "$file"; then
+      pass "$label describes fresh and forked bundles"
+    else
+      fail "$label must describe fresh and forked bundles"
+    fi
+
+    # First attempt bundle contents
+    if grep -qi "first.*attempt\|First implementation attempt" "$file" && grep -q "acceptance criteria" "$file" && grep -q "file paths\|file path" "$file"; then
+      pass "$label first-attempt bundle includes acceptance criteria and file paths"
+    else
+      fail "$label first-attempt bundle must include acceptance criteria and file paths"
+    fi
+
+    # Retry bundle contents
+    if grep -qi "retry\|bug fix\|forked" "$file" && grep -q "failure output\|prior-attempt" "$file"; then
+      pass "$label retry bundle includes failure output and prior-attempt summary"
+    else
+      fail "$label retry bundle must include failure output and prior-attempt summary"
+    fi
+
+    # Review bundle contents
+    if grep -qi "review\|critique" "$file" && grep -q "diff" "$file" && grep -q "touched files" "$file" && grep -q "verification command output\|verification.*output" "$file"; then
+      pass "$label review bundle includes diff, touched files, verification output"
+    else
+      fail "$label review bundle must include diff, touched files, verification command output"
+    fi
+
+    # Diagnosis bundle contents
+    if grep -qi "diagnosis\|stuck-step" "$file" && grep -qi "failure history" "$file" && grep -qi "ranked code context\|ranked.*context" "$file"; then
+      pass "$label diagnosis bundle includes failure history and ranked code context"
+    else
+      fail "$label diagnosis bundle must include failure history and ranked code context"
+    fi
+  done
+}
+
+test_corrective_redelegation() {
+  run_test "#43 corrective re-delegation is documented and distinguished from mid-run steering"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+
+  for file in "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+
+    if grep -qi "corrective re-delegation\|corrective redelegation" "$file"; then
+      pass "$label mentions corrective re-delegation"
+    else
+      fail "$label must mention corrective re-delegation"
+    fi
+
+    if grep -qi "mid-run steering\|mid-run steer\|true mid-run steering" "$file"; then
+      pass "$label distinguishes corrective re-delegation from mid-run steering"
+    else
+      fail "$label must distinguish corrective re-delegation from mid-run steering"
+    fi
+  done
+}
+
+test_review_routing() {
+  run_test "#44 review routing classified as fresh-context work"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local found=false
+
+  for file in "$pippy" "$skill"; do
+    if grep -qi "review.*fresh-context\|review.*fresh.context\|Review.*fresh-context\|review.*fresh context" "$file" &&
+       grep -q "diff" "$file" &&
+       grep -q "touched files" "$file" &&
+       grep -q "acceptance criteria" "$file" &&
+       grep -q "verification command output\|verification.*output" "$file"; then
+      found=true
+      pass "$(basename "$file") classifies review as fresh-context with correct bundle contents"
+    fi
+  done
+
+  if [[ "$found" == false ]]; then
+    fail "pippy.md or SKILL.md must classify review as fresh-context work with diff, touched files, acceptance criteria, verification command output"
+  fi
+}
+
+test_deferred_dispatch() {
+  run_test "#42 deferred dynamic dispatch capabilities documented"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local found=false
+
+  for file in "$pippy" "$skill"; do
+    if grep -qi "per-Task model override is deferred\|per-task model override is deferred" "$file"; then
+      found=true
+      pass "$(basename "$file") states per-Task model override is deferred"
+    fi
+  done
+
+  if [[ "$found" == false ]]; then
+    fail "pippy.md or SKILL.md must state per-Task model override is deferred"
+  fi
+
+  # Check deferred capabilities listed
+  local combined
+  combined="$(cat "$pippy" "$skill")"
+  for cap in "mid-run steering\|mid-run steer" "queueing\|queue" "parallel children" "recipe-style dynamic subagent\|recipe-style" "persistent step manifest"; do
+    if echo "$combined" | grep -qi "$cap"; then
+      pass "deferred capability found: $cap"
+    else
+      fail "deferred capability missing: $cap"
+    fi
+  done
+}
+
+test_improvement_loop_doc() {
+  run_test "#48 pippy-improvement-loop.md exists with required content"
+  local doc="$REPO_ROOT/docs/agents/pippy-improvement-loop.md"
+
+  if [[ ! -f "$doc" ]]; then
+    fail "docs/agents/pippy-improvement-loop.md does not exist"
+    return
+  fi
+  pass "pippy-improvement-loop.md exists"
+
+  if grep -qi "human-reviewed\|human.reviewed" "$doc"; then
+    pass "doc mentions human-reviewed"
+  else
+    fail "doc must mention human-reviewed"
+  fi
+
+  if grep -qi "does.*not.*automatically modify Pippy\|does not automatically modify" "$doc"; then
+    pass "doc states it does not automatically modify Pippy"
+  else
+    fail "doc must state it does not automatically modify Pippy"
+  fi
+
+  if grep -qi "Pippy-owned friction\|pippy-owned friction" "$doc" && grep -qi "ordinary project failure\|ordinary.*failure" "$doc"; then
+    pass "doc distinguishes Pippy-owned friction from ordinary project failure"
+  else
+    fail "doc must distinguish Pippy-owned friction from ordinary project failure"
+  fi
+}
+
+test_external_trigger_recipe() {
+  run_test "#49 external-trigger-recipe.md exists with required content"
+  local doc="$REPO_ROOT/docs/agents/external-trigger-recipe.md"
+
+  if [[ ! -f "$doc" ]]; then
+    fail "docs/agents/external-trigger-recipe.md does not exist"
+    return
+  fi
+  pass "external-trigger-recipe.md exists"
+
+  if grep -qi "cron\|scheduler\|CI\|github actions\|scheduled" "$doc"; then
+    pass "doc names an outside trigger mechanism"
+  else
+    fail "doc must name an outside trigger mechanism (cron/scheduler/CI)"
+  fi
+
+  if grep -qi "scheduling.*outside\|outside.*pippy\|scheduling stays outside" "$doc"; then
+    pass "doc keeps scheduling outside Pippy"
+  else
+    fail "doc must state scheduling stays outside Pippy"
+  fi
+
+  if grep -q '/goal' "$doc" && grep -qi "verifiable.*objective\|observable.*acceptance\|acceptance criteria" "$doc"; then
+    pass "doc includes a verifiable /goal objective with acceptance criteria"
+  else
+    fail "doc must include a verifiable /goal objective with observable acceptance criteria"
+  fi
+
+  if grep -qi "pippy improvement loop\|improvement loop\|loop stack" "$doc"; then
+    pass "doc links back to Pippy loop stack / improvement loop"
+  else
+    fail "doc must link back to Pippy loop stack or improvement loop"
+  fi
+}
+
+test_improvement_signal_smoke() {
+  run_test "#47 manual smoke tests include Improvement Signal examples"
+  local file="$REPO_ROOT/docs/agents/manual-smoke-tests.md"
+
+  if [[ ! -f "$file" ]]; then
+    fail "manual-smoke-tests.md does not exist"
+    return
+  fi
+
+  if grep -qi "Improvement Signal: None\|Improvement Signal.*None" "$file"; then
+    pass "smoke test includes Improvement Signal: None example"
+  else
+    fail "smoke test must include an Improvement Signal: None example"
+  fi
+
+  if grep -qi "Improvement Signal" "$file" && grep -qi "vague\|rewritten\|context.*compress\|read multiple times\|prior-attempt" "$file"; then
+    pass "smoke test includes a valid Pippy-owned improvement signal example"
+  else
+    fail "smoke test must include a valid Pippy-owned improvement signal example"
+  fi
+}
+
 main() {
   echo "Running GeneralPippy validation tests..."
 
@@ -648,6 +859,13 @@ main() {
   test_final_verification_gate_required
   test_ship_budget_efficiency_smoke_test
   test_adr_bump_process
+  test_context_assembly
+  test_corrective_redelegation
+  test_review_routing
+  test_deferred_dispatch
+  test_improvement_loop_doc
+  test_external_trigger_recipe
+  test_improvement_signal_smoke
 
   echo ""
   echo "========================="
