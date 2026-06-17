@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-06-18
+
+### Added
+- `docs/agents/pippy-harness.md` — inventory of the Pippy harness components maintainers can tune.
+- `docs/agents/goal-run-evals.md` — repeatable manual `/goal` eval scenarios for trajectory, routing, verification, retry behavior, and Improvement Signal quality.
+- ADR-0009 documenting the config-only adaptation of external agentic engineering practices into Pippy.
+
+### Changed
+- `/goal` guidance now requires trajectory checkpoints, compact run evidence, verification rigor scaled by task risk, and a last-20% review checklist.
+- RTK Force guidance is stricter: after `command -v rtk` succeeds, raw `git`, `gh`, `make`, and shell verification commands are treated as routing failures.
+- `/budget` coverage now includes context compression hygiene, ponytail constraint/plugin distinctions, and optional-tool status language.
+
+### Fixed
+- Pinned `jcodemunch-mcp` to the working `v1.0.0` tag and made validation check the configured `uvx --from ... jcodemunch-mcp` command shape without requiring CI to execute `uvx`.
+
 ## [2.4.1] - 2026-06-17
 
 ### Added
