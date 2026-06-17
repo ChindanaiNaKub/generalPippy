@@ -457,6 +457,7 @@ test_outcome_must_be_done_blocked_partial() {
   local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
 
   # pippy.md must say the final line must be exactly Done, Blocked, or Partial
+  # shellcheck disable=SC2016
   if grep -q "exactly one of" "$pippy" && grep -q '`Done`' "$pippy" && grep -q '`Blocked`' "$pippy" && grep -q '`Partial`' "$pippy"; then
     pass "pippy.md requires exact Done/Blocked/Partial outcome"
   else
@@ -471,6 +472,7 @@ test_outcome_must_be_done_blocked_partial() {
   fi
 
   # skill.md must say exactly one of Done/Blocked/Partial
+  # shellcheck disable=SC2016
   if grep -q "exactly one of" "$skill" && grep -q '`Done`' "$skill" && grep -q '`Blocked`' "$skill" && grep -q '`Partial`' "$skill"; then
     pass "SKILL.md requires exact Done/Blocked/Partial outcome"
   else

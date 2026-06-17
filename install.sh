@@ -264,30 +264,11 @@ merge_plugins() {
     return 0
   fi
 
-  # Extract pinned plugins from the current (just-copied) config.
-  local pinned_plugins=()
-  in_plugin_array=0
-  while IFS= read -r line; do
-    if [[ "$line" =~ \"plugin\"[[:space:]]*: ]]; then
-      in_plugin_array=1
-      continue
-    fi
-    if [[ $in_plugin_array -eq 1 ]]; then
-      if [[ "$line" =~ \[ ]]; then continue; fi
-      if [[ "$line" =~ \] ]]; then break; fi
-      local plugin
-      plugin="$(echo "$line" | sed -E 's/^[[:space:]]*"([^"]*)".*/\1/' | sed -E "s/^[[:space:]]*'([^']*)'.*/\1/")"
-      if [[ -n "$plugin" ]]; then
-        pinned_plugins+=("$plugin")
-      fi
-    fi
-  done < "$dst"
-
   # Build merged list: pinned first, then user plugins not already present.
   local merged=()
   local seen=()
   local p
-  for p in "${pinned_plugins[@]}" "${user_plugins[@]}"; do
+  for p in "${PINNED_PLUGINS[@]}" "${user_plugins[@]}"; do
     local already=0
     local s
     for s in "${seen[@]+"${seen[@]}"}"; do
@@ -303,7 +284,7 @@ merge_plugins() {
   done
 
   # If merged is identical to pinned, no user plugins were added.
-  if [[ ${#merged[@]} -eq ${#pinned_plugins[@]} ]]; then
+  if [[ ${#merged[@]} -eq ${#PINNED_PLUGINS[@]} ]]; then
     info "No new user plugins to merge."
     return 0
   fi
