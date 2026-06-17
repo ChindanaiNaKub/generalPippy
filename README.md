@@ -7,7 +7,7 @@
 
 # GeneralPippy v2.4.1 — Self-Driving Goal Agent for OpenCode
 
-Take a verifiable objective, and Pippy drives to completion — plan, execute, verify, iterate.
+Take a verifiable objective, and Pippy drives to completion — plan, execute, verify, review, iterate.
 
 ## What's Included
 
@@ -77,7 +77,7 @@ or troubleshooting guidance.
 ## The Self-Driving Loop
 
 ```
-UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL → REPORT
+UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
 ```
 
 Pippy:
@@ -86,13 +86,15 @@ Pippy:
 - Plans with step-by-step verification
 - Executes and verifies each step
 - Retries failures (3 cheap + 1 strong diagnosis)
+- Reviews the diff and verification evidence
+- Runs final verification
 - Reports done/blocked/partial
 
 ## Pippy Loop Stack
 
 GeneralPippy stays config-only, but frames Pippy as a stack of useful loops:
 
-- **Self-driving loop** — `/goal` plans, executes, verifies, retries, and reports.
+- **Self-driving loop** — `/goal` plans, executes, verifies, retries, reviews, runs final verification, and reports.
 - **Verification feedback** — acceptance criteria, verification evidence, and retry context keep each run grounded.
 - **External trigger recipes** — cron, CI, or shell workflows invoking `/goal` from outside Pippy. See [external-trigger-recipe.md](docs/agents/external-trigger-recipe.md).
 - **Pippy improvement loop** — goal run reports expose human-reviewed improvement signals for better prompts, routing, and verification habits. See [pippy-improvement-loop.md](docs/agents/pippy-improvement-loop.md).

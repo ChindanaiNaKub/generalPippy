@@ -59,7 +59,7 @@ Expected behavior:
 - A `pippy-build` child session is created for the edit.
 - The `pippy-build` child session shows `opencode-go/mimo-v2.5`.
 - If analysis or stuck-step diagnosis is needed, `pippy-plan` is read-only.
-- Final verification runs from the primary `pippy` session.
+- Review and final verification run from the primary `pippy` session.
 
 Then run:
 
@@ -87,7 +87,7 @@ Expected behavior:
 Run `/ship` in OpenCode and verify these budget-efficiency behaviors:
 
 - **RTK Force**: `/ship` uses `rtk git status`, `rtk git log`, `rtk git diff`, `rtk gh ...`, and `rtk make all` instead of raw git, gh, or make when `rtk` is installed.
-- **Context compression before final gate**: `/ship` compresses context (via caveman mode or explicit compress) before the final verification gate to reduce token usage.
+- **Context compression before closing gates**: `/ship` compresses context (via caveman mode or explicit compress) before review and final verification to reduce token usage.
 - **Caveman-full reporting**: When caveman mode is available, `/ship` reports in caveman-full compression style for status, build, and verification output.
 - **No re-fetch of releases**: After `gh release create` succeeds, `/ship` trusts the exit status and does not re-fetch the release metadata to confirm it exists.
 

@@ -35,7 +35,7 @@ Expected behavior:
 - Pippy routes planning and analysis to `pippy-plan`, which stays read-only.
 - Pippy invokes `pippy-build` with the Task tool for the edit.
 - The `pippy-build` child session uses `opencode-go/mimo-v2.5`.
-- Pippy runs final verification from the primary session.
+- Pippy runs review and final verification from the primary session.
 - `/budget` reports routing guidance only, not estimated tokens or cost.
 
 ## How to Inspect

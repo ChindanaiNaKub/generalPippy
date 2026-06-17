@@ -18,8 +18,9 @@ Pippy will:
 4. Assemble a context bundle (fresh or forked) for each delegation
 5. Execute and verify each step
 6. Corrective re-delegate failures (3 cheap + 1 strong diagnosis)
-7. Run the final no-mistakes gate
-8. Report outcome as exactly one of `Done`, `Blocked`, or `Partial`
+7. Review the diff and verification evidence
+8. Run final verification
+9. Report outcome as exactly one of `Done`, `Blocked`, or `Partial`
 
 ### Acceptance Criteria Rules
 
@@ -46,9 +47,9 @@ Every `/goal` run must report four things at the end:
    - `Blocked` — what's blocking progress, what needs human action
    - `Partial` — what was completed, what remains, why it stopped
 
-### Verification
+### Review And Verification
 
-Verification is the **FINAL step** of `/goal`, not a standalone command. The plan must always end with this verification gate before reporting outcome. After all steps complete:
+Review and final verification are the closing gates of `/goal`, not standalone commands. The plan must always end with review followed by final verification before reporting outcome. After all execution steps complete:
 1. Cheap self-review of the full diff (use `rtk git diff` when `rtk` is installed)
 2. Run the combined verification command (`rtk make all` when `rtk` and `make all` are available, otherwise `rtk test` / `rtk err` equivalents)
 3. Check docs for public API changes

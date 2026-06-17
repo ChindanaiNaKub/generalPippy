@@ -44,13 +44,14 @@ Removed: `/think`, `/verify`, `/cheap`, `/smart`.
 3. Plan with acceptance criteria and step-by-step breakdown
 4. Execute each step, verify after each step
 5. On failure: retry up to 3 cheap attempts + 1 strong-model diagnosis
-6. Final verification against acceptance criteria
-7. Report: done / blocked / partial
+6. Review the diff and verification evidence
+7. Final verification against acceptance criteria
+8. Report: done / blocked / partial
 
 ### Self-Driving Loop
 
 ```
-UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL → REPORT
+UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
 ```
 
 - Max 50 iterations, 30 minutes wall time, 5 consecutive failures → escalate
