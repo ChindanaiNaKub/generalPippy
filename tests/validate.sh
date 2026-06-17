@@ -349,22 +349,22 @@ test_goal_output_format() {
 }
 
 test_verify_is_part_of_goal() {
-  run_test "verification is described as final step of /goal, not standalone"
+  run_test "review and final verification are closing gates of /goal, not standalone"
   local goal="$REPO_ROOT/config/commands/goal.md"
   local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
 
-  # goal.md must say verification is the final step
-  if grep -q "Verification.*FINAL step.*goal" "$goal" || grep -q "FINAL step.*goal" "$goal"; then
-    pass "goal.md describes verification as final step of /goal"
+  # goal.md must say review and final verification are closing gates
+  if grep -qi "Review and final verification are the closing gates" "$goal" && grep -qi "review followed by final verification" "$goal"; then
+    pass "goal.md describes review and final verification as /goal closing gates"
   else
-    fail "goal.md must describe verification as final step of /goal"
+    fail "goal.md must describe review and final verification as /goal closing gates"
   fi
 
-  # SKILL.md must say verification is the final step
-  if grep -q "FINAL step.*goal" "$skill"; then
-    pass "SKILL.md describes verification as final step of /goal"
+  # SKILL.md must say review and final verification are closing gates
+  if grep -qi "Review and final verification are the closing gates" "$skill" && grep -qi "review followed by final verification" "$skill"; then
+    pass "SKILL.md describes review and final verification as /goal closing gates"
   else
-    fail "SKILL.md must describe verification as final step of /goal"
+    fail "SKILL.md must describe review and final verification as /goal closing gates"
   fi
 
   # No standalone /verify command in config/commands/
@@ -518,16 +518,16 @@ test_outcome_must_be_done_blocked_partial() {
 }
 
 test_final_verification_gate_required() {
-  run_test "#15 plan must always end with final verification gate"
+  run_test "#15 plan must always end with review and final verification gates"
   local goal="$REPO_ROOT/config/commands/goal.md"
   local pippy="$REPO_ROOT/config/agents/pippy.md"
   local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
 
-  # goal.md must say verification is FINAL and plan must end with it
-  if grep -q "FINAL step" "$goal" && grep -qi "plan.*must always end\|always end.*verification\|must always end with this verification" "$goal"; then
-    pass "goal.md requires plan to end with final verification gate"
+  # goal.md must say the plan ends with review followed by final verification
+  if grep -qi "plan must always end with review followed by final verification" "$goal"; then
+    pass "goal.md requires plan to end with review and final verification gates"
   else
-    fail "goal.md must require plan to always end with final verification gate"
+    fail "goal.md must require plan to end with review followed by final verification"
   fi
 
   # pippy.md must say plan must always end with verification
@@ -537,11 +537,11 @@ test_final_verification_gate_required() {
     fail "pippy.md must require plan to always end with final verification gate"
   fi
 
-  # skill.md must say plan must always end with verification gate
-  if grep -qi "plan must always end" "$skill"; then
-    pass "SKILL.md requires plan to end with final verification gate"
+  # skill.md must say the plan ends with review followed by final verification
+  if grep -qi "plan must always end with review followed by final verification" "$skill"; then
+    pass "SKILL.md requires plan to end with review and final verification gates"
   else
-    fail "SKILL.md must require plan to always end with final verification gate"
+    fail "SKILL.md must require plan to end with review followed by final verification"
   fi
 }
 
@@ -562,9 +562,9 @@ test_ship_budget_efficiency_smoke_test() {
   fi
 
   if grep -qi "compress.*context\|context.*compress\|compression before" "$file"; then
-    pass "/ship smoke test checks context compression before final gate"
+    pass "/ship smoke test checks context compression before closing gates"
   else
-    fail "/ship smoke test must check context compression before final gate"
+    fail "/ship smoke test must check context compression before closing gates"
   fi
 
   if grep -qi "caveman-full" "$file"; then

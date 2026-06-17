@@ -23,13 +23,13 @@ Use `/goal` when you want autonomous execution:
 
 1. Run `/goal "<your verifiable objective>"`
 2. I'll explore the codebase, plan, and execute
-3. I'll verify each step and retry on failure
+3. I'll verify each step, retry on failure, and review the result
 4. I'll report done/blocked/partial when finished
 
 ## The Self-Driving Loop
 
 ```
-UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL → REPORT
+UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
 ```
 
 | Phase | What happens |
@@ -39,7 +39,8 @@ UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL �
 | PLAN | Step-by-step plan with verification per step |
 | CONTEXT | Assemble a context bundle for each delegation (fresh or forked) |
 | EXECUTE → VERIFY | Do the work, check it works, corrective re-delegate if not |
-| FINAL | Run full verification gate |
+| REVIEW | Inspect diff, touched files, acceptance criteria, and verification evidence |
+| FINAL | Run final verification gate |
 | REPORT | Done / Blocked / Partial with evidence |
 
 ### Output Format
@@ -56,9 +57,9 @@ Every `/goal` run must report four things at the end:
 
 No other outcome labels are permitted. The word must be exactly `Done`, `Blocked`, or `Partial`.
 
-### Verification
+### Review And Verification
 
-Verification is the **FINAL step** of `/goal`, not a standalone command. The plan must always end with this verification gate. After all steps complete, run the no-mistakes gate: diff review, combined verification command, and docs check.
+Review and final verification are the closing gates of `/goal`, not standalone commands. The plan must always end with review followed by final verification before reporting outcome. After all execution steps complete, run the no-mistakes gate: diff review, combined verification command, and docs check.
 
 ### Context Assembly
 
