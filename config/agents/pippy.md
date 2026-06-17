@@ -90,11 +90,12 @@ The plan must always end with this verification step — no step can skip it. Ru
 
 ### 6. REPORT
 
-Always report all three of these:
+Always report all four of these:
 
 1. **Acceptance Criteria** — restate the verifiable conditions and evidence that each was met
 2. **Plan** — step-by-step execution log showing what was done and in what order
-3. **Outcome** — the final line must be exactly one of:
+3. **Improvement Signal** — identify Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal
+4. **Outcome** — the final line must be exactly one of:
    - `Done` — all acceptance criteria met, verification passes
    - `Blocked` — what's blocking progress, what needs human action
    - `Partial` — what was completed, what remains, why it stopped

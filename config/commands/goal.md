@@ -35,11 +35,12 @@ The plan must list steps **in execution order** with dependencies respected. Eac
 
 ### Output Format
 
-Every `/goal` run must report three things at the end:
+Every `/goal` run must report four things at the end:
 
 1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against evidence
 2. **Plan** — the step-by-step execution log showing what was done and in what order
-3. **Outcome** — one of:
+3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal
+4. **Outcome** — one of:
    - `Done` — all acceptance criteria met, verification passes
    - `Blocked` — what's blocking progress, what needs human action
    - `Partial` — what was completed, what remains, why it stopped

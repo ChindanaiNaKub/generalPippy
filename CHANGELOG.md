@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- ADR-0006: Context bundles and corrective re-delegation for Pippy subagent dispatch, with dynamic model override and true mid-run steering explicitly deferred.
+- Pippy loop stack positioning plus `/goal` Improvement Signal reporting and validation coverage.
+
 ## [2.3.0] - 2026-06-17
 
 ### Changed

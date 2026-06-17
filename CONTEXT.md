@@ -8,10 +8,20 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 
 | Term | Definition |
 |------|------------|
-| **Agent** | A configured persona/model pair in OpenCode. Pippy is the primary agent; `pippy-plan` and `pippy-build` are subagents. |
+| **Agent** | A configured OpenCode role/persona with permissions and instructions. Its model may be supplied by the selected model profile. Pippy is the primary agent; `pippy-plan` and `pippy-build` are subagents. |
+| **Advisor agent** | An external AI coding tool that Pippy may ask for read-only plans, critiques, diagnoses, or context summaries while Pippy remains responsible for execution. _Avoid_: external executor, delegated editor |
+| **Advisor adapter** | A configured command template that lets Pippy request read-only advice from an advisor agent. _Avoid_: runtime broker, execution adapter |
+| **Advisor context bundle** | The Pippy-prepared objective, plan, constraints, and relevant repo context sent to an advisor agent for read-only advice. _Avoid_: full-repo handoff |
+| **Acceptance criteria** | Observable conditions that define whether a `/goal` objective or plan step has succeeded. _Avoid_: goal rubric, vague success condition |
 | **Command** | A slash command registered with OpenCode (e.g., `/goal`, `/ship`, `/budget`). |
 | **Budget guidance** | Non-authoritative advice from `/budget` about model routing and token efficiency. Exact token usage and cost belong to OpenCode's own session usage display. |
+| **External trigger recipe** | Documentation that shows how an outside system can invoke `/goal` for recurring or event-driven work while Pippy remains config-only. _Avoid_: built-in scheduler, event runtime |
+| **Goal run report** | The structured final report from a `/goal` run: acceptance criteria, execution plan/log, evidence, outcome, and improvement signal. It is Pippy's first learning artifact for human-reviewed improvement. _Avoid_: raw trace, telemetry store |
+| **Improvement signal** | A concise, always-present goal run report field that identifies Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; it may be `None`. _Avoid_: ordinary project failure, automatic patch, model self-training signal |
+| **Pippy improvement loop** | The human-reviewed process of using goal run reports to propose better Pippy prompts, tools, acceptance-criteria guidance, or verification habits. _Avoid_: automatic self-modification, prompt auto-rewrite |
+| **Model profile** | A beginner-friendly bundle of model choices for Pippy's planning, implementation, and system-task roles. _Avoid_: hardcoded model, provider lock-in |
 | **Primary coordination boundary** | The rule that Pippy coordinates, plans, and verifies while delegating workspace mutation to `pippy-build`. _Avoid_: primary implementation, tiny-edit exception |
+| **Pippy loop stack** | The product framing for stacking loops around Pippy while keeping GeneralPippy config-only: the self-driving loop, verification feedback, optional external triggering, and human-reviewed improvement from run evidence. _Avoid_: runtime loop engine, built-in scheduler |
 | **Skill** | A reusable instruction card loaded by agent skills (e.g., `pippy`). |
 | **Self-driving loop** | The fixed workflow `UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL → REPORT`. |
 | **YOLO mode** | Default permission mode that auto-allows file reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`. Safety comes from scoped agent workflow and reporting, not command approval prompts. |
