@@ -17,7 +17,7 @@ GeneralPippy keeps the primary `pippy` session in a coordinator role:
 - Primary Pippy must not have auto edit permissions.
 - Primary bash is unrestricted for YOLO mode, so git, gh, make, and repo-local commands run without approval prompts.
 - `pippy-plan` remains read-only.
-- `pippy-build` remains the implementation subagent and uses `opencode-go/mimo-v2.5`.
+- `pippy-build` remains the implementation subagent and uses the implementation role model from `~/.config/opencode/generalpippy/profile.json` (`opencode-go/mimo-v2.5` for Balanced).
 
 ## Test
 
@@ -34,7 +34,7 @@ Expected behavior:
 - Primary bash is unrestricted for YOLO mode, but implementation edits still route to `pippy-build`.
 - Pippy routes planning and analysis to `pippy-plan`, which stays read-only.
 - Pippy invokes `pippy-build` with the Task tool for the edit.
-- The `pippy-build` child session uses `opencode-go/mimo-v2.5`.
+- The `pippy-build` child session uses the implementation role model from `profile.json`.
 - Pippy runs review and final verification from the primary session.
 - `/budget` reports routing guidance only, not estimated tokens or cost.
 
@@ -51,5 +51,5 @@ Expected behavior:
 - Primary bash or `pippy-build` bash asks for command approval in YOLO mode.
 - `pippy-plan` is used for edits or other write actions.
 - The `pippy-build` child session is not created for a non-trivial edit.
-- `pippy-build` runs on `opencode-go/kimi-k2.7-code` instead of `opencode-go/mimo-v2.5`.
+- `pippy-build` runs on the planning role model instead of the implementation role model.
 - `/budget` estimates exact spend instead of pointing to OpenCode's usage display.
