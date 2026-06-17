@@ -48,10 +48,13 @@ cd generalPippy
 ./install.sh
 ```
 
-Or manually copy files to `~/.config/opencode/`:
-```bash
-cp -r config/* ~/.config/opencode/
-```
+The installer handles:
+- Backing up existing config files
+- Merging your existing plugins with GeneralPippy's pinned list
+- Installing npm plugins if package.json exists
+- Cleaning up obsolete v1.0 files
+
+**Note:** Always use `install.sh` rather than manually copying files. The installer provides safety features like backups, rollback on failure, and plugin merging that manual copying bypasses.
 
 ## Usage
 
@@ -80,11 +83,11 @@ Pippy:
 Default permissions (auto-allow):
 - File reads
 - Delegation to `pippy-build` and `pippy-plan`
-- Read-only exploration bash
-- Batched verification bash
+- Unrestricted bash for `pippy` and `pippy-build`
+- Git, gh, make, dependency, and repo-local commands without approval prompts
+- Implementation edits inside `pippy-build`
 
-Ask first:
-- Destructive bash, git push/commit, deps, external APIs, unusual primary-agent bash
+YOLO mode keeps safety in the workflow instead of permission prompts: Pippy stays scoped to the objective, reports risky commands, and does not auto-push or auto-PR unless explicitly requested.
 
 Pippy's primary agent coordinates and verifies. Workspace edits, file copies, config changes, bug fixes, refactors, and tests route to `pippy-build` on `opencode-go/mimo-v2.5`.
 
@@ -94,7 +97,7 @@ Pippy's primary agent coordinates and verifies. Workspace edits, file copies, co
 - **DCP** — Dynamic context pruning
 - **Compaction** — Auto-compress long conversations
 - **Cheap model default** — Strong model only for planning/diagnosis
-- **rtk** — Token-efficient bash commands
+- **rtk** — Token-efficient bash commands; when installed, Pippy forces shell commands through `rtk`
 - **Caveman mode** — Terse OpenCode responses and compressed build/verify summaries
 
 ## Budget Guidance
@@ -103,7 +106,9 @@ OpenCode's built-in session usage display is the authoritative source for exact 
 
 ## Routing Smoke Test
 
-After installing, use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on `opencode-go/mimo-v2.5`.
+After installing, run `scripts/doctor.sh` to validate agent frontmatter, permission boundaries, stale v1.0 references, and pinned deps automatically.
+
+Use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on `opencode-go/mimo-v2.5`.
 
 Use [docs/agents/caveman-mode-smoke-test.md](docs/agents/caveman-mode-smoke-test.md) to verify that Pippy detects OpenCode Caveman mode and does not require a `caveman` shell executable.
 

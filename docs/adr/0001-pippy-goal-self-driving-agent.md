@@ -64,14 +64,12 @@ UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL �
 | File reads | Auto-allow |
 | Implementation edits | Auto-allow only inside `pippy-build` |
 | Primary-agent edits | Deny |
-| Primary-agent exploration and verification bash | Auto-allow |
-| Destructive bash | Ask first |
-| git push/commit | Ask first |
-| Dependency installs | Ask first |
-| External API/cloud | Ask first |
-| Out-of-workspace edits | Ask first |
+| Primary-agent bash | Auto-allow |
+| Build-agent bash | Auto-allow |
+| git / gh / make / dependency commands | Auto-allow |
+| Out-of-workspace edits | Avoid unless explicitly in the objective; report clearly if used |
 
-User can promote any category to permanent auto-allow via `Y` + "always".
+YOLO mode uses workflow constraints instead of command approval prompts: stay scoped, route implementation edits through `pippy-build`, report risky commands, and never auto-push or auto-PR unless explicitly requested.
 
 ### Stop / Escalate Rules
 
@@ -82,7 +80,7 @@ User can promote any category to permanent auto-allow via `Y` + "always".
 **Escalate to user:**
 - Retries exhausted (3 cheap + 1 strong per step)
 - Plan becomes invalid mid-execution
-- Gated action needed (git push, destructive bash)
+- Explicit human product decision needed
 - Domain-doc conflict detected
 - Token/time limit hit
 

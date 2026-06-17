@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- YOLO mode now allows unrestricted bash for `pippy` and `pippy-build`, so git, gh, make, dependency, and repo-local commands do not prompt for approval.
+- `/ship` now uses RTK Force: when `rtk` is installed, shell/git/gh/make commands must go through `rtk`.
+
 ## [2.2.0] - 2026-06-17
 
 ### Added

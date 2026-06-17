@@ -2,10 +2,10 @@
 
 Status: accepted
 
-Pippy's primary agent is a coordinator, not an implementation worker. We deny primary-agent edits and auto-allow only exploration and verification bash so that file creation, file copies, config edits, refactors, bug fixes, and tests route through `pippy-build` on the cheap implementation model. The rejected alternative was a prompt-only rule with a tiny-edit exception; that was cheaper to write but allowed the strong primary model to silently perform implementation work, which defeats GeneralPippy's budget goal.
+Pippy's primary agent is a coordinator, not an implementation worker. We deny primary-agent edits but allow unrestricted bash so YOLO mode can run git, gh, make, verification, and repo-local commands without approval friction. File creation, file copies, config edits, refactors, bug fixes, and tests still route through `pippy-build` on the cheap implementation model. The rejected alternative was a prompt-only rule with a tiny-edit exception; that was cheaper to write but allowed the strong primary model to silently perform implementation work, which defeats GeneralPippy's budget goal.
 
 ## Consequences
 
 - Small edits still create a `pippy-build` child session.
 - If `pippy-build` is unavailable, `/goal` reports blocked instead of falling back to strong-model implementation.
-- Unusual primary-agent bash commands ask for approval; routine exploration and verification stay automatic.
+- Primary and build-agent bash commands do not ask for approval; safety is enforced by routing, scope, verification, and reporting.

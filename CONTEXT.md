@@ -14,7 +14,7 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 | **Primary coordination boundary** | The rule that Pippy coordinates, plans, and verifies while delegating workspace mutation to `pippy-build`. _Avoid_: primary implementation, tiny-edit exception |
 | **Skill** | A reusable instruction card loaded by agent skills (e.g., `pippy`). |
 | **Self-driving loop** | The fixed workflow `UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL → REPORT`. |
-| **YOLO mode** | Default permission mode that auto-allows file reads, subagent routing, and verification bash while keeping implementation edits inside `pippy-build`. |
+| **YOLO mode** | Default permission mode that auto-allows file reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`. Safety comes from scoped agent workflow and reporting, not command approval prompts. |
 | **Hard limits** | The safety bounds: 50 iterations, 30 minutes wall time, 5 consecutive failures before escalation. |
 | **jcodemunch** | The MCP server that indexes the codebase for token-efficient navigation. |
 | **Caveman mode** | An OpenCode prompt/command compression mode that makes Pippy and its subagents communicate tersely while preserving technical accuracy. _Avoid_: caveman CLI, build-output compressor |
@@ -26,7 +26,7 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 1. **Prompts are the product.** The repo's value is in the agent/command/skill prompts and the installer that places them in `~/.config/opencode/`.
 2. **No runtime code.** GeneralPippy does not ship a long-running service; it ships configuration consumed by OpenCode.
 3. **Graceful degradation.** Optional tools and modes (rtk, Caveman mode, Caveman CLI, ponytail) improve efficiency but are not required.
-4. **Safety over speed.** Auto-allow reads, verification, and delegated implementation, but ask before destructive bash, git commits, dependency installs, or external API calls.
+4. **Autonomy with scoped reporting.** Auto-allow commands so Pippy can drive without approval friction, but keep work scoped to the objective, route implementation edits to `pippy-build`, and report risky actions clearly.
 5. **Versioned backups.** The installer must back up existing user config before overwriting it and must be able to roll back on failure.
 
 ## Decisions

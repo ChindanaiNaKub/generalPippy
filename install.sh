@@ -39,6 +39,15 @@ declare -a OBSOLETE_FILES=(
 # Tracks files we backed up so we can restore on failure: target:backup_path
 declare -a BACKUPS=()
 
+# Tracks paths we created during this install run (for rollback on failure).
+# Format: "path:type" where type is "file" or "dir"
+declare -a CREATED_PATHS=()
+
+# GeneralPippy's pinned plugin list. User plugins are merged on top.
+PINNED_PLUGINS=(
+  "@tarquinen/opencode-dcp@0.0.4"
+)
+
 usage() {
   cat <<EOF
 Usage: $0 [OPTIONS]
@@ -151,20 +160,46 @@ backup_existing() {
 }
 
 rollback() {
-  [[ ${#BACKUPS[@]} -eq 0 ]] && return 0
-  warn "Installation failed. Rolling back ${#BACKUPS[@]} backup(s)..."
-  local pair
-  local target
-  local backup
-  for pair in "${BACKUPS[@]}"; do
-    target="${pair%%:*}"
-    backup="${pair##*:}"
-    if [[ -e "$backup" ]]; then
-      rm -rf "$target"
-      cp -a "$backup" "$target"
-      log "  Restored $target from $backup"
-    fi
-  done
+  local exit_code=$?
+  [[ $exit_code -eq 0 ]] && return 0
+
+  warn "Installation failed (exit code $exit_code). Rolling back..."
+
+  # Restore backed-up files first.
+  if [[ ${#BACKUPS[@]} -gt 0 ]]; then
+    warn "Restoring ${#BACKUPS[@]} backup(s)..."
+    local pair
+    local target
+    local backup
+    for pair in "${BACKUPS[@]}"; do
+      target="${pair%%:*}"
+      backup="${pair##*:}"
+      if [[ -e "$backup" ]]; then
+        rm -rf "$target"
+        cp -a "$backup" "$target"
+        log "  Restored $target from $backup"
+      fi
+    done
+  fi
+
+  # Remove any files/dirs we created during this run (newest first for dirs).
+  if [[ ${#CREATED_PATHS[@]} -gt 0 ]]; then
+    warn "Removing ${#CREATED_PATHS[@]} newly-created path(s)..."
+    local entry
+    local cpath
+    local ctype
+    # Remove files before directories (reverse order handles nesting).
+    local i
+    for (( i=${#CREATED_PATHS[@]}-1; i>=0; i-- )); do
+      entry="${CREATED_PATHS[$i]}"
+      cpath="${entry%%:*}"
+      ctype="${entry##*:}"
+      if [[ -e "$cpath" ]]; then
+        rm -rf "$cpath"
+        log "  Removed $ctype: $cpath"
+      fi
+    done
+  fi
 }
 
 cleanup_obsolete() {
@@ -179,6 +214,157 @@ cleanup_obsolete() {
       fi
     fi
   done
+}
+
+merge_plugins() {
+  # Merge user's existing plugins with GeneralPippy's pinned list.
+  # Writes a new opencode.jsonc to the target path.
+  local dst="$1"
+
+  # Copy the pinned config as base.
+  cp -a "config/opencode.jsonc" "$dst"
+
+  # Find the most recent backup to extract user plugins.
+  local latest_backup=""
+  for f in "${dst}".backup.*; do
+    if [[ -f "$f" ]]; then
+      latest_backup="$f"
+      break
+    fi
+  done
+
+  if [[ -z "$latest_backup" ]]; then
+    info "No existing plugins to merge (no backup found)."
+    return 0
+  fi
+
+  # Extract user plugin strings from the backup file (bash-only, no python3 needed).
+  local user_plugins=()
+  local in_plugin_array=0
+  local line
+  while IFS= read -r line; do
+    if [[ "$line" =~ \"plugin\"[[:space:]]*: ]]; then
+      in_plugin_array=1
+      continue
+    fi
+    if [[ $in_plugin_array -eq 1 ]]; then
+      # Extract quoted string from the line.
+      if [[ "$line" =~ \[ ]]; then continue; fi  # Skip opening bracket
+      if [[ "$line" =~ \] ]]; then break; fi      # End of array
+      local plugin
+      plugin="$(echo "$line" | sed -E 's/^[[:space:]]*"([^"]*)".*/\1/' | sed -E "s/^[[:space:]]*'([^']*)'.*/\1/")"
+      if [[ -n "$plugin" ]]; then
+        user_plugins+=("$plugin")
+      fi
+    fi
+  done < "$latest_backup"
+
+  if [[ ${#user_plugins[@]} -eq 0 ]]; then
+    info "No user plugins found in backup."
+    return 0
+  fi
+
+  # Build merged list: pinned first, then user plugins not already present.
+  local merged=()
+  local seen=()
+  local p
+  for p in "${PINNED_PLUGINS[@]}" "${user_plugins[@]}"; do
+    local already=0
+    local s
+    for s in "${seen[@]+"${seen[@]}"}"; do
+      if [[ "$s" == "$p" ]]; then
+        already=1
+        break
+      fi
+    done
+    if [[ $already -eq 0 ]]; then
+      merged+=("$p")
+      seen+=("$p")
+    fi
+  done
+
+  # If merged is identical to pinned, no user plugins were added.
+  if [[ ${#merged[@]} -eq ${#PINNED_PLUGINS[@]} ]]; then
+    info "No new user plugins to merge."
+    return 0
+  fi
+
+  # Use python3 if available for reliable JSONC editing; otherwise use sed.
+  if command -v python3 &> /dev/null; then
+    python3 - "$dst" "$latest_backup" <<'PY'
+import json, re, sys
+
+target_path = sys.argv[1]
+backup_path = sys.argv[2]
+
+def extract_plugins(text):
+    """Extract plugin strings from JSONC text."""
+    text = re.sub(r'(?<!\S)//[^\n]*', '', text)
+    text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
+    try:
+        data = json.loads(text)
+        return data.get("plugin", [])
+    except Exception:
+        return []
+
+with open(backup_path) as f:
+    user_plugins = extract_plugins(f.read())
+
+if not user_plugins:
+    sys.exit(0)
+
+with open(target_path) as f:
+    target_text = f.read()
+
+target_plugins = extract_plugins(target_text)
+
+seen = set()
+merged = []
+for p in target_plugins:
+    if p not in seen:
+        seen.add(p)
+        merged.append(p)
+for p in user_plugins:
+    if p not in seen:
+        seen.add(p)
+        merged.append(p)
+
+if merged == target_plugins:
+    sys.exit(0)
+
+entries = ",\n".join(f'    "{p}"' for p in merged)
+plugin_block = f'"plugin": [\n{entries}\n  ]'
+
+new_text = re.sub(r'"plugin"\s*:\s*\[.*?\]', plugin_block, target_text, flags=re.DOTALL)
+
+with open(target_path, 'w') as f:
+    f.write(new_text)
+PY
+  else
+    # Fallback: perl-based replacement for environments without python3.
+    # Build the new plugin array with proper commas.
+    local new_array='"plugin": [\n'
+    local i
+    for (( i=0; i<${#merged[@]}; i++ )); do
+      if [[ $i -gt 0 ]]; then new_array+=","; fi
+      new_array+=$'\n    "'"${merged[$i]}"'"'
+    done
+    new_array+=$'\n  ]'
+
+    # Use perl for multiline replacement (more reliable than sed for this).
+    if command -v perl &> /dev/null; then
+      # Escape the replacement string for perl.
+      local escaped
+      escaped="$(printf '%s' "$new_array" | perl -e 'use File::Slurp; local $/; $_=<>; s/\\/\\\\/g; s/\//\\\//g; s/\$/\\\$/g; s/\n/\\n/g; print')"
+      perl -i -0pe "s/\"plugin\"\\s*:\\s*\\[.*?\\]/$escaped/s" "$dst"
+    else
+      warn "Cannot merge plugins: need python3 or perl."
+      cp -a "config/opencode.jsonc" "$dst"
+      return 0
+    fi
+  fi
+
+  log "🔀 Merged plugins: pinned + user additions"
 }
 
 copy_files() {
@@ -197,9 +383,23 @@ copy_files() {
       continue
     fi
 
-    mkdir -p "$dst_dir"
+    # Track whether we're creating the directory or it already existed.
+    if [[ ! -d "$dst_dir" ]]; then
+      mkdir -p "$dst_dir"
+      CREATED_PATHS+=("$dst_dir:dir")
+    else
+      mkdir -p "$dst_dir"
+    fi
+
     backup_existing "$dst"
-    cp -a "$src" "$dst"
+
+    # Special handling for opencode.jsonc: merge user plugins with pinned list.
+    if [[ "$src" == "config/opencode.jsonc" ]] && [[ -f "$dst" ]]; then
+      merge_plugins "$dst"
+    else
+      cp -a "$src" "$dst"
+    fi
+    CREATED_PATHS+=("$dst:file")
     log "📝 Copied $src -> $dst"
   done
 }
@@ -209,6 +409,14 @@ install_plugins() {
 
   if [[ ! -f "$package_json" ]]; then
     info "No package.json found in $OPENCODE_CONFIG; skipping plugin install."
+    return 0
+  fi
+
+  # Only check for npm when we actually need it (#24).
+  if ! command -v npm &> /dev/null; then
+    warn "npm not found. Plugins require npm for installation."
+    warn "Install npm from https://nodejs.org/ to enable plugin support."
+    warn "Plugins may need manual installation."
     return 0
   fi
 
@@ -237,8 +445,17 @@ prompt_yes_no() {
 }
 
 install_rtk() {
-  curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh \
-    && rtk init -g --opencode
+  # Pin rtk to a specific release for reproducible installs (#27).
+  local rtk_version="1.78.0"
+  local rtk_url="https://raw.githubusercontent.com/rtk-ai/rtk/refs/tags/v${rtk_version}/install.sh"
+
+  info "Installing rtk v${rtk_version}..."
+  if curl -fsSL "$rtk_url" | sh; then
+    rtk init -g --opencode
+  else
+    warn "Failed to download rtk v${rtk_version} from $rtk_url"
+    return 1
+  fi
 }
 
 install_optional() {
@@ -308,22 +525,33 @@ main() {
 
   # Trap rollback on any error, but only in real mode.
   if [[ $DRY_RUN -eq 0 ]]; then
-    trap rollback ERR
+    trap 'rollback' ERR
   fi
 
   log "🔍 Checking core dependencies..."
   check_dependency "opencode" "opencode"
   check_dependency "uv" "uv"
-  check_dependency "npm" "npm"
+  # npm is only required when plugin installation is needed (#24).
+  # The check happens inside install_plugins when package.json is present.
   log ""
 
   log "📁 Preparing directories..."
   if [[ $DRY_RUN -eq 1 ]]; then
     info "Would create: $OPENCODE_CONFIG/{agents,commands,skills/pippy}"
   else
-    mkdir -p "$OPENCODE_CONFIG/agents" \
-             "$OPENCODE_CONFIG/commands" \
-             "$OPENCODE_CONFIG/skills/pippy"
+    local _dirs=(
+      "$OPENCODE_CONFIG"
+      "$OPENCODE_CONFIG/agents"
+      "$OPENCODE_CONFIG/commands"
+      "$OPENCODE_CONFIG/skills/pippy"
+    )
+    local _d
+    for _d in "${_dirs[@]}"; do
+      if [[ ! -d "$_d" ]]; then
+        mkdir -p "$_d"
+        CREATED_PATHS+=("$_d:dir")
+      fi
+    done
   fi
   log ""
 
