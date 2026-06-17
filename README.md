@@ -19,13 +19,13 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 - `/budget` — Audit budget health and routing behavior
 
 ### Plugins
-- **jcodemunch-mcp** — AST code indexing (95%+ token savings)
-- **opencode-dcp** — Dynamic context pruning
+- **[jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp)** — AST code indexing (95%+ token savings)
+- **[opencode-dcp](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)** — Dynamic context pruning
 
 ### Optional Tools
-- **rtk** — Token-efficient bash wrapper
-- **Caveman mode** — Terse OpenCode responses and compressed build/verify summaries
-- **ponytail** — Planning constraint (reuse stdlib)
+- **[rtk](https://github.com/rtk-ai/rtk)** — Token-efficient bash wrapper
+- **[Caveman mode](https://github.com/juliusbrussee/caveman)** — Terse OpenCode responses and compressed build/verify summaries
+- **[ponytail](https://github.com/DietrichGebert/ponytail)** — Planning constraint (reuse stdlib)
 
 ## Models (opencode-go)
 
@@ -93,12 +93,12 @@ Pippy's primary agent coordinates and verifies. Workspace edits, file copies, co
 
 ## Token Efficiency
 
-- **jcodemunch-mcp** — 95%+ savings on code reading
-- **DCP** — Dynamic context pruning
+- **[jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp)** — 95%+ savings on code reading
+- **[DCP](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)** — Dynamic context pruning
 - **Compaction** — Auto-compress long conversations
 - **Cheap model default** — Strong model only for planning/diagnosis
-- **rtk** — Token-efficient bash commands; when installed, Pippy forces shell commands through `rtk`
-- **Caveman mode** — Terse OpenCode responses and compressed build/verify summaries
+- **[rtk](https://github.com/rtk-ai/rtk)** — Token-efficient bash commands; when installed, Pippy forces shell commands through `rtk`
+- **[Caveman mode](https://github.com/juliusbrussee/caveman)** — Terse OpenCode responses and compressed build/verify summaries
 
 ## Budget Guidance
 
