@@ -30,7 +30,8 @@ test_required_files_exist() {
   for file in config/opencode.jsonc \
               config/agents/pippy.md config/agents/pippy-plan.md config/agents/pippy-build.md \
               config/commands/goal.md config/commands/ship.md config/commands/budget.md \
-              config/skills/pippy/SKILL.md; do
+              config/skills/pippy/SKILL.md \
+              config/references/opencode/REFERENCE.md; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
       pass "exists: $file"
     else
@@ -183,6 +184,46 @@ test_subagent_routing_config() {
     pass "manual smoke test covers config, routing, and budget checks"
   else
     fail "manual smoke test must cover config, routing, and budget checks"
+  fi
+}
+
+test_opencode_reference_pack() {
+  run_test "OpenCode reference pack is configured and packaged"
+  local opencode="$REPO_ROOT/config/opencode.jsonc"
+  local ref="$REPO_ROOT/config/references/opencode/REFERENCE.md"
+  local installer="$REPO_ROOT/install.sh"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local build="$REPO_ROOT/config/agents/pippy-build.md"
+
+  if grep -q '"references"' "$opencode" &&
+     grep -q '"opencode-docs"' "$opencode" &&
+     grep -q './references/opencode' "$opencode"; then
+    pass "opencode.jsonc registers opencode-docs reference"
+  else
+    fail "opencode.jsonc must register the opencode-docs reference"
+  fi
+
+  if [[ -f "$ref" ]] &&
+     grep -q "https://opencode.ai/docs/references/" "$ref" &&
+     grep -q "https://opencode.ai/docs/config/" "$ref" &&
+     grep -q "https://opencode.ai/docs/providers/" "$ref" &&
+     grep -q "https://opencode.ai/docs/troubleshooting/" "$ref"; then
+    pass "reference pack contains linked OpenCode source docs"
+  else
+    fail "reference pack must include references/config/providers/troubleshooting source links"
+  fi
+
+  if grep -q 'config/references/opencode/REFERENCE.md' "$installer" &&
+     grep -q 'references/opencode/REFERENCE.md' "$installer"; then
+    pass "installer copies OpenCode reference pack"
+  else
+    fail "installer must copy OpenCode reference pack"
+  fi
+
+  if grep -q "@opencode-docs" "$pippy" && grep -q "@opencode-docs" "$build"; then
+    pass "pippy agents know when to use @opencode-docs"
+  else
+    fail "pippy and pippy-build must mention @opencode-docs for OpenCode config work"
   fi
 }
 
@@ -593,6 +634,7 @@ main() {
   test_markdown_frontmatter
   test_budget_command_is_guidance_only
   test_subagent_routing_config
+  test_opencode_reference_pack
   test_caveman_mode_not_cli_only
   test_external_deps_are_pinned
   test_pippy_build_bash_permissions
