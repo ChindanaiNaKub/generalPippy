@@ -206,6 +206,7 @@ test_subagent_routing_config() {
 
   if [[ -f "$manual_smoke" ]] &&
      grep -q "opencode debug config" "$manual_smoke" &&
+     grep -q "profile.json" "$manual_smoke" &&
      grep -q "pippy.permission.edit" "$manual_smoke" &&
      grep -q "pippy.permission.bash" "$manual_smoke" &&
      grep -q "pippy-build.model" "$manual_smoke" &&
@@ -563,6 +564,15 @@ test_doctor_script() {
     pass "doctor.sh exits 0 on current repo"
   else
     fail "doctor.sh exited non-zero on current repo:\n$output"
+  fi
+
+  if grep -q "PROFILE_METADATA" "$script" &&
+     grep -q "planning role renders as" "$script" &&
+     grep -q "implementation role renders as" "$script" &&
+     grep -q "system-task role renders as" "$script"; then
+    pass "doctor.sh validates role models from profile metadata"
+  else
+    fail "doctor.sh must validate role models from profile metadata"
   fi
 }
 
@@ -1248,6 +1258,13 @@ test_model_profile_and_advice() {
     else
       fail "advice.md must state advisors remain read-only"
     fi
+    if grep -q "no adapters are enabled" "$advice" &&
+       grep -q "conflict-aware summary" "$advice" &&
+       grep -q "asks the user instead of silently choosing" "$advice"; then
+      pass "advice.md covers no-advisor and conflict escalation behavior"
+    else
+      fail "advice.md must cover no-advisor and conflict escalation behavior"
+    fi
   else
     fail "advice.md missing"
   fi
@@ -1272,6 +1289,25 @@ test_model_profile_and_advice() {
     pass "install.sh writes advisors.json"
   else
     fail "install.sh must write advisors.json to generalpippy/"
+  fi
+
+  if grep -q "read_required_model" "$installer" &&
+     grep -q "not provider-verified" "$installer" &&
+     grep -q "command_template" "$installer"; then
+    pass "install.sh rejects blank Custom models and records advisor command templates"
+  else
+    fail "install.sh must reject blank Custom models and record advisor command templates"
+  fi
+
+  local readme="$REPO_ROOT/README.md"
+  local budget="$REPO_ROOT/config/commands/budget.md"
+  local manual_smoke="$REPO_ROOT/docs/agents/manual-smoke-tests.md"
+  if grep -q "passes them through to OpenCode without provider verification" "$readme" &&
+     grep -q "selected model profile and role-based model routing" "$budget" &&
+     grep -q "Advisor Adapter Checks" "$manual_smoke"; then
+    pass "docs cover Custom pass-through, profile-aware budget, and advisor smoke checks"
+  else
+    fail "docs must cover Custom pass-through, profile-aware budget, and advisor smoke checks"
   fi
 }
 

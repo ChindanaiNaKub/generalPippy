@@ -55,13 +55,15 @@ Choose your own models during installation. The installer prompts for:
 - Implementation model
 - System-tasks model
 
+Custom model IDs must be non-empty. GeneralPippy passes them through to OpenCode without provider verification; if a model ID is unavailable, OpenCode reports that at runtime.
+
 Check [OpenCode Go](https://opencode.ai/go) or OpenCode's session usage display for current pricing and actual spend.
 
 The installer records your selected profile in `~/.config/opencode/generalpippy/profile.json`.
 
 ## Advisor Adapters
 
-GeneralPippy can request read-only advice from external AI coding tools (claude-code, aider, codex, gemini) through advisor adapters. These are detected during installation but disabled by default to avoid surprising cost or privacy behavior.
+GeneralPippy can request read-only advice from external AI coding tools (claude-code, aider, codex, gemini, cursor) through advisor adapters. These are detected during installation but disabled by default to avoid surprising cost or privacy behavior.
 
 To enable an adapter, edit `~/.config/opencode/generalpippy/advisors.json` and set `"enabled": true` for the desired adapter. Use `/advice <adapter-name>` to request advice from an enabled adapter.
 
@@ -134,7 +136,7 @@ Default permissions (auto-allow):
 
 YOLO mode keeps safety in the workflow instead of permission prompts: Pippy stays scoped to the objective, reports risky commands, and does not auto-push or auto-PR unless explicitly requested.
 
-Pippy's primary agent coordinates and verifies. Workspace edits, file copies, config changes, bug fixes, refactors, and tests route to `pippy-build` on `opencode-go/mimo-v2.5`.
+Pippy's primary agent coordinates and verifies. Workspace edits, file copies, config changes, bug fixes, refactors, and tests route to `pippy-build` on the selected implementation role model (`opencode-go/mimo-v2.5` for Balanced).
 
 ## Token Efficiency
 
@@ -151,9 +153,9 @@ OpenCode's built-in session usage display is the authoritative source for exact 
 
 ## Routing Smoke Test
 
-After installing, run `scripts/doctor.sh` to validate agent frontmatter, permission boundaries, stale v1.0 references, and pinned deps automatically.
+After installing, run `scripts/doctor.sh` to validate agent frontmatter, permission boundaries, selected profile metadata, role-based model rendering, stale v1.0 references, and pinned deps automatically.
 
-Use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on `opencode-go/mimo-v2.5`.
+Use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on the selected implementation role model.
 
 Use [docs/agents/caveman-mode-smoke-test.md](docs/agents/caveman-mode-smoke-test.md) to verify that Pippy detects OpenCode Caveman mode and does not require a `caveman` shell executable.
 

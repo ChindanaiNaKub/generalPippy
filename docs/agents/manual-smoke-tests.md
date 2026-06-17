@@ -13,16 +13,20 @@ Use these checks after installing GeneralPippy when you need human-visible proof
 Run the automated validator first:
 
 ```bash
-scripts/doctor.sh
+OPENCODE_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/opencode" scripts/doctor.sh
 ```
 
 This checks agent frontmatter, permission boundaries, stale v1.0 references, and pinned deps. Returns non-zero on problems.
+
+When `~/.config/opencode/generalpippy/profile.json` exists, `scripts/doctor.sh` validates installed role models against that metadata instead of assuming the Balanced defaults.
 
 ## 1. Resolved Config
 
 In a shell, run:
 
 ```bash
+cat ~/.config/opencode/generalpippy/profile.json
+
 opencode debug config | jq '{
   default_agent,
   pippy: .agent.pippy.permission,
@@ -33,12 +37,13 @@ opencode debug config | jq '{
 
 Expected behavior:
 
+- `profile.json` records the selected model profile and concrete planning, implementation, and system-task role models.
 - `default_agent` is `pippy`.
 - `pippy.permission.edit` is `deny`.
 - `pippy.permission.bash` is `allow`.
 - `pippy.permission.task["pippy-build"]` is `allow`.
 - `pippy.permission.task["pippy-plan"]` is `allow`.
-- `pippy-build.model` is `opencode-go/mimo-v2.5`.
+- `pippy-build.model` matches the implementation role model in `profile.json` (`opencode-go/mimo-v2.5` for Balanced).
 - `pippy-build.permission.edit` is `allow`.
 - `pippy-build.permission.bash` is `allow`.
 - `pippy-build.permission.task` is `deny`.
@@ -70,6 +75,7 @@ Then run:
 Expected behavior:
 
 - `/budget` reports that implementation was delegated to `pippy-build`.
+- `/budget` reports the selected model profile and role-based routing when profile metadata is visible.
 - `/budget` points to OpenCode's built-in usage/cost display for exact spend.
 - `/budget` does not estimate exact tokens, model usage, or cost from conversation volume.
 - `/budget` distinguishes ponytail constraint (stdlib reuse behavior) from ponytail plugin (optional OpenCode plugin).
@@ -86,7 +92,23 @@ Expected behavior:
 - `pippy-plan` edits files or invokes implementation work.
 - `/budget` invents exact cost numbers.
 
-## 4. /ship Budget-Efficiency Checks
+## 4. Advisor Adapter Checks
+
+After install, inspect detected advisor adapters:
+
+```bash
+cat ~/.config/opencode/generalpippy/advisors.json
+```
+
+Expected behavior:
+
+- Detected advisor adapters are present with `"enabled": false`.
+- Each adapter has a read-only-oriented command template.
+- `/advice <adapter-name>` refuses disabled or unknown adapters and lists available adapters.
+- After manually setting one adapter to `"enabled": true`, `/advice <adapter-name>` prepares an advisor context bundle and treats the advisor response as non-authoritative evidence.
+- `/advice all` reports no enabled advisors when none are enabled, and summarizes agreement, disagreement, assumptions, and unresolved product or architecture conflicts when multiple advisors are enabled.
+
+## 5. /ship Budget-Efficiency Checks
 
 Run `/ship` in OpenCode and verify these budget-efficiency behaviors:
 
