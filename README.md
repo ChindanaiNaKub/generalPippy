@@ -48,10 +48,13 @@ cd generalPippy
 ./install.sh
 ```
 
-Or manually copy files to `~/.config/opencode/`:
-```bash
-cp -r config/* ~/.config/opencode/
-```
+The installer handles:
+- Backing up existing config files
+- Merging your existing plugins with GeneralPippy's pinned list
+- Installing npm plugins if package.json exists
+- Cleaning up obsolete v1.0 files
+
+**Note:** Always use `install.sh` rather than manually copying files. The installer provides safety features like backups, rollback on failure, and plugin merging that manual copying bypasses.
 
 ## Usage
 
@@ -103,7 +106,9 @@ OpenCode's built-in session usage display is the authoritative source for exact 
 
 ## Routing Smoke Test
 
-After installing, use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on `opencode-go/mimo-v2.5`.
+After installing, run `scripts/doctor.sh` to validate agent frontmatter, permission boundaries, stale v1.0 references, and pinned deps automatically.
+
+Use [docs/agents/subagent-routing-smoke-test.md](docs/agents/subagent-routing-smoke-test.md) to verify that implementation work creates a `pippy-build` child session on `opencode-go/mimo-v2.5`.
 
 Use [docs/agents/caveman-mode-smoke-test.md](docs/agents/caveman-mode-smoke-test.md) to verify that Pippy detects OpenCode Caveman mode and does not require a `caveman` shell executable.
 

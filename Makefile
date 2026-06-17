@@ -15,7 +15,7 @@ test:
 lint:
 	@echo "Running shellcheck..."
 	@if command -v "$(SHELLCHECK)" >/dev/null 2>&1; then \
-		$(SHELLCHECK) install.sh tests/install.sh tests/validate.sh; \
+		$(SHELLCHECK) install.sh tests/install.sh tests/validate.sh scripts/doctor.sh; \
 	else \
 		echo "$(SHELLCHECK) not found. Skipping lint."; \
 		echo "Install from: https://github.com/koalaman/shellcheck"; \

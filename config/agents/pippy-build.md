@@ -5,7 +5,77 @@ model: opencode-go/mimo-v2.5
 temperature: 0.2
 permission:
   edit: allow
-  bash: allow
+  bash:
+    "*": ask
+    "pwd": allow
+    "ls*": allow
+    "find*": allow
+    "cat*": allow
+    "sed -n*": allow
+    "head*": allow
+    "tail*": allow
+    "wc*": allow
+    "nl*": allow
+    "rg*": allow
+    "grep*": allow
+    "tree*": allow
+    "jq*": allow
+    "file*": allow
+    "stat*": allow
+    "du -sh*": allow
+    "git status*": allow
+    "git log*": allow
+    "git diff*": allow
+    "git show*": allow
+    "git branch*": allow
+    "command -v *": allow
+    "which *": allow
+    "make all": allow
+    "make test": allow
+    "make lint": allow
+    "npm test*": allow
+    "npm run test*": allow
+    "npm run lint*": allow
+    "pnpm test*": allow
+    "pnpm run test*": allow
+    "pnpm run lint*": allow
+    "pytest*": allow
+    "cargo test*": allow
+    "go test*": allow
+    "rtk pwd": allow
+    "rtk ls*": allow
+    "rtk find*": allow
+    "rtk cat*": allow
+    "rtk sed -n*": allow
+    "rtk head*": allow
+    "rtk tail*": allow
+    "rtk wc*": allow
+    "rtk nl*": allow
+    "rtk rg*": allow
+    "rtk grep*": allow
+    "rtk tree*": allow
+    "rtk jq*": allow
+    "rtk file*": allow
+    "rtk stat*": allow
+    "rtk du -sh*": allow
+    "rtk git status*": allow
+    "rtk git log*": allow
+    "rtk git diff*": allow
+    "rtk git show*": allow
+    "rtk command -v *": allow
+    "rtk which *": allow
+    "rtk make all": allow
+    "rtk make test": allow
+    "rtk make lint": allow
+    "rtk npm test*": allow
+    "rtk npm run test*": allow
+    "rtk npm run lint*": allow
+    "rtk pnpm test*": allow
+    "rtk pnpm run test*": allow
+    "rtk pnpm run lint*": allow
+    "rtk pytest*": allow
+    "rtk cargo test*": allow
+    "rtk go test*": allow
   task: deny
   skill: allow
 ---
@@ -76,6 +146,22 @@ You're running on MiMo V2.5 (cheap model) — be efficient:
 - Don't over-explain — just do the work
 - Focus on the task, not on explaining what you're doing
 - If the task is complex, break it into smaller steps
+
+## Gated Actions
+
+Your bash permissions use a granular read-only + gated-action model. Read-only commands and common build/test/status commands auto-allow. The following require user confirmation:
+
+- **Destructive actions:** `rm`, `mv`, `cp -r`, `chmod` (recursive), `chown`
+- **Git mutations:** `git push`, `git commit`, `git add .`, `git checkout --`, `git reset --hard`
+- **Dependency installs:** `npm install`, `npm ci`, `pip install`, `uv pip install`, `pnpm install`
+- **External API / cloud actions:** `curl`, `wget`, `aws`, `gcloud`, `az`
+- **Writes outside workspace:** any command that creates files outside the project root
+
+If the primary agent routes a step that requires a gated action, report the action needed and let the user approve it.
+
+## Primary Agent Boundary
+
+The primary agent (`pippy`) must NOT make edits. Its `edit` permission is denied. Any step that changes files, creates files, refactors, fixes bugs, or writes tests must be routed to you via the Task tool. If the primary agent attempts to edit directly, treat it as a routing failure.
 
 ## Important Notes
 

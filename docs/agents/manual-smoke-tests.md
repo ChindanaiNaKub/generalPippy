@@ -8,6 +8,16 @@ Use these checks after installing GeneralPippy when you need human-visible proof
 2. Start OpenCode in this repo with `opencode`.
 3. Confirm the active/default agent is `pippy`.
 
+## Automated Doctor Check
+
+Run the automated validator first:
+
+```bash
+scripts/doctor.sh
+```
+
+This checks agent frontmatter, permission boundaries, stale v1.0 references, and pinned deps. Returns non-zero on problems.
+
 ## 1. Resolved Config
 
 In a shell, run:
@@ -72,3 +82,17 @@ Expected behavior:
 - `pippy-build` runs on a strong model instead of `opencode-go/mimo-v2.5`.
 - `pippy-plan` edits files or invokes implementation work.
 - `/budget` invents exact cost numbers.
+
+## 4. /ship Budget-Efficiency Checks
+
+Run `/ship` in OpenCode and verify these budget-efficiency behaviors:
+
+- **rtk for git/status**: `/ship` uses `rtk git status`, `rtk git log`, and `rtk git diff` instead of raw git commands for read-only operations.
+- **Context compression before final gate**: `/ship` compresses context (via caveman mode or explicit compress) before the final verification gate to reduce token usage.
+- **Caveman-full reporting**: When caveman mode is available, `/ship` reports in caveman-full compression style for status, build, and verification output.
+- **No re-fetch of releases**: After `gh release create` succeeds, `/ship` trusts the exit status and does not re-fetch the release metadata to confirm it exists.
+
+Expected failure signals:
+- `/ship` runs raw `git status` instead of `rtk git status` when rtk is installed.
+- `/ship` re-fetches release info after creating a release.
+- `/ship` reports in full prose when caveman mode is available.

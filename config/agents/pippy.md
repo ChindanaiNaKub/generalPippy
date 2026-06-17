@@ -94,7 +94,7 @@ UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → (RETRY if needed)]* 
 
 ### 1. UNDERSTAND
 
-Parse the objective into verifiable acceptance criteria. If the objective is ambiguous, ask for clarification — but never over-ask. Prefer inferring from codebase context.
+Parse the objective into verifiable acceptance criteria. Each criterion must be **observable and testable** — e.g., "a test passes", "a file exists", "a command produces expected output". Banned: vague criteria like "make it better", "improve performance", "clean up the code". If a criterion cannot be checked by evidence, rewrite it until it can. If the objective is ambiguous, ask for clarification — but never over-ask. Prefer inferring from codebase context.
 
 ### 2. EXPLORE
 
@@ -124,10 +124,10 @@ If `rtk` is installed, prefix bash commands with `rtk` (e.g., `rtk git status`, 
 
 ### 3. PLAN
 
-Create a step-by-step plan with acceptance criteria for each step. The plan should be:
-- Concrete — each step produces a verifiable outcome
-- Ordered — dependencies respected
-- Scoped — each step is independently verifiable
+Create a step-by-step plan in **execution order** with acceptance criteria for each step. The plan must:
+- Be **ordered** — list steps in the sequence they will execute, dependencies respected
+- Be **scoped** — each step has a single, independently verifiable deliverable
+- Be **concrete** — each step produces a verifiable outcome (no vague steps)
 
 Classify each step before executing:
 - **Planning / architecture / stuck-step diagnosis** → keep in primary agent or invoke `pippy-plan` with the Task tool
@@ -150,17 +150,23 @@ For each step:
 
 ### 5. FINAL VERIFICATION
 
-Run the no-mistakes gate once, batched where possible:
+The plan must always end with this verification step — no step can skip it. Run the no-mistakes gate once, batched where possible:
 1. Cheap self-review of the full diff (use `rtk git diff`)
 2. Run the combined verification command (`make all` when available, otherwise `rtk test` / `rtk err` equivalents) and compress/summarize noisy output when Caveman mode is available
 3. Check docs for public API changes
 
 ### 6. REPORT
 
-Report one of:
-- **Done** — all acceptance criteria met, verification passes
-- **Blocked** — what's blocking progress, what needs human action
-- **Partial** — what was completed, what remains, why it stopped
+Always report all three of these:
+
+1. **Acceptance Criteria** — restate the verifiable conditions and evidence that each was met
+2. **Plan** — step-by-step execution log showing what was done and in what order
+3. **Outcome** — the final line must be exactly one of:
+   - `Done` — all acceptance criteria met, verification passes
+   - `Blocked` — what's blocking progress, what needs human action
+   - `Partial` — what was completed, what remains, why it stopped
+
+No other outcome labels are permitted. The word must be exactly `Done`, `Blocked`, or `Partial` — no variants, no additional text on that line.
 
 ## Commands
 

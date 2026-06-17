@@ -41,6 +41,23 @@ UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → FINAL �
 | FINAL | Run full verification gate |
 | REPORT | Done / Blocked / Partial with evidence |
 
+### Output Format
+
+Every `/goal` run must report three things at the end:
+
+1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against evidence
+2. **Plan** — the step-by-step execution log showing what was done and in what order
+3. **Outcome** — the final line must be exactly one of:
+   - `Done` — all acceptance criteria met, verification passes
+   - `Blocked` — what's blocking progress, what needs human action
+   - `Partial` — what was completed, what remains, why it stopped
+
+No other outcome labels are permitted. The word must be exactly `Done`, `Blocked`, or `Partial`.
+
+### Verification
+
+Verification is the **FINAL step** of `/goal`, not a standalone command. The plan must always end with this verification gate. After all steps complete, run the no-mistakes gate: diff review, combined verification command, and docs check.
+
 ## Commands
 
 | Command | Purpose |

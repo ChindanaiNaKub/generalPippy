@@ -11,14 +11,14 @@
 
   // Plugins
   "plugin": [
-    "@tarquinen/opencode-dcp@latest"
+    "@tarquinen/opencode-dcp@0.0.4"
   ],
 
   // MCP servers
   "mcp": {
     "jcodemunch": {
       "type": "local",
-      "command": ["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git", "jcodemunch-mcp"],
+      "command": ["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git@v0.1.0", "jcodemunch-mcp"],
       "enabled": true
     }
   },
