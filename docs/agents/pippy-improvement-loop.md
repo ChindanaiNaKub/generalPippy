@@ -4,7 +4,7 @@ The Pippy improvement loop is a human-reviewed process for refining Pippy's prom
 
 ## How It Works
 
-1. **Collect goal run reports.** Each `/goal` run produces a structured report with acceptance criteria, execution plan/log, evidence, routing decisions, retry causes, improvement signal, and outcome.
+1. **Collect goal run reports.** Each `/goal` run produces a structured report with acceptance criteria, run evidence, routing decisions, retry causes, improvement signal, and outcome. Run evidence is compact: commands run, verification outputs, routing decisions, retry causes, and final evidence. It is not a raw trace, telemetry store, or persistent observability system.
 2. **Review the Improvement Signal.** The Improvement Signal field identifies Pippy-owned friction — problems in Pippy's own prompts, routing logic, acceptance-criteria shaping, context assembly, or verification habits. It is always present and limited to Pippy-owned friction.
 3. **Distinguish Pippy-owned friction from ordinary project failure.** Pippy-owned friction is things like: acceptance criteria were vague and had to be rewritten mid-run, a file was read multiple times because context was not compressed, the retry bundle omitted failure context so the first retry failed identically, or review routing produced findings but the final verification gate was skipped. Ordinary project failure is things like: the user's objective was genuinely blocked by a missing dependency, the codebase had a pre-existing bug unrelated to Pippy, or the task required human judgment that no agent could resolve.
 4. **Turn accepted signals into changes.** A maintainer reviews accepted signals and decides whether to modify Pippy's prompts (pippy.md, SKILL.md, goal.md), add or adjust commands, update skills, write new tests, or update documentation. Each change should be scoped to one signal and verifiable.
@@ -15,6 +15,13 @@ The Pippy improvement loop is a human-reviewed process for refining Pippy's prom
 - It does **not** automatically modify Pippy. All changes are human-reviewed and manually applied.
 - It does **not** train or fine-tune any model. Signals inform prompt and config changes only.
 - It does **not** replace ordinary project debugging. If a `/goal` run fails due to a codebase bug, that is not an improvement signal.
+- It does **not** add runtime guardrail hooks from generic concern alone. Treat possible guardrails as guardrail candidates until repeated run evidence shows a specific safety or workflow rule is needed.
+
+## Guardrail Candidates
+
+A guardrail candidate is a proposed deterministic safety or workflow rule for the Pippy harness. Examples could include blocking secret commits or enforcing primary-agent no-edit behavior outside prompts/tests, but only repeated run evidence should promote a candidate into implementation work.
+
+Do not add runtime hooks just because a category sounds important. GeneralPippy is config-only, and OpenCode hook behavior is a platform-level commitment. Create an ADR only when the guardrail is hard to reverse, surprising without context, and the result of a real trade-off.
 
 ## Relationship to the Pippy Loop Stack
 

@@ -31,6 +31,8 @@ Each acceptance criterion must be **observable and testable**. Valid examples:
 
 Banned: vague criteria like "make it better", "improve performance", "clean up the code". If a criterion cannot be checked by evidence, rewrite it until it can.
 
+Scale verification rigor to task risk while shaping acceptance criteria. Use higher rigor when the objective touches release prep, auth, security, data loss, installer behavior, permissions, or public docs/config: require stronger evidence such as targeted tests, full validation commands, diff review, and docs checks. For low-risk prototype or small documentation work, lightweight evidence such as a focused diff or file check is acceptable. Do not introduce a separate mode flag; express the rigor through the acceptance criteria and plan.
+
 ### Plan Rules
 
 The plan must list steps **in execution order** with dependencies respected. Each step must have a **single, independently verifiable deliverable** — one clear thing that can be checked as done or not done.
@@ -39,8 +41,8 @@ The plan must list steps **in execution order** with dependencies respected. Eac
 
 Every `/goal` run must report four things at the end:
 
-1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against evidence; each criterion must include the evidence (command output, test result, file path, diff)
-2. **Plan** — the step-by-step execution log showing what was done and in what order; include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened
+1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against run evidence; each criterion must include final evidence (command output, test result, file path, diff)
+2. **Plan** — the compact run evidence trail showing what was done and in what order; include commands run, verification outputs, trajectory checkpoints for explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, or persistent observability system.
 3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal
 4. **Outcome** — one of:
    - `Done` — all acceptance criteria met, verification passes
@@ -51,8 +53,9 @@ Every `/goal` run must report four things at the end:
 
 Review and final verification are the closing gates of `/goal`, not standalone commands. The plan must always end with review followed by final verification before reporting outcome. After all execution steps complete:
 1. Cheap self-review of the full diff (use `rtk git diff` when `rtk` is installed)
-2. Run the combined verification command (`rtk make all` when `rtk` and `make all` are available, otherwise `rtk test` / `rtk err` equivalents)
-3. Check docs for public API changes
+2. Apply the review checklist for last-20% failures: edge cases, error handling, integration assumptions, hallucinated dependencies, and clever-looking generated code that passes shallow tests but may be conceptually wrong
+3. Run the combined verification command (`rtk make all` when `rtk` and `make all` are available, otherwise `rtk test` / `rtk err` equivalents)
+4. Check docs for public API changes
 
 ### Examples
 
@@ -64,7 +67,8 @@ Review and final verification are the closing gates of `/goal`, not standalone c
 
 ### Notes
 
-- YOLO mode is on by default (auto-allow reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`; command output should go through `rtk` when installed).
+- YOLO mode is on by default (auto-allow reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`).
+- RTK Force is mandatory when `rtk` is installed: `command -v rtk` is the only allowed raw detection command, then every later shell command must go through `rtk` (`rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk make all`, or `rtk run` / `rtk proxy`). Raw `git` of any kind, `gh`, `make`, or test commands after rtk was found are Pippy-owned routing failures and must appear in the Improvement Signal.
 - Pippy stops only when acceptance criteria are met by evidence.
 - Use `/ship` as a shortcut for PR prep.
 - Use OpenCode's session usage display for exact tokens/cost, and `/budget` for routing and efficiency guidance.

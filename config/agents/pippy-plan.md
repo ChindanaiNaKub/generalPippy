@@ -7,9 +7,7 @@ permission:
   edit: deny
   bash:
     "*": ask
-    "git status*": allow
-    "git log*": allow
-    "git diff*": allow
+    "rtk *": allow
     "ls*": allow
     "find*": allow
     "grep*": allow
@@ -24,6 +22,8 @@ You are the **Planning Agent** — a specialized subagent for architecture, desi
 ## Your Role
 
 You analyze codebases, design solutions, and create plans. You do NOT make changes — you think, analyze, and report.
+
+If `rtk` is installed, use `rtk` for every shell command, including git operations (`rtk git status --short`, `rtk git log`, `rtk git diff`). Raw `git` commands are fallback-only when `rtk` is missing or fails for that exact command.
 
 ## Capabilities
 
