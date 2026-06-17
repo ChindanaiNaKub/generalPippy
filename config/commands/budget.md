@@ -12,9 +12,9 @@ Report only what can be grounded in the visible session:
 1. Whether the task should have delegated implementation to `pippy-build`
 2. Whether planning or stuck-step diagnosis should have used `pippy-plan`
 3. Whether the conversation appears to be running too long before compaction
-4. Whether `rtk`, Caveman mode, and jcodemunch were used where appropriate
+4. Whether `rtk`, Caveman mode, jcodemunch, and ponytail were used where appropriate
 5. Whether verification was batched (e.g., `make all`) instead of running separate redundant commands
-6. Specific optimization suggestions for the next step
+6. Specific optimization suggestions for the next step, including an explicit compression recommendation when a finished work block is obvious
 
 If the user asks for exact spend, answer:
 
@@ -25,9 +25,20 @@ If the user asks for exact spend, answer:
 - No subagent delegation happened for a straightforward coding/editing task
 - Large file reads, repeated diffs, or verbose test output are inflating context
 - Verification commands are run redundantly instead of batched safely (e.g., prefer `make all` over separate `make test` + `make lint`)
+- The session added new scripts, dependencies, wrappers, or custom logic without first considering existing stdlib, repo utilities, native OpenCode behavior, or already-installed dependencies
 
 For caveman, distinguish:
 - **Caveman mode**: OpenCode command/config mode. Treat it as available when `/caveman` exists in OpenCode commands or `AGENTS.md` contains a `caveman-begin` block.
 - **Caveman CLI**: optional shell executable. Do not report Caveman mode as missing merely because `command -v caveman` fails.
+
+For ponytail, distinguish:
+- **ponytail constraint**: planning/build behavior that prefers stdlib, existing dependencies, repo-local utilities, and native platform features before adding new code or dependencies.
+- **ponytail plugin**: optional OpenCode plugin. If installed but no relevant reuse decision appears in the visible work, report it as "not visibly exercised" rather than failed.
+- Treat ponytail as a soft observation by default. Make it a warning only when the visible session added custom logic, wrappers, scripts, or dependencies without showing reuse consideration.
+
+For optional efficiency tools generally:
+- Use **not applicable** when the session type did not call for the tool (for example, jcodemunch during docs-only work or ponytail when no new code/dependency choice occurred).
+- Use **not visibly exercised** when the tool or constraint may have mattered but the visible session contains no evidence that it shaped the work.
+- Use **missed opportunity** when visible evidence shows the tool or constraint should have been used and was not.
 
 **Usage:** /budget

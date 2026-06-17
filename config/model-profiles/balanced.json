@@ -1,0 +1,9 @@
+{
+  "name": "Balanced",
+  "description": "Current tested defaults for GeneralPippy",
+  "models": {
+    "planning": "opencode-go/kimi-k2.7-code",
+    "implementation": "opencode-go/mimo-v2.5",
+    "system": "opencode-go/deepseek-v4-flash"
+  }
+}

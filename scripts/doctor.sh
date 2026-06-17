@@ -133,6 +133,108 @@ else
   ok "no stale /verify command in config/commands/"
 fi
 
+# --- 6. Budget command guidance ---
+section "Budget command guidance"
+
+budget="$REPO_ROOT/config/commands/budget.md"
+if [[ ! -f "$budget" ]]; then
+  error "config/commands/budget.md missing"
+else
+  # ponytail constraint vs ponytail plugin
+  if grep -q "ponytail constraint" "$budget" && grep -q "ponytail plugin" "$budget"; then
+    ok "budget distinguishes ponytail constraint from ponytail plugin"
+  else
+    error "budget must distinguish ponytail constraint from ponytail plugin"
+  fi
+
+  # optional-tool statuses
+  if grep -q "not applicable" "$budget" && grep -q "not visibly exercised" "$budget" && grep -q "missed opportunity" "$budget"; then
+    ok "budget defines optional-tool statuses (not applicable, not visibly exercised, missed opportunity)"
+  else
+    error "budget must define optional-tool statuses: not applicable, not visibly exercised, missed opportunity"
+  fi
+
+  # explicit compression recommendation
+  if grep -qi "compression recommendation" "$budget"; then
+    ok "budget includes explicit compression recommendation"
+  else
+    error "budget must include an explicit compression recommendation"
+  fi
+
+  # Caveman mode vs Caveman CLI
+  if grep -q "Caveman mode" "$budget" && grep -q "Caveman CLI" "$budget"; then
+    ok "budget distinguishes Caveman mode from Caveman CLI"
+  else
+    error "budget must distinguish Caveman mode from Caveman CLI"
+  fi
+fi
+
+# --- 7. Model profiles ---
+section "Model profiles"
+
+profile_json="$REPO_ROOT/config/model-profiles/balanced.json"
+if [[ ! -f "$profile_json" ]]; then
+  error "config/model-profiles/balanced.json missing"
+else
+  ok "model-profiles/balanced.json exists"
+
+  # Verify expected models using python3 or grep.
+  if grep -q '"opencode-go/kimi-k2.7-code"' "$profile_json" && \
+     grep -q '"opencode-go/mimo-v2.5"' "$profile_json" && \
+     grep -q '"opencode-go/deepseek-v4-flash"' "$profile_json"; then
+    ok "balanced.json contains expected model defaults"
+  else
+    error "balanced.json must contain kimi-k2.7-code, mimo-v2.5, deepseek-v4-flash"
+  fi
+fi
+
+# --- 8. Advice command ---
+section "Advice command"
+
+advice="$REPO_ROOT/config/commands/advice.md"
+if [[ ! -f "$advice" ]]; then
+  error "config/commands/advice.md missing"
+else
+  ok "config/commands/advice.md exists"
+
+  if head -1 "$advice" | grep -q '^---$'; then
+    ok "advice.md has frontmatter"
+  else
+    error "advice.md missing frontmatter"
+  fi
+fi
+
+# --- 9. Decision records ---
+section "Decision records"
+
+adr7="$REPO_ROOT/docs/adr/0007-dynamic-model-routing-decision.md"
+adr8="$REPO_ROOT/docs/adr/0008-improve-pippy-command-decision.md"
+
+for adr in "$adr7" "$adr8"; do
+  label="$(basename "$adr")"
+  if [[ ! -f "$adr" ]]; then
+    error "$label missing"
+    continue
+  fi
+  ok "$label exists"
+
+  # Check required sections (Status may be "## Status" heading or "Status: accepted" field)
+  for section_name in Context Decision Consequences References; do
+    if grep -qi "^## $section_name" "$adr"; then
+      ok "$label has $section_name"
+    else
+      error "$label missing $section_name section"
+    fi
+  done
+
+  # Status can be either a heading or a field
+  if grep -qi "^## Status" "$adr" || grep -qi "^Status:" "$adr"; then
+    ok "$label has Status"
+  else
+    error "$label missing Status section"
+  fi
+done
+
 # --- Summary ---
 echo ""
 if [[ $ERRORS -eq 0 ]]; then

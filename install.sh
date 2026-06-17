@@ -20,6 +20,7 @@ declare -a COPY_TARGETS=(
   "config/commands/goal.md:$OPENCODE_CONFIG/commands/goal.md"
   "config/commands/ship.md:$OPENCODE_CONFIG/commands/ship.md"
   "config/commands/budget.md:$OPENCODE_CONFIG/commands/budget.md"
+  "config/commands/advice.md:$OPENCODE_CONFIG/commands/advice.md"
   "config/skills/pippy/SKILL.md:$OPENCODE_CONFIG/skills/pippy/SKILL.md"
   "config/references/opencode/REFERENCE.md:$OPENCODE_CONFIG/references/opencode/REFERENCE.md"
 )
@@ -48,6 +49,14 @@ declare -a CREATED_PATHS=()
 PINNED_PLUGINS=(
   "@tarquinen/opencode-dcp@0.0.4"
 )
+
+# Default models for the Balanced profile.
+BALANCED_PLANNING_MODEL="opencode-go/kimi-k2.7-code"
+BALANCED_IMPLEMENTATION_MODEL="opencode-go/mimo-v2.5"
+BALANCED_SYSTEM_MODEL="opencode-go/deepseek-v4-flash"
+
+# Metadata directory under OPENCODE_CONFIG.
+GENERALPIPPY_DIR="$OPENCODE_CONFIG/generalpippy"
 
 usage() {
   cat <<EOF
@@ -518,6 +527,306 @@ report_optional_manual() {
   info "  $install_url"
 }
 
+choose_model_profile() {
+  # Interactive model profile selection.
+  # Sets SELECTED_PROFILE, SELECTED_PLANNING, SELECTED_IMPLEMENTATION, SELECTED_SYSTEM.
+  SELECTED_PROFILE="Balanced"
+  SELECTED_PLANNING="$BALANCED_PLANNING_MODEL"
+  SELECTED_IMPLEMENTATION="$BALANCED_IMPLEMENTATION_MODEL"
+  SELECTED_SYSTEM="$BALANCED_SYSTEM_MODEL"
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    info "Would prompt for model profile selection (default: Balanced)"
+    return 0
+  fi
+
+  echo ""
+  log "📋 Model Profiles"
+  log ""
+  log "  1) Balanced (default) — Current tested defaults"
+  log "     Planning:     $BALANCED_PLANNING_MODEL"
+  log "     Implementation: $BALANCED_IMPLEMENTATION_MODEL"
+  log "     System tasks:   $BALANCED_SYSTEM_MODEL"
+  log "  2) Custom — Enter your own models"
+  log ""
+
+  local choice=""
+  read -r -p "  Select profile [1]: " choice || true
+  choice="${choice:-1}"
+
+  if [[ "$choice" == "2" ]]; then
+    SELECTED_PROFILE="Custom"
+    log ""
+    log "  Enter model strings (provider/model-id format):"
+    log ""
+
+    local input=""
+    while true; do
+      input=""
+      read -r -p "  Planning model [$BALANCED_PLANNING_MODEL]: " input || true
+      SELECTED_PLANNING="${input:-$BALANCED_PLANNING_MODEL}"
+      [[ -n "$SELECTED_PLANNING" ]] && break
+      warn "Model string cannot be empty."
+    done
+
+    while true; do
+      input=""
+      read -r -p "  Implementation model [$BALANCED_IMPLEMENTATION_MODEL]: " input || true
+      SELECTED_IMPLEMENTATION="${input:-$BALANCED_IMPLEMENTATION_MODEL}"
+      [[ -n "$SELECTED_IMPLEMENTATION" ]] && break
+      warn "Model string cannot be empty."
+    done
+
+    while true; do
+      input=""
+      read -r -p "  System-tasks model [$BALANCED_SYSTEM_MODEL]: " input || true
+      SELECTED_SYSTEM="${input:-$BALANCED_SYSTEM_MODEL}"
+      [[ -n "$SELECTED_SYSTEM" ]] && break
+      warn "Model string cannot be empty."
+    done
+  fi
+
+  log ""
+  success "Selected profile: $SELECTED_PROFILE"
+  log "  Planning:       $SELECTED_PLANNING"
+  log "  Implementation: $SELECTED_IMPLEMENTATION"
+  log "  System tasks:   $SELECTED_SYSTEM"
+}
+
+patch_installed_models() {
+  # Patch installed config files to use the selected model profile.
+  local planning="$1"
+  local implementation="$2"
+  local system="$3"
+
+  if [[ "$SELECTED_PROFILE" == "Balanced" ]]; then
+    return 0  # No patching needed; source files already have Balanced defaults.
+  fi
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    info "Would patch installed files with custom models:"
+    info "  opencode.jsonc: model=$planning, small_model=$system"
+    info "  agents/pippy.md: model=$planning"
+    info "  agents/pippy-plan.md: model=$planning"
+    info "  agents/pippy-build.md: model=$implementation"
+    return 0
+  fi
+
+  if command -v python3 &> /dev/null; then
+    python3 - "$OPENCODE_CONFIG" "$planning" "$implementation" "$system" <<'PY'
+import re, sys
+
+config_dir = sys.argv[1]
+planning = sys.argv[2]
+implementation = sys.argv[3]
+system = sys.argv[4]
+
+# Patch opencode.jsonc: replace model and small_model values.
+jsonc_path = f"{config_dir}/opencode.jsonc"
+with open(jsonc_path) as f:
+    text = f.read()
+text = re.sub(r'"model"\s*:\s*"[^"]*"', f'"model": "{planning}"', text)
+text = re.sub(r'"small_model"\s*:\s*"[^"]*"', f'"small_model": "{system}"', text)
+with open(jsonc_path, 'w') as f:
+    f.write(text)
+
+# Patch agent markdown files: replace model: frontmatter value.
+agent_models = {
+    f"{config_dir}/agents/pippy.md": planning,
+    f"{config_dir}/agents/pippy-plan.md": planning,
+    f"{config_dir}/agents/pippy-build.md": implementation,
+}
+for path, model in agent_models.items():
+    with open(path) as f:
+        text = f.read()
+    text = re.sub(r'^model:\s*\S+', f'model: {model}', text, count=1, flags=re.MULTILINE)
+    with open(path, 'w') as f:
+        f.write(text)
+PY
+  elif command -v perl &> /dev/null; then
+    # Fallback: perl-based replacement.
+    perl -i -pe "s/^model:\s*\S+/model: $planning/ if \$. == 4" \
+      "$OPENCODE_CONFIG/agents/pippy.md" \
+      "$OPENCODE_CONFIG/agents/pippy-plan.md"
+    perl -i -pe "s/^model:\s*\S+/model: $implementation/ if \$. == 4" \
+      "$OPENCODE_CONFIG/agents/pippy-build.md"
+    perl -i -pe "s/\"model\"\s*:\s*\"[^\"]*\"/\"model\": \"$planning\"/" \
+      "$OPENCODE_CONFIG/opencode.jsonc"
+    perl -i -pe "s/\"small_model\"\s*:\s*\"[^\"]*\"/\"small_model\": \"$system\"/" \
+      "$OPENCODE_CONFIG/opencode.jsonc"
+  else
+    # Last resort: sed (less reliable for multiline).
+    sed -i "s|^model: .*|model: $planning|" \
+      "$OPENCODE_CONFIG/agents/pippy.md" \
+      "$OPENCODE_CONFIG/agents/pippy-plan.md"
+    sed -i "s|^model: .*|model: $implementation|" \
+      "$OPENCODE_CONFIG/agents/pippy-build.md"
+    sed -i "s|\"model\": \"[^\"]*\"|\"model\": \"$planning\"|" \
+      "$OPENCODE_CONFIG/opencode.jsonc"
+    sed -i "s|\"small_model\": \"[^\"]*\"|\"small_model\": \"$system\"|" \
+      "$OPENCODE_CONFIG/opencode.jsonc"
+  fi
+
+  success "Patched installed files with custom models"
+}
+
+write_profile_metadata() {
+  # Write profile metadata to generalpippy/profile.json.
+  local profile="$1"
+  local planning="$2"
+  local implementation="$3"
+  local system="$4"
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    info "Would write profile metadata to $GENERALPIPPY_DIR/profile.json"
+    return 0
+  fi
+
+  mkdir -p "$GENERALPIPPY_DIR"
+  if command -v python3 &> /dev/null; then
+    python3 - "$GENERALPIPPY_DIR/profile.json" "$profile" "$planning" "$implementation" "$system" <<'PY'
+import json, sys
+
+path = sys.argv[1]
+profile = sys.argv[2]
+planning = sys.argv[3]
+implementation = sys.argv[4]
+system = sys.argv[5]
+
+data = {
+    "profile": profile,
+    "models": {
+        "planning": planning,
+        "implementation": implementation,
+        "system": system
+    }
+}
+
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+PY
+  else
+    cat > "$GENERALPIPPY_DIR/profile.json" <<EOF
+{
+  "profile": "$profile",
+  "models": {
+    "planning": "$planning",
+    "implementation": "$implementation",
+    "system": "$system"
+  }
+}
+EOF
+  fi
+
+  success "Profile metadata written to $GENERALPIPPY_DIR/profile.json"
+}
+
+detect_advisors() {
+  # Detect common advisor CLI executables and write advisors.json.
+  # All detected advisors are disabled by default.
+  local advisors_json="$GENERALPIPPY_DIR/advisors.json"
+
+  # Define known advisors: name:command:read_only_flag:description
+  local -a known_advisors=(
+    "claude-code:claude-code:--read-only:Anthropic Claude Code CLI"
+    "aider:aider:--readonly:Aider AI pair programming"
+    "codex:codex::OpenAI Codex CLI"
+    "gemini:gemini::Google Gemini CLI"
+  )
+
+  local detected=()
+
+  for entry in "${known_advisors[@]}"; do
+    IFS=':' read -r name cmd flag desc <<< "$entry"
+    if command -v "$cmd" &> /dev/null; then
+      detected+=("$name:$cmd:$flag:$desc")
+    fi
+  done
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    if [[ ${#detected[@]} -gt 0 ]]; then
+      info "Would detect advisor CLIs:"
+      for entry in "${detected[@]}"; do
+        IFS=':' read -r name cmd flag desc <<< "$entry"
+        info "  $name ($cmd) — $desc"
+      done
+    else
+      info "Would detect advisor CLIs (none found)"
+    fi
+    return 0
+  fi
+
+  mkdir -p "$GENERALPIPPY_DIR"
+
+  # Build JSON using python3 if available, otherwise heredoc.
+  if command -v python3 &> /dev/null; then
+    local advisors_tsv
+    advisors_tsv="$(mktemp)"
+    {
+      for entry in "${detected[@]}"; do
+        IFS=':' read -r name cmd flag desc <<< "$entry"
+        printf '%s\t%s\t%s\t%s\n' "$name" "$cmd" "$flag" "$desc"
+      done
+    } > "$advisors_tsv"
+
+    python3 - "$advisors_json" "$advisors_tsv" <<'PY'
+import json, sys
+
+path = sys.argv[1]
+tsv_path = sys.argv[2]
+data = {"adapters": {}}
+
+with open(tsv_path) as f:
+    for line in f:
+        line = line.rstrip("\n")
+        if not line:
+            continue
+        name, command, read_only_flag, description = line.split("\t", 3)
+        data["adapters"][name] = {
+            "detected": True,
+            "enabled": False,
+            "command": command,
+            "read_only_flag": read_only_flag,
+            "description": description,
+        }
+
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+PY
+    rm -f "$advisors_tsv"
+  else
+    # Fallback: build JSON with heredoc.
+    {
+      echo '{'
+      echo '  "adapters": {'
+      local first=1
+      for entry in "${detected[@]}"; do
+        IFS=':' read -r name cmd flag desc <<< "$entry"
+        if [[ $first -eq 1 ]]; then
+          first=0
+        else
+          echo ','
+        fi
+        printf '    "%s": {"detected": true, "enabled": false, "command": "%s", "read_only_flag": "%s", "description": "%s"}' \
+          "$name" "$cmd" "$flag" "$desc"
+      done
+      echo ''
+      echo '  }'
+      echo '}'
+    } > "$advisors_json"
+  fi
+
+  if [[ ${#detected[@]} -gt 0 ]]; then
+    success "Detected ${#detected[@]} advisor CLI(s)"
+  else
+    info "No advisor CLIs detected (empty adapters written)"
+  fi
+
+  success "Advisor metadata written to $advisors_json"
+}
+
 main() {
   parse_args "$@"
 
@@ -538,7 +847,7 @@ main() {
 
   log "📁 Preparing directories..."
   if [[ $DRY_RUN -eq 1 ]]; then
-    info "Would create: $OPENCODE_CONFIG/{agents,commands,skills/pippy}"
+    info "Would create: $OPENCODE_CONFIG/{agents,commands,skills/pippy,generalpippy}"
   else
     local _dirs=(
       "$OPENCODE_CONFIG"
@@ -546,6 +855,7 @@ main() {
       "$OPENCODE_CONFIG/commands"
       "$OPENCODE_CONFIG/skills/pippy"
       "$OPENCODE_CONFIG/references/opencode"
+      "$GENERALPIPPY_DIR"
     )
     local _d
     for _d in "${_dirs[@]}"; do
@@ -557,6 +867,10 @@ main() {
   fi
   log ""
 
+  log "📋 Selecting model profile..."
+  choose_model_profile
+  log ""
+
   log "🔍 Validating source files..."
   require_source_files
   log ""
@@ -564,6 +878,18 @@ main() {
   log "📝 Copying config files..."
   copy_files
   success "Files copied"
+  log ""
+
+  log "🔧 Patching installed files with selected models..."
+  patch_installed_models "$SELECTED_PLANNING" "$SELECTED_IMPLEMENTATION" "$SELECTED_SYSTEM"
+  log ""
+
+  log "💾 Writing profile metadata..."
+  write_profile_metadata "$SELECTED_PROFILE" "$SELECTED_PLANNING" "$SELECTED_IMPLEMENTATION" "$SELECTED_SYSTEM"
+  log ""
+
+  log "🔍 Detecting advisor CLIs..."
+  detect_advisors
   log ""
 
   log "🧹 Cleaning up obsolete v1.0 files..."
@@ -593,15 +919,18 @@ main() {
   log "  4. Use /ship to prepare for PR"
   log "  5. Use OpenCode's usage display for exact tokens/cost, and /budget for routing guidance"
   log ""
-  log "Models configured:"
-  log "  • Planning: opencode-go/kimi-k2.7-code (strong)"
-  log "  • Implementation: opencode-go/mimo-v2.5 (cheap)"
-  log "  • System tasks: opencode-go/deepseek-v4-flash (cheapest)"
+  log "Model profile: $SELECTED_PROFILE"
+  log "  • Planning:       $SELECTED_PLANNING"
+  log "  • Implementation: $SELECTED_IMPLEMENTATION"
+  log "  • System tasks:   $SELECTED_SYSTEM"
   log ""
   log "Plugins configured:"
   log "  • jcodemunch-mcp — AST code indexing"
   log "  • opencode-dcp — Dynamic context pruning"
   log "  • opencode-docs reference — Config, provider, reference, and troubleshooting guidance"
+  log ""
+  log "Advisor adapters: detected CLIs written to generalpippy/advisors.json (disabled by default)"
+  log "  • Use /advice <adapter-name> to request read-only advice from an enabled advisor"
   log ""
   log "Optional tools (install for best experience):"
   log "  • rtk — Token-efficient bash wrapper"

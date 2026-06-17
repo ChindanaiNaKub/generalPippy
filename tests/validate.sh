@@ -30,8 +30,10 @@ test_required_files_exist() {
   for file in config/opencode.jsonc \
               config/agents/pippy.md config/agents/pippy-plan.md config/agents/pippy-build.md \
               config/commands/goal.md config/commands/ship.md config/commands/budget.md \
+              config/commands/advice.md \
               config/skills/pippy/SKILL.md \
-              config/references/opencode/REFERENCE.md; do
+              config/references/opencode/REFERENCE.md \
+              config/model-profiles/balanced.json; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
       pass "exists: $file"
     else
@@ -105,6 +107,34 @@ test_budget_command_is_guidance_only() {
     fail "budget command contains static pricing table"
   else
     pass "budget command has no static pricing table"
+  fi
+
+  # ponytail constraint vs ponytail plugin distinction
+  if grep -q "ponytail constraint" "$file" && grep -q "ponytail plugin" "$file"; then
+    pass "budget command distinguishes ponytail constraint from ponytail plugin"
+  else
+    fail "budget command must distinguish ponytail constraint from ponytail plugin"
+  fi
+
+  # optional-tool statuses: not applicable / not visibly exercised / missed opportunity
+  if grep -q "not applicable" "$file" && grep -q "not visibly exercised" "$file" && grep -q "missed opportunity" "$file"; then
+    pass "budget command defines optional-tool statuses (not applicable, not visibly exercised, missed opportunity)"
+  else
+    fail "budget command must define optional-tool statuses: not applicable, not visibly exercised, missed opportunity"
+  fi
+
+  # explicit compression recommendation
+  if grep -qi "compression recommendation" "$file"; then
+    pass "budget command includes explicit compression recommendation"
+  else
+    fail "budget command must include an explicit compression recommendation"
+  fi
+
+  # Caveman mode vs Caveman CLI distinction
+  if grep -q "Caveman mode" "$file" && grep -q "Caveman CLI" "$file"; then
+    pass "budget command distinguishes Caveman mode from Caveman CLI"
+  else
+    fail "budget command must distinguish Caveman mode from Caveman CLI"
   fi
 }
 
@@ -836,6 +866,156 @@ test_improvement_signal_smoke() {
   fi
 }
 
+test_decision_records() {
+  run_test "#45/#50 decision records exist with required sections"
+
+  local adr7="$REPO_ROOT/docs/adr/0007-dynamic-model-routing-decision.md"
+  local adr8="$REPO_ROOT/docs/adr/0008-improve-pippy-command-decision.md"
+
+  for adr in "$adr7" "$adr8"; do
+    local label
+    label="$(basename "$adr")"
+
+    if [[ ! -f "$adr" ]]; then
+      fail "$label does not exist"
+      continue
+    fi
+    pass "$label exists"
+
+    # Must have Status (either "## Status" heading or "Status: accepted" field)
+    if grep -qi "^## Status\|^Status:" "$adr"; then
+      pass "$label has Status"
+    else
+      fail "$label must have Status section"
+    fi
+
+    # Must have Context
+    if grep -qi "^## Context" "$adr"; then
+      pass "$label has Context"
+    else
+      fail "$label must have Context section"
+    fi
+
+    # Must have Decision
+    if grep -qi "^## Decision" "$adr"; then
+      pass "$label has Decision"
+    else
+      fail "$label must have Decision section"
+    fi
+
+    # Must have Consequences
+    if grep -qi "^## Consequences" "$adr"; then
+      pass "$label has Consequences"
+    else
+      fail "$label must have Consequences section"
+    fi
+
+    # Must have References
+    if grep -qi "^## References" "$adr"; then
+      pass "$label has References"
+    else
+      fail "$label must have References section"
+    fi
+  done
+
+  # ADR-0007 specifics
+  if grep -qi "defer.*dynamic.*model.*routing\|per-step.*model.*override.*deferred" "$adr7"; then
+    pass "ADR-0007 states dynamic model routing is deferred"
+  else
+    fail "ADR-0007 must state dynamic model routing is deferred"
+  fi
+
+  if grep -qi "model profile\|profile.json\|Balanced" "$adr7"; then
+    pass "ADR-0007 references model profiles"
+  else
+    fail "ADR-0007 must reference model profiles"
+  fi
+
+  if grep -qi "role-based.*routing\|pippy-plan.*pippy-build\|pippy-build.*pippy-plan" "$adr7"; then
+    pass "ADR-0007 references role-based subagent routing"
+  else
+    fail "ADR-0007 must reference role-based subagent routing"
+  fi
+
+  # ADR-0008 specifics
+  if grep -qi "reject\|do not add\|not add" "$adr8"; then
+    pass "ADR-0008 rejects the command"
+  else
+    fail "ADR-0008 must reject the /improve-pippy command"
+  fi
+
+  if grep -qi "human-reviewed\|human.reviewed" "$adr8"; then
+    pass "ADR-0008 references human-reviewed improvement"
+  else
+    fail "ADR-0008 must reference human-reviewed improvement"
+  fi
+
+  if grep -qi "Improvement Signal" "$adr8"; then
+    pass "ADR-0008 references Improvement Signal"
+  else
+    fail "ADR-0008 must reference Improvement Signal"
+  fi
+}
+
+test_model_profile_and_advice() {
+  run_test "#34-40 model profiles and /advice command"
+
+  # Balanced profile JSON exists and matches current defaults.
+  local profile="$REPO_ROOT/config/model-profiles/balanced.json"
+  if [[ -f "$profile" ]]; then
+    pass "balanced.json exists"
+    if grep -q '"planning": "opencode-go/kimi-k2.7-code"' "$profile" &&
+       grep -q '"implementation": "opencode-go/mimo-v2.5"' "$profile" &&
+       grep -q '"system": "opencode-go/deepseek-v4-flash"' "$profile"; then
+      pass "balanced.json matches current defaults"
+    else
+      fail "balanced.json must contain kimi-k2.7-code, mimo-v2.5, deepseek-v4-flash"
+    fi
+  else
+    fail "balanced.json missing"
+  fi
+
+  # Advice command exists with required content.
+  local advice="$REPO_ROOT/config/commands/advice.md"
+  if [[ -f "$advice" ]]; then
+    pass "advice.md exists"
+    if grep -q '/advice <adapter-name>' "$advice" && grep -q '/advice all' "$advice"; then
+      pass "advice.md supports /advice <adapter-name> and /advice all"
+    else
+      fail "advice.md must contain '/advice <adapter-name>' and '/advice all' usage"
+    fi
+    if grep -qi "read-only\|read.only" "$advice" && grep -qi "must not edit\|do not edit\|do not execute\|not execute" "$advice"; then
+      pass "advice.md states advisors remain read-only"
+    else
+      fail "advice.md must state advisors remain read-only"
+    fi
+  else
+    fail "advice.md missing"
+  fi
+
+  # install.sh adds advice.md to COPY_TARGETS.
+  local installer="$REPO_ROOT/install.sh"
+  if grep -q 'config/commands/advice.md' "$installer"; then
+    pass "install.sh includes advice.md in COPY_TARGETS"
+  else
+    fail "install.sh must include config/commands/advice.md in COPY_TARGETS"
+  fi
+
+  # install.sh writes profile.json to generalpippy/.
+  if grep -q 'profile.json' "$installer"; then
+    pass "install.sh writes profile.json"
+  else
+    fail "install.sh must write profile.json to generalpippy/"
+  fi
+
+  # install.sh writes advisors.json to generalpippy/.
+  if grep -q 'advisors.json' "$installer"; then
+    pass "install.sh writes advisors.json"
+  else
+    fail "install.sh must write advisors.json to generalpippy/"
+  fi
+}
+
 main() {
   echo "Running GeneralPippy validation tests..."
 
@@ -866,6 +1046,8 @@ main() {
   test_improvement_loop_doc
   test_external_trigger_recipe
   test_improvement_signal_smoke
+  test_decision_records
+  test_model_profile_and_advice
 
   echo ""
   echo "========================="

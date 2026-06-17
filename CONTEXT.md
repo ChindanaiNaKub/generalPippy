@@ -15,6 +15,7 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 | **Acceptance criteria** | Observable conditions that define whether a `/goal` objective or plan step has succeeded. _Avoid_: goal rubric, vague success condition |
 | **Command** | A slash command registered with OpenCode (e.g., `/goal`, `/ship`, `/budget`). |
 | **Budget guidance** | Non-authoritative advice from `/budget` about model routing and token efficiency. Exact token usage and cost belong to OpenCode's own session usage display. |
+| **Context compression hygiene** | The budget-guidance practice of closing finished exploration, planning, shipping, or issue-management work into compact summaries before context pressure degrades coordination. _Avoid_: exact token accounting, cost measurement |
 | **External trigger recipe** | Documentation that shows how an outside system can invoke `/goal` for recurring or event-driven work while Pippy remains config-only. _Avoid_: built-in scheduler, event runtime |
 | **Goal run report** | The structured final report from a `/goal` run: acceptance criteria, execution plan/log, evidence, outcome, and improvement signal. It is Pippy's first learning artifact for human-reviewed improvement. _Avoid_: raw trace, telemetry store |
 | **Goal run state** | The authoritative working state for a `/goal` run, owned by `pippy` while child subagents remain temporary task executors or advisors. _Avoid_: subagent memory, worker-owned state |
