@@ -18,7 +18,7 @@
   "mcp": {
     "jcodemunch": {
       "type": "local",
-      "command": ["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git@v0.1.0", "jcodemunch-mcp"],
+      "command": ["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git@v1.0.0", "jcodemunch-mcp"],
       "enabled": true
     }
   },

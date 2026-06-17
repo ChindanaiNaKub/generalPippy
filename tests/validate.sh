@@ -167,10 +167,10 @@ test_subagent_routing_config() {
     fail "pippy prompt must forbid primary implementation fallback"
   fi
 
-  if grep -q "edit: deny" "$pippy_plan" && grep -q '"\*": ask' "$pippy_plan" && grep -q 'git diff\*": allow' "$pippy_plan"; then
-    pass "pippy-plan remains read-only with granular bash access"
+  if grep -q "edit: deny" "$pippy_plan" && grep -q '"\*": ask' "$pippy_plan" && grep -q '"rtk \*": allow' "$pippy_plan"; then
+    pass "pippy-plan remains read-only with granular rtk bash access"
   else
-    fail "pippy-plan must remain read-only with granular bash access"
+    fail "pippy-plan must remain read-only with granular rtk bash access"
   fi
 
   if grep -q 'model: opencode-go/mimo-v2.5' "$pippy_build" &&
@@ -305,10 +305,16 @@ test_external_deps_are_pinned() {
   fi
 
   # jcodemunch must have a tag or commit in the URL.
-  if grep -q 'jcodemunch-mcp.git@' "$config"; then
-    pass "jcodemunch MCP is pinned to a tag/commit"
+  if grep -q 'jcodemunch-mcp.git@v1.0.0' "$config"; then
+    pass "jcodemunch MCP is pinned to v1.0.0"
   else
-    fail "jcodemunch MCP source must be pinned (git@vX.Y.Z)"
+    fail "jcodemunch MCP source must be pinned to working tag v1.0.0"
+  fi
+
+  if grep -q '"command": \["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git@v1.0.0", "jcodemunch-mcp"\]' "$config"; then
+    pass "jcodemunch MCP pinned command starts with uvx"
+  else
+    fail "jcodemunch MCP pinned command must start with uvx"
   fi
 
   # rtk must be pinned to a specific version in install.sh.
@@ -355,6 +361,8 @@ test_goal_output_format() {
   local goal="$REPO_ROOT/config/commands/goal.md"
   local pippy="$REPO_ROOT/config/agents/pippy.md"
   local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local context="$REPO_ROOT/CONTEXT.md"
+  local improvement_loop="$REPO_ROOT/docs/agents/pippy-improvement-loop.md"
 
   # goal.md must have the four output elements
   if grep -q "Acceptance Criteria" "$goal" && grep -q "Plan" "$goal" && grep -q "Improvement Signal" "$goal" && grep -q "Outcome" "$goal"; then
@@ -375,6 +383,86 @@ test_goal_output_format() {
     pass "SKILL.md includes acceptance criteria, plan, improvement signal, and outcome"
   else
     fail "SKILL.md must include acceptance criteria, plan, improvement signal, and outcome"
+  fi
+
+  # Plan must carry trajectory evidence without adding a fifth report field.
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -q "trajectory checkpoints" "$file" &&
+       grep -q "explored" "$file" &&
+       grep -q "delegated edits to \`pippy-build\`" "$file" &&
+       grep -q "verified each step" "$file" &&
+       grep -q "reviewed diff" "$file" &&
+       grep -q "final-verified" "$file"; then
+      pass "$label Plan includes trajectory checkpoints"
+    else
+      fail "$label Plan must include trajectory checkpoints inside the existing Plan field"
+    fi
+  done
+
+  # Run evidence must stay compact and report-local, not become telemetry.
+  for file in "$goal" "$pippy" "$skill" "$improvement_loop"; do
+    local label
+    label="$(basename "$file")"
+    if grep -qi "run evidence" "$file" &&
+       grep -qi "commands run" "$file" &&
+       grep -qi "verification outputs" "$file" &&
+       grep -qi "routing decisions" "$file" &&
+       grep -qi "retry causes" "$file" &&
+       grep -qi "final evidence" "$file" &&
+       grep -qi "raw trace" "$file" &&
+       grep -qi "telemetry store" "$file"; then
+      pass "$label defines compact run evidence"
+    else
+      fail "$label must define compact run evidence without raw trace or telemetry-store semantics"
+    fi
+  done
+
+  if grep -q "Run evidence" "$context" &&
+     grep -qi "commands run" "$context" &&
+     grep -qi "verification outputs" "$context" &&
+     grep -qi "routing decisions" "$context" &&
+     grep -qi "retry causes" "$context" &&
+     grep -qi "final evidence" "$context" &&
+     grep -qi "telemetry store" "$context"; then
+    pass "CONTEXT.md defines Run evidence"
+  else
+    fail "CONTEXT.md must define Run evidence as compact report-local evidence, not telemetry"
+  fi
+}
+
+test_goal_rtk_force() {
+  run_test "/goal enforces RTK Force after rtk detection"
+  local goal="$REPO_ROOT/config/commands/goal.md"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local evals="$REPO_ROOT/docs/agents/goal-run-evals.md"
+
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -q "command -v rtk" "$file" &&
+       grep -qi "only allowed raw.*detection command\|only allowed raw shell command" "$file" &&
+       grep -q "rtk git status --short" "$file" &&
+       grep -q "rtk git log" "$file" &&
+       grep -q "rtk git diff" "$file" &&
+       grep -qi "Raw.*git.*any kind\|raw.*git.*any kind" "$file" &&
+       grep -qi "Improvement Signal\|Pippy-owned routing failure" "$file"; then
+      pass "$label forces rtk after detection"
+    else
+      fail "$label must allow raw command -v rtk only for detection and force rtk for later shell/git commands"
+    fi
+  done
+
+  if grep -q "RTK Force" "$evals" &&
+     grep -q "command -v rtk" "$evals" &&
+     grep -q "rtk git status --short" "$evals" &&
+     grep -q "rtk git log" "$evals" &&
+     grep -qi "raw.*git.*any kind" "$evals"; then
+    pass "goal-run evals catch raw git after rtk detection"
+  else
+    fail "goal-run evals must catch raw git after rtk detection"
   fi
 }
 
@@ -482,6 +570,7 @@ test_acceptance_criteria_are_verifiable() {
   run_test "#12 acceptance criteria must be observable/testable"
   local goal="$REPO_ROOT/config/commands/goal.md"
   local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
 
   # goal.md must mention observable/testable criteria and ban vague ones
   if grep -q "observable and testable" "$goal" && grep -qi "vague.*banned\|banned.*vague\|make it better" "$goal"; then
@@ -496,6 +585,25 @@ test_acceptance_criteria_are_verifiable() {
   else
     fail "pippy.md must state criteria must be observable/testable and ban vague criteria"
   fi
+
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -qi "Scale verification rigor to task risk" "$file" &&
+       grep -qi "release prep" "$file" &&
+       grep -qi "auth" "$file" &&
+       grep -qi "security" "$file" &&
+       grep -qi "data loss" "$file" &&
+       grep -qi "installer behavior" "$file" &&
+       grep -qi "permissions" "$file" &&
+       grep -qi "public docs/config" "$file" &&
+       grep -qi "low-risk prototype" "$file" &&
+       grep -qi "separate mode flag" "$file"; then
+      pass "$label scales verification rigor through acceptance criteria"
+    else
+      fail "$label must scale verification rigor to task risk without adding a separate mode flag"
+    fi
+  done
 }
 
 test_plan_steps_ordered_scoped() {
@@ -733,6 +841,8 @@ test_review_routing() {
   run_test "#44 review routing classified as fresh-context work"
   local pippy="$REPO_ROOT/config/agents/pippy.md"
   local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local goal="$REPO_ROOT/config/commands/goal.md"
+  local context="$REPO_ROOT/CONTEXT.md"
   local found=false
 
   for file in "$pippy" "$skill"; do
@@ -748,6 +858,27 @@ test_review_routing() {
 
   if [[ "$found" == false ]]; then
     fail "pippy.md or SKILL.md must classify review as fresh-context work with diff, touched files, acceptance criteria, verification command output"
+  fi
+
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -qi "review checklist" "$file" &&
+       grep -qi "edge cases" "$file" &&
+       grep -qi "error handling" "$file" &&
+       grep -qi "integration assumptions" "$file" &&
+       grep -qi "hallucinated dependencies" "$file" &&
+       grep -qi "clever-looking generated code" "$file"; then
+      pass "$label includes last-20% review checklist"
+    else
+      fail "$label must include review checklist for edge cases, error handling, integration assumptions, hallucinated dependencies, and clever-looking generated code"
+    fi
+  done
+
+  if grep -q "Review checklist" "$context" && grep -qi "last-20% failures" "$context"; then
+    pass "CONTEXT.md defines Review checklist"
+  else
+    fail "CONTEXT.md must define Review checklist"
   fi
 }
 
@@ -806,6 +937,24 @@ test_improvement_loop_doc() {
     pass "doc distinguishes Pippy-owned friction from ordinary project failure"
   else
     fail "doc must distinguish Pippy-owned friction from ordinary project failure"
+  fi
+
+  if grep -qi "guardrail candidate" "$doc" &&
+     grep -qi "runtime guardrail hooks" "$doc" &&
+     grep -qi "repeated run evidence" "$doc" &&
+     grep -qi "config-only" "$doc" &&
+     grep -qi "platform-level commitment" "$doc"; then
+    pass "doc defers runtime guardrail hooks until specific evidence exists"
+  else
+    fail "doc must defer runtime guardrail hooks and describe guardrail candidates"
+  fi
+
+  if grep -q "Guardrail candidate" "$REPO_ROOT/CONTEXT.md" &&
+     grep -qi "repeated run evidence" "$REPO_ROOT/CONTEXT.md" &&
+     grep -qi "runtime hook" "$REPO_ROOT/CONTEXT.md"; then
+    pass "CONTEXT.md defines Guardrail candidate"
+  else
+    fail "CONTEXT.md must define Guardrail candidate"
   fi
 }
 
@@ -866,13 +1015,99 @@ test_improvement_signal_smoke() {
   fi
 }
 
+test_goal_run_evals_doc() {
+  run_test "#51 goal-run eval suite exists with trajectory/routing/retry checks"
+  local doc="$REPO_ROOT/docs/agents/goal-run-evals.md"
+  local readme="$REPO_ROOT/README.md"
+  local context="$REPO_ROOT/CONTEXT.md"
+
+  if [[ ! -f "$doc" ]]; then
+    fail "docs/agents/goal-run-evals.md does not exist"
+    return
+  fi
+  pass "goal-run-evals.md exists"
+
+  if grep -qi "manual by design\|config-only" "$doc"; then
+    pass "eval doc keeps GeneralPippy config-only"
+  else
+    fail "eval doc must state evals are manual/config-only"
+  fi
+
+  for term in "trajectory" "routing" "verification" "retry" "Improvement Signal"; do
+    if grep -qi "$term" "$doc"; then
+      pass "eval doc covers $term"
+    else
+      fail "eval doc must cover $term"
+    fi
+  done
+
+  if grep -q '/goal' "$doc" && grep -qi "Expected behavior" "$doc" && grep -qi "Failure signals" "$doc"; then
+    pass "eval doc includes /goal scenarios with expected behavior and failure signals"
+  else
+    fail "eval doc must include /goal scenarios with expected behavior and failure signals"
+  fi
+
+  if grep -q "goal-run-evals.md" "$readme"; then
+    pass "README links goal-run evals"
+  else
+    fail "README must link docs/agents/goal-run-evals.md"
+  fi
+
+  if grep -q "Goal-run eval suite" "$context"; then
+    pass "CONTEXT.md defines Goal-run eval suite"
+  else
+    fail "CONTEXT.md must define Goal-run eval suite"
+  fi
+}
+
+test_pippy_harness_doc() {
+  run_test "#52 pippy harness inventory exists with core components"
+  local doc="$REPO_ROOT/docs/agents/pippy-harness.md"
+  local readme="$REPO_ROOT/README.md"
+  local context="$REPO_ROOT/CONTEXT.md"
+
+  if [[ ! -f "$doc" ]]; then
+    fail "docs/agents/pippy-harness.md does not exist"
+    return
+  fi
+  pass "pippy-harness.md exists"
+
+  if grep -qi "config-only" "$doc" &&
+     grep -qi "does not add runtime services" "$doc"; then
+    pass "harness doc preserves config-only boundary"
+  else
+    fail "harness doc must preserve config-only boundary"
+  fi
+
+  for term in "Agent prompts" "Slash commands" "Skills" "Context assembly" "Subagent routing" "Verification gates" "Reporting" "Goal-run evals" "Improvement loop"; do
+    if grep -q "$term" "$doc"; then
+      pass "harness doc includes $term"
+    else
+      fail "harness doc must include $term"
+    fi
+  done
+
+  if grep -q "pippy-harness.md" "$readme"; then
+    pass "README links pippy harness doc"
+  else
+    fail "README must link docs/agents/pippy-harness.md"
+  fi
+
+  if grep -q "Pippy harness" "$context"; then
+    pass "CONTEXT.md defines Pippy harness"
+  else
+    fail "CONTEXT.md must define Pippy harness"
+  fi
+}
+
 test_decision_records() {
   run_test "#45/#50 decision records exist with required sections"
 
   local adr7="$REPO_ROOT/docs/adr/0007-dynamic-model-routing-decision.md"
   local adr8="$REPO_ROOT/docs/adr/0008-improve-pippy-command-decision.md"
+  local adr9="$REPO_ROOT/docs/adr/0009-agentic-engineering-harness-adaptation.md"
 
-  for adr in "$adr7" "$adr8"; do
+  for adr in "$adr7" "$adr8" "$adr9"; do
     local label
     label="$(basename "$adr")"
 
@@ -955,6 +1190,30 @@ test_decision_records() {
   else
     fail "ADR-0008 must reference Improvement Signal"
   fi
+
+  # ADR-0009 specifics
+  if grep -qi "config-only Pippy harness improvements\|config-only.*harness" "$adr9"; then
+    pass "ADR-0009 keeps adaptation config-only"
+  else
+    fail "ADR-0009 must keep adaptation config-only"
+  fi
+
+  for term in "Pippy harness" "Goal-run eval suite" "Verification rigor" "Review checklist" "Run evidence" "Guardrail candidate"; do
+    if grep -q "$term" "$adr9"; then
+      pass "ADR-0009 references $term"
+    else
+      fail "ADR-0009 must reference $term"
+    fi
+  done
+
+  if grep -qi "runtime telemetry\|raw traces" "$adr9" &&
+     grep -qi "runtime evaluator\|model benchmark" "$adr9" &&
+     grep -qi "OpenCode hook infrastructure\|runtime hooks" "$adr9" &&
+     grep -qi "mode flag" "$adr9"; then
+    pass "ADR-0009 records rejected runtime alternatives"
+  else
+    fail "ADR-0009 must record rejected runtime alternatives"
+  fi
 }
 
 test_model_profile_and_advice() {
@@ -1030,6 +1289,7 @@ main() {
   test_external_deps_are_pinned
   test_pippy_build_bash_permissions
   test_goal_output_format
+  test_goal_rtk_force
   test_verify_is_part_of_goal
   test_ship_guidance
   test_doctor_script
@@ -1046,6 +1306,8 @@ main() {
   test_improvement_loop_doc
   test_external_trigger_recipe
   test_improvement_signal_smoke
+  test_goal_run_evals_doc
+  test_pippy_harness_doc
   test_decision_records
   test_model_profile_and_advice
 

@@ -111,10 +111,16 @@ else
   ok "no @latest references in opencode.jsonc"
 fi
 
-if grep -q 'jcodemunch-mcp.git@' "$config"; then
-  ok "jcodemunch MCP is pinned"
+if grep -q 'jcodemunch-mcp.git@v1.0.0' "$config"; then
+  ok "jcodemunch MCP is pinned to v1.0.0"
 else
-  error "jcodemunch MCP must be pinned (git@vX.Y.Z)"
+  error "jcodemunch MCP must be pinned to working tag v1.0.0"
+fi
+
+if grep -q '"command": \["uvx", "--from", "git+https://github.com/jgravelle/jcodemunch-mcp.git@v1.0.0", "jcodemunch-mcp"\]' "$config"; then
+  ok "jcodemunch MCP command starts with uvx"
+else
+  error "jcodemunch MCP command must start with uvx"
 fi
 
 if grep -q 'rtk_version=' "$installer" && grep -q 'refs/tags/v' "$installer"; then

@@ -23,7 +23,7 @@ Pin all external dependencies to specific versions:
 | Dependency | Location | Pinned Version | Bump Process |
 |------------|----------|----------------|--------------|
 | `@tarquinen/opencode-dcp` | `config/opencode.jsonc` | `0.0.4` | Update `plugin` array entry |
-| `jcodemunch-mcp` | `config/opencode.jsonc` | `v0.1.0` (git tag) | Update `--from` URL tag |
+| `jcodemunch-mcp` | `config/opencode.jsonc` | `v1.0.0` (git tag) | Update `--from` URL tag |
 | `rtk` | `install.sh` | `1.78.0` | Update `rtk_version` variable |
 
 ### How to Bump a Pinned Version
