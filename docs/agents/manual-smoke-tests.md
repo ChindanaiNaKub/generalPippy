@@ -25,6 +25,8 @@ In a shell, run:
 ```bash
 opencode debug config | jq '{
   default_agent,
+  formatter,
+  lsp,
   pippy: .agent.pippy.permission,
   build: .agent["pippy-build"] | {mode, model, permission},
   plan: .agent["pippy-plan"] | {mode, model, permission}
@@ -34,6 +36,8 @@ opencode debug config | jq '{
 Expected behavior:
 
 - `default_agent` is `pippy`.
+- `formatter` is `true`.
+- `lsp` is `true`.
 - `pippy.permission.edit` is `deny`.
 - `pippy.permission.bash` is `allow`.
 - `pippy.permission.task["pippy-build"]` is `allow`.

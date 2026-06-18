@@ -34,6 +34,9 @@
   // Formatters
   "formatter": true,
 
+  // LSP servers
+  "lsp": true,
+
   // References
   // OpenCode includes described references in agent context and allows the
   // referenced directories through its external-directory boundary.

@@ -30,6 +30,10 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 ### References
 - **opencode-docs** — Local OpenCode reference pack for config, providers, references, permissions, and troubleshooting
 
+### OpenCode Defaults
+- **Formatters** — Built-in formatters are enabled by default.
+- **LSP servers** — Built-in language servers are enabled by default for code intelligence.
+
 ### Optional Tools
 - **[rtk](https://github.com/rtk-ai/rtk)** — Token-efficient bash wrapper
 - **[Caveman mode](https://github.com/juliusbrussee/caveman)** — Terse OpenCode responses and compressed build/verify summaries

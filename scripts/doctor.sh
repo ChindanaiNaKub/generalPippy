@@ -129,6 +129,21 @@ else
   error "rtk install must be pinned to a release tag"
 fi
 
+# --- 4b. OpenCode default tools ---
+section "OpenCode default tools"
+
+if grep -q '"formatter"[[:space:]]*:[[:space:]]*true' "$config"; then
+  ok "formatter is enabled by default"
+else
+  error "opencode.jsonc must enable formatter by default"
+fi
+
+if grep -q '"lsp"[[:space:]]*:[[:space:]]*true' "$config"; then
+  ok "LSP is enabled by default"
+else
+  error "opencode.jsonc must enable LSP by default"
+fi
+
 # --- 5. Stale /verify command references ---
 section "No stale /verify command"
 
