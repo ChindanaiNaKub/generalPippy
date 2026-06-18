@@ -14,7 +14,8 @@ Report only what can be grounded in the visible session:
 3. Whether the conversation appears to be running too long before compaction
 4. Whether `rtk`, Caveman mode, jcodemunch, and ponytail were used where appropriate
 5. Whether verification was batched (e.g., `make all`) instead of running separate redundant commands
-6. Specific optimization suggestions for the next step, including an explicit compression recommendation when a finished work block is obvious
+6. The selected model profile and role-based model routing when `~/.config/opencode/generalpippy/profile.json` is visible
+7. Specific optimization suggestions for the next step, including an explicit compression recommendation when a finished work block is obvious
 
 If the user asks for exact spend, answer:
 
@@ -23,6 +24,7 @@ If the user asks for exact spend, answer:
 **Warn qualitatively when:**
 - Implementation appears to be happening in the primary strong-model agent instead of `pippy-build`
 - No subagent delegation happened for a straightforward coding/editing task
+- Visible agent models disagree with selected profile metadata for the planning, implementation, or system-task roles
 - Large file reads, repeated diffs, or verbose test output are inflating context
 - Verification commands are run redundantly instead of batched safely (e.g., prefer `make all` over separate `make test` + `make lint`)
 - The session added new scripts, dependencies, wrappers, or custom logic without first considering existing stdlib, repo utilities, native OpenCode behavior, or already-installed dependencies

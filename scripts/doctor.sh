@@ -6,6 +6,18 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+INSTALLED_CONFIG="${OPENCODE_CONFIG:-}"
+SOURCE_CONFIG="$REPO_ROOT/config"
+
+CONFIG_ROOT="$SOURCE_CONFIG"
+CONFIG_MODE="source"
+PROFILE_METADATA=""
+
+if [[ -n "$INSTALLED_CONFIG" && -f "$INSTALLED_CONFIG/agents/pippy.md" && -f "$INSTALLED_CONFIG/generalpippy/profile.json" ]]; then
+  CONFIG_ROOT="$INSTALLED_CONFIG"
+  CONFIG_MODE="installed"
+  PROFILE_METADATA="$INSTALLED_CONFIG/generalpippy/profile.json"
+fi
 
 ERRORS=0
 
@@ -23,11 +35,50 @@ section() {
   echo "▶ $1"
 }
 
+json_get() {
+  local file="$1"
+  local path="$2"
+
+  if ! command -v python3 &> /dev/null; then
+    return 1
+  fi
+
+  python3 - "$file" "$path" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+parts = sys.argv[2].split(".")
+
+with open(path) as f:
+    data = json.load(f)
+
+for part in parts:
+    data = data[part]
+
+print(data)
+PY
+}
+
+model_frontmatter() {
+  local file="$1"
+  sed -n 's/^model:[[:space:]]*//p' "$file" | head -1
+}
+
+jsonc_model_value() {
+  local file="$1"
+  local key="$2"
+  sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" "$file" | head -1
+}
+
+section "Config target"
+ok "validating $CONFIG_MODE config at $CONFIG_ROOT"
+
 # --- 1. Agent markdown frontmatter ---
 section "Agent frontmatter"
 
 for agent in pippy pippy-plan pippy-build; do
-  file="$REPO_ROOT/config/agents/$agent.md"
+  file="$CONFIG_ROOT/agents/$agent.md"
   if [[ ! -f "$file" ]]; then
     error "$agent.md missing"
     continue
@@ -42,9 +93,10 @@ done
 # --- 2. Permission boundaries ---
 section "Permission boundaries"
 
-pippy="$REPO_ROOT/config/agents/pippy.md"
-pippy_plan="$REPO_ROOT/config/agents/pippy-plan.md"
-pippy_build="$REPO_ROOT/config/agents/pippy-build.md"
+pippy="$CONFIG_ROOT/agents/pippy.md"
+pippy_plan="$CONFIG_ROOT/agents/pippy-plan.md"
+pippy_build="$CONFIG_ROOT/agents/pippy-build.md"
+opencode_config="$CONFIG_ROOT/opencode.jsonc"
 
 # Primary pippy: edit deny, bash unrestricted for YOLO mode
 if grep -q 'edit: deny' "$pippy" && grep -q '^  bash: allow$' "$pippy"; then
@@ -67,11 +119,11 @@ else
   error "pippy-plan must deny edit and task"
 fi
 
-# pippy-build: edit allow, task deny, model correct
-if grep -q 'edit: allow' "$pippy_build" && grep -q 'task: deny' "$pippy_build" && grep -q 'opencode-go/mimo-v2.5' "$pippy_build"; then
-  ok "pippy-build: implementation agent on mimo-v2.5"
+# pippy-build: edit allow, task deny. Model is checked in the Model profiles section.
+if grep -q 'edit: allow' "$pippy_build" && grep -q 'task: deny' "$pippy_build"; then
+  ok "pippy-build: edit allow, task deny"
 else
-  error "pippy-build must allow edit, deny task, use mimo-v2.5"
+  error "pippy-build must allow edit and deny task"
 fi
 
 # pippy-build: bash must be unrestricted for YOLO mode
@@ -91,8 +143,22 @@ fi
 # --- 3. Stale v1.0 references ---
 section "Stale v1.0 references"
 
-# Exclude docs/adr (legitimate history) and CHANGELOG.md (release history)
-matches="$(grep -RniE 'orchestrator|/think|/cheap|/smart' "$REPO_ROOT/config" "$REPO_ROOT/README.md" "$REPO_ROOT/AGENTS.md" 2>/dev/null || true)"
+# Exclude docs/adr (legitimate history), CHANGELOG.md (release history), and
+# unrelated user OpenCode plugins. Only check files GeneralPippy manages.
+managed_paths=(
+  "$CONFIG_ROOT/agents/pippy.md"
+  "$CONFIG_ROOT/agents/pippy-plan.md"
+  "$CONFIG_ROOT/agents/pippy-build.md"
+  "$CONFIG_ROOT/commands/goal.md"
+  "$CONFIG_ROOT/commands/ship.md"
+  "$CONFIG_ROOT/commands/budget.md"
+  "$CONFIG_ROOT/commands/advice.md"
+  "$CONFIG_ROOT/skills/pippy"
+  "$CONFIG_ROOT/references/opencode"
+  "$REPO_ROOT/README.md"
+  "$REPO_ROOT/AGENTS.md"
+)
+matches="$(grep -RniE 'orchestrator|/think|/cheap|/smart' "${managed_paths[@]}" 2>/dev/null || true)"
 if [[ -z "$matches" ]]; then
   ok "no stale v1.0 references in active config/docs"
 else
@@ -102,13 +168,13 @@ fi
 # --- 4. Pinned dependencies ---
 section "Pinned dependencies"
 
-config="$REPO_ROOT/config/opencode.jsonc"
+config="$opencode_config"
 installer="$REPO_ROOT/install.sh"
 
-if grep -q '@latest' "$config"; then
-  error "opencode.jsonc contains @latest reference"
+if grep -q '@tarquinen/opencode-dcp@latest' "$config"; then
+  error "opencode.jsonc contains unpinned GeneralPippy opencode-dcp plugin"
 else
-  ok "no @latest references in opencode.jsonc"
+  ok "GeneralPippy opencode-dcp plugin is not installed with @latest"
 fi
 
 if grep -q 'jcodemunch-mcp.git@v1.0.0' "$config"; then
@@ -194,25 +260,58 @@ fi
 section "Model profiles"
 
 profile_json="$REPO_ROOT/config/model-profiles/balanced.json"
-if [[ ! -f "$profile_json" ]]; then
-  error "config/model-profiles/balanced.json missing"
-else
-  ok "model-profiles/balanced.json exists"
+expected_profile="Balanced"
+expected_planning=""
+expected_implementation=""
+expected_system=""
 
-  # Verify expected models using python3 or grep.
-  if grep -q '"opencode-go/kimi-k2.7-code"' "$profile_json" && \
-     grep -q '"opencode-go/mimo-v2.5"' "$profile_json" && \
-     grep -q '"opencode-go/deepseek-v4-flash"' "$profile_json"; then
-    ok "balanced.json contains expected model defaults"
+if [[ -n "$PROFILE_METADATA" ]]; then
+  ok "profile metadata exists: $PROFILE_METADATA"
+  expected_profile="$(json_get "$PROFILE_METADATA" "profile" 2>/dev/null || true)"
+  expected_planning="$(json_get "$PROFILE_METADATA" "models.planning" 2>/dev/null || true)"
+  expected_implementation="$(json_get "$PROFILE_METADATA" "models.implementation" 2>/dev/null || true)"
+  expected_system="$(json_get "$PROFILE_METADATA" "models.system" 2>/dev/null || true)"
+else
+  if [[ ! -f "$profile_json" ]]; then
+    error "config/model-profiles/balanced.json missing"
   else
-    error "balanced.json must contain kimi-k2.7-code, mimo-v2.5, deepseek-v4-flash"
+    ok "model-profiles/balanced.json exists"
+    expected_planning="$(json_get "$profile_json" "models.planning" 2>/dev/null || true)"
+    expected_implementation="$(json_get "$profile_json" "models.implementation" 2>/dev/null || true)"
+    expected_system="$(json_get "$profile_json" "models.system" 2>/dev/null || true)"
+  fi
+fi
+
+if [[ -z "$expected_profile" || -z "$expected_planning" || -z "$expected_implementation" || -z "$expected_system" ]]; then
+  error "model profile metadata must include profile, planning, implementation, and system values"
+else
+  ok "model profile resolved: $expected_profile"
+
+  if [[ "$(model_frontmatter "$pippy")" == "$expected_planning" ]] &&
+     [[ "$(model_frontmatter "$pippy_plan")" == "$expected_planning" ]] &&
+     [[ "$(jsonc_model_value "$opencode_config" "model")" == "$expected_planning" ]]; then
+    ok "planning role renders as $expected_planning"
+  else
+    error "planning role must render as $expected_planning"
+  fi
+
+  if [[ "$(model_frontmatter "$pippy_build")" == "$expected_implementation" ]]; then
+    ok "implementation role renders as $expected_implementation"
+  else
+    error "implementation role must render as $expected_implementation"
+  fi
+
+  if [[ "$(jsonc_model_value "$opencode_config" "small_model")" == "$expected_system" ]]; then
+    ok "system-task role renders as $expected_system"
+  else
+    error "system-task role must render as $expected_system"
   fi
 fi
 
 # --- 8. Advice command ---
 section "Advice command"
 
-advice="$REPO_ROOT/config/commands/advice.md"
+advice="$CONFIG_ROOT/commands/advice.md"
 if [[ ! -f "$advice" ]]; then
   error "config/commands/advice.md missing"
 else

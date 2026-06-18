@@ -549,6 +549,26 @@ report_optional_manual() {
   info "  $install_url"
 }
 
+read_required_model() {
+  # Prompt for a Custom profile model value. Blank values are invalid for Custom.
+  local prompt="$1"
+  local dest_var="$2"
+  local input=""
+
+  while true; do
+    input=""
+    if ! read -r -p "  $prompt: " input; then
+      warn "Model string cannot be empty."
+      return 1
+    fi
+    if [[ -n "$input" ]]; then
+      printf -v "$dest_var" '%s' "$input"
+      return 0
+    fi
+    warn "Model string cannot be empty."
+  done
+}
+
 choose_model_profile() {
   # Interactive model profile selection.
   # Sets SELECTED_PROFILE, SELECTED_PLANNING, SELECTED_IMPLEMENTATION, SELECTED_SYSTEM.
@@ -579,33 +599,13 @@ choose_model_profile() {
   if [[ "$choice" == "2" ]]; then
     SELECTED_PROFILE="Custom"
     log ""
-    log "  Enter model strings (provider/model-id format):"
+    log "  Enter exact OpenCode-compatible model strings (provider/model-id format)."
+    warn "Custom model IDs are passed through to OpenCode and are not provider-verified by GeneralPippy."
     log ""
 
-    local input=""
-    while true; do
-      input=""
-      read -r -p "  Planning model [$BALANCED_PLANNING_MODEL]: " input || true
-      SELECTED_PLANNING="${input:-$BALANCED_PLANNING_MODEL}"
-      [[ -n "$SELECTED_PLANNING" ]] && break
-      warn "Model string cannot be empty."
-    done
-
-    while true; do
-      input=""
-      read -r -p "  Implementation model [$BALANCED_IMPLEMENTATION_MODEL]: " input || true
-      SELECTED_IMPLEMENTATION="${input:-$BALANCED_IMPLEMENTATION_MODEL}"
-      [[ -n "$SELECTED_IMPLEMENTATION" ]] && break
-      warn "Model string cannot be empty."
-    done
-
-    while true; do
-      input=""
-      read -r -p "  System-tasks model [$BALANCED_SYSTEM_MODEL]: " input || true
-      SELECTED_SYSTEM="${input:-$BALANCED_SYSTEM_MODEL}"
-      [[ -n "$SELECTED_SYSTEM" ]] && break
-      warn "Model string cannot be empty."
-    done
+    read_required_model "Planning model" SELECTED_PLANNING
+    read_required_model "Implementation model" SELECTED_IMPLEMENTATION
+    read_required_model "System-tasks model" SELECTED_SYSTEM
   fi
 
   log ""
@@ -755,6 +755,7 @@ detect_advisors() {
     "aider:aider:--readonly:Aider AI pair programming"
     "codex:codex::OpenAI Codex CLI"
     "gemini:gemini::Google Gemini CLI"
+    "cursor:cursor::Cursor CLI"
   )
 
   local detected=()
@@ -810,6 +811,7 @@ with open(tsv_path) as f:
             "enabled": False,
             "command": command,
             "read_only_flag": read_only_flag,
+            "command_template": " ".join(part for part in [command, read_only_flag, "{bundle_path}"] if part),
             "description": description,
         }
 
@@ -831,8 +833,13 @@ PY
         else
           echo ','
         fi
-        printf '    "%s": {"detected": true, "enabled": false, "command": "%s", "read_only_flag": "%s", "description": "%s"}' \
-          "$name" "$cmd" "$flag" "$desc"
+        local template="$cmd"
+        if [[ -n "$flag" ]]; then
+          template="$template $flag"
+        fi
+        template="$template {bundle_path}"
+        printf '    "%s": {"detected": true, "enabled": false, "command": "%s", "read_only_flag": "%s", "command_template": "%s", "description": "%s"}' \
+          "$name" "$cmd" "$flag" "$template" "$desc"
       done
       echo ''
       echo '  }'

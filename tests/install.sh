@@ -93,7 +93,7 @@ make_minimal_path() {
   local coreutils_dir
   coreutils_dir="$(mktemp -d)"
   local cmd
-  for cmd in cp mv mkdir rm dirname cat date mktemp sort md5sum find echo chmod sleep tr python3 perl sed grep; do
+  for cmd in basename bash cp mv mkdir rm dirname cat date mktemp sort md5sum find echo chmod sleep tr python3 perl sed grep head; do
     if command -v "$cmd" &> /dev/null; then
       ln -s "$(command -v "$cmd")" "$coreutils_dir/$cmd"
     fi
@@ -533,6 +533,11 @@ EOF
     else
       fail "advisors should be disabled by default"
     fi
+    if grep -q '"command_template"' "$advisors_file"; then
+      pass "advisors.json records command templates"
+    else
+      fail "advisors.json should record command templates"
+    fi
     if grep -q -- '--full-auto' "$advisors_file"; then
       fail "advisors.json should not suggest auto-execution flags"
     else
@@ -540,6 +545,78 @@ EOF
     fi
   else
     fail "advisors.json not created"
+  fi
+
+  rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
+}
+
+test_custom_profile_renders_models_and_doctor_reads_metadata() {
+  run_test "custom profile rejects blanks, renders models, and doctor reads metadata"
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+  local config_dir="$tmp_home/.config/opencode"
+
+  for cmd in opencode uv npm codex aider; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
+
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
+
+  local output
+  if output="$(printf '2\n\ncustom/plan\n\ncustom/impl\n\ncustom/sys\n' | HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" 2>&1)"; then
+    pass "custom profile install succeeds after blank values are corrected"
+  else
+    fail "custom profile install failed: $output"
+    rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
+    return
+  fi
+
+  if [[ "$output" == *"Model string cannot be empty."* ]]; then
+    pass "blank custom model values are rejected"
+  else
+    fail "custom profile should reject blank model values"
+  fi
+
+  local profile_file="$config_dir/generalpippy/profile.json"
+  if grep -q '"profile": "Custom"' "$profile_file" &&
+     grep -q '"planning": "custom/plan"' "$profile_file" &&
+     grep -q '"implementation": "custom/impl"' "$profile_file" &&
+     grep -q '"system": "custom/sys"' "$profile_file"; then
+    pass "profile.json records custom model values"
+  else
+    fail "profile.json must record custom model values"
+  fi
+
+  if grep -q '^model: custom/plan$' "$config_dir/agents/pippy.md" &&
+     grep -q '^model: custom/plan$' "$config_dir/agents/pippy-plan.md" &&
+     grep -q '^model: custom/impl$' "$config_dir/agents/pippy-build.md" &&
+     grep -q '"model": "custom/plan"' "$config_dir/opencode.jsonc" &&
+     grep -q '"small_model": "custom/sys"' "$config_dir/opencode.jsonc"; then
+    pass "installed OpenCode files render custom role models"
+  else
+    fail "installed OpenCode files must render custom role models"
+  fi
+
+  local doctor_output
+  if doctor_output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" OPENCODE_CONFIG="$config_dir" PATH="$min_path" bash "$REPO_ROOT/scripts/doctor.sh" 2>&1)"; then
+    pass "doctor accepts installed custom profile metadata"
+  else
+    fail "doctor should accept installed custom profile metadata:\n$doctor_output"
+  fi
+
+  if [[ "$doctor_output" == *"planning role renders as custom/plan"* &&
+        "$doctor_output" == *"implementation role renders as custom/impl"* &&
+        "$doctor_output" == *"system-task role renders as custom/sys"* ]]; then
+    pass "doctor validates installed models against profile metadata"
+  else
+    fail "doctor must validate installed models against profile metadata"
   fi
 
   rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
@@ -562,6 +639,7 @@ main() {
   test_install_preserves_existing_plugins
   test_install_rollbacks_on_failure
   test_install_records_profile_and_advisors
+  test_custom_profile_renders_models_and_doctor_reads_metadata
 
   echo ""
   echo "========================="
