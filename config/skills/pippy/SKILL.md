@@ -37,8 +37,8 @@ RECALL → UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] �
 | RECALL | Read the first project cross-run memory anchor that exists and apply relevant human-approved lessons as guidance |
 | UNDERSTAND | Parse objective into acceptance criteria and scale verification rigor to task risk |
 | EXPLORE | Map codebase with jcodemunch + rtk |
-| PLAN | Step-by-step plan with verification per step |
-| CONTEXT | Assemble a context bundle for each delegation (fresh or forked) |
+| PLAN | Step-by-step plan with verification per step; request a Program design sketch for design-sensitive changes |
+| CONTEXT | Assemble a context bundle for each delegation (fresh or forked), including any Program design sketch |
 | EXECUTE → VERIFY | Do the work, check it works, corrective re-delegate if not |
 | REVIEW | Inspect diff, touched files, acceptance criteria, verification evidence, last-20% failure modes, and assumptions behind claims |
 | FINAL | Run final verification gate |
@@ -53,8 +53,8 @@ Scale verification rigor to task risk while shaping acceptance criteria. Use hig
 Every `/goal` run must report four things at the end:
 
 1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against run evidence; each criterion must include final evidence (command output, test result, file path, diff), not just a status summary
-2. **Plan** — the compact run evidence trail showing what was done and in what order; include whether cross-run memory was recalled, commands run, verification outputs, trajectory checkpoints for recalled memory when present, explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, durable memory write, or persistent observability system.
-3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal; always present and limited to Pippy-owned friction
+2. **Plan** — the compact run evidence trail showing what was done and in what order; include whether cross-run memory was recalled, commands run, verification outputs, trajectory checkpoints for recalled memory when present, explored, planned, requested a Program design sketch when used, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, durable memory write, or persistent observability system.
+3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, Program design handling, or verification habits; use `None` when there is no actionable signal; always present and limited to Pippy-owned friction. Program design failures are Pippy-owned only when Pippy skipped a needed sketch, skipped the Program design REVIEW check, accepted passing tests without design evidence, or made maintainability claims without concrete boundaries/ownership/data-flow evidence; messy pre-existing code is not a Pippy-owned signal.
 4. **Outcome** — the final line must be exactly one of:
    - `Done` — all acceptance criteria met, verification passes
    - `Blocked` — what's blocking progress, what needs human action
@@ -70,9 +70,11 @@ Memory is not proof. Current objective, repo docs, ADRs, verified code facts, an
 
 ### Review And Verification
 
-Review and final verification are the closing gates of `/goal`, not standalone commands. The plan must always end with review followed by final verification before reporting outcome. After all execution steps complete, run the no-mistakes gate: diff review, review checklist, Assumption audit, combined verification command, and docs check.
+Review and final verification are the closing gates of `/goal`, not standalone commands. The plan must always end with review followed by final verification before reporting outcome. After all execution steps complete, run the no-mistakes gate: diff review, review checklist, Program design check, Assumption audit, combined verification command, and docs check.
 
-Apply the review checklist for last-20% failures that shallow tests may miss: edge cases, error handling, integration assumptions, hallucinated dependencies, and clever-looking generated code that passes basic verification but may be conceptually wrong.
+Apply the review checklist for last-20% failures that shallow tests may miss: edge cases, error handling, integration assumptions, hallucinated dependencies, program design regressions, and clever-looking generated code that passes basic verification but may be conceptually wrong.
+
+Run the **Program design** check inside REVIEW, not as a separate command or loop phase. Inspect whether the changed code preserves responsibility boundaries, dependency direction, state ownership, data flow, error paths, interface size, and change locality. Treat design findings like other review findings: route fixes to `pippy-build`, then re-verify the affected step and rerun REVIEW.
 
 Run an **Assumption audit** inside REVIEW before reporting: check each claim Pippy is about to make against an authoritative source, executable evidence, or a concrete scenario. Source-check external links and package metadata, scenario-check behavior claims, and dry-run runnable docs. Scale the audit depth to verification rigor: quick for low-risk work, deeper for installer, permissions, dependencies, external links, public docs, security, or data-loss risks. Put audit evidence in the existing Plan evidence trail, not in a fifth report field.
 
@@ -80,9 +82,11 @@ Run an **Assumption audit** inside REVIEW before reporting: check each claim Pip
 
 After planning, assemble a context bundle before each Task delegation. Bundles are prompt text assembled from existing context, jcodemunch output, verification output, and optional compression aids.
 
+Before implementation, route design-sensitive changes to `pippy-plan` for a read-only Program design sketch. A change is design-sensitive when it is multi-file, refactor-heavy, touches core abstractions, changes state ownership or error paths, or introduces a new interface. Skip the sketch for small mechanical edits. Include any sketch in the `pippy-build` context bundle.
+
 | Scenario | Bundle mode | Contents |
 |----------|-------------|----------|
-| First implementation attempt | Fresh | Objective, acceptance criteria, relevant file paths, constraints |
+| First implementation attempt | Fresh | Objective, acceptance criteria, relevant file paths, constraints, Program design sketch when present |
 | Retry or bug fix | Forked | Fresh bundle plus failure output, prior-attempt summary, and relevant discovered context |
 | Review or critique | Fresh | Diff, touched files, acceptance criteria, verification command output |
 | Stuck-step diagnosis | Forked | Failure history, current plan step, constraints, ranked code context |

@@ -90,6 +90,6 @@ The primary agent (`pippy`) must NOT make edits. Its `edit` permission is denied
 
 - You CAN make changes — use this power wisely
 - Always verify your changes work
-- Follow the plan from `pippy-plan` if one exists
+- Follow the plan from `pippy-plan` if one exists, including any Program design sketch in your context bundle
 - If you need to deviate from the plan, explain why
 - Never auto-push or auto-PR — prepare only

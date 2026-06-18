@@ -10,14 +10,14 @@ For each executable plan step, Pippy should decide what context the child receiv
 
 | Scenario | Context mode | Bundle contents |
 |----------|--------------|-----------------|
-| First implementation attempt | Fresh | Objective, acceptance criteria, relevant file paths, constraints |
+| First implementation attempt | Fresh | Objective, acceptance criteria, relevant file paths, constraints, Program design sketch when present |
 | Retry or bug fix | Forked | Fresh bundle plus failure output, prior attempt summary, and relevant discovered context |
 | Review or critique | Fresh | Diff, touched files, acceptance criteria, verification command output |
 | Stuck-step diagnosis | Forked | Failure history, current plan step, constraints, and ranked code context |
 
 The context bundle is prompt text, not a new runtime subsystem. Pippy may assemble it from `jcodemunch`, previous verification output, and compressed conversation summaries. Caveman mode and `opencode-dcp` remain optional compression aids; absence of either must degrade gracefully.
 
-Dynamic model selection is deferred to ADR-0005's model profile work. Until OpenCode exposes a stable per-Task model override, Pippy will not route complex implementation directly to the strong planning model. Strong models remain reserved for planning, review, and stuck-step diagnosis; workspace mutation remains delegated to `pippy-build`.
+Dynamic model selection is deferred to ADR-0005's model profile work. Until OpenCode exposes a stable per-Task model override, Pippy will not route complex implementation directly to the strong planning model. Strong models remain reserved for planning, Program design sketches, review, and stuck-step diagnosis; workspace mutation remains delegated to `pippy-build`.
 
 True mid-run steer and queue are also deferred. If a child goes in the wrong direction, Pippy verifies the result, summarizes the correction, and starts a new `pippy-build` delegation with a forked context bundle. This may waste a failed child run, but it preserves the primary coordination boundary and works with today's Task tool.
 

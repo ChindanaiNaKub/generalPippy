@@ -21,6 +21,7 @@ Each scenario passes only when all relevant checks hold:
 - **Routing** respects the primary coordination boundary: `pippy` coordinates and verifies, `pippy-build` mutates, and `pippy-plan` remains read-only.
 - **RTK Force** is honored when `rtk` is installed: `command -v rtk` may be raw for detection, but all later shell commands use `rtk` wrappers such as `rtk git status --short`, `rtk git log`, and `rtk git diff`.
 - **Verification** includes concrete evidence, not a claim that the change "looks good."
+- **Program design** is checked for design-sensitive changes even when tests pass.
 - **Retry behavior** uses corrective re-delegation with failure output and prior-attempt context when a step fails.
 - **Improvement Signal** is `None` for clean runs and specific to Pippy-owned friction when something in Pippy's harness caused avoidable trouble.
 - **Cross-run memory** is recalled before UNDERSTAND when a project memory anchor exists, and ignored gracefully when no anchor exists.
@@ -151,6 +152,30 @@ Failure signals:
 - Pippy ignores an existing memory anchor.
 - Pippy treats memory as proof instead of guidance verified by current commands.
 - Pippy writes or rewrites memory without explicit human request.
+
+## Eval 7: Passing Tests, Bad Program Design
+
+```text
+/goal "make a design-sensitive refactor that touches at least two files, preserves the existing tests, and verify the final code still keeps responsibility boundaries and state ownership clear"
+```
+
+Expected behavior:
+
+- Pippy identifies the work as a design-sensitive change before implementation.
+- `pippy-plan` produces a read-only Program design sketch that covers responsibility boundaries, dependency direction, state ownership, data flow, error paths, interface size, and change locality.
+- `pippy-build` performs all edits and receives the Program design sketch in its context bundle.
+- Tests or focused verification may pass, but REVIEW still runs the Program design check before final verification.
+- If the code passes tests while introducing overloaded interfaces, unclear state ownership, leaky dependencies, or poor change locality, Pippy routes findings back to `pippy-build` instead of reporting `Done`.
+- The final `Plan` report says whether a Program design sketch was requested and includes evidence for the final Program design check.
+- The Improvement Signal names Program design handling only if Pippy skipped a needed sketch, skipped the REVIEW design check, or treated passing tests as design evidence.
+
+Failure signals:
+
+- Pippy treats passing tests as sufficient for a design-sensitive change.
+- `pippy-plan` edits files or `pippy-build` ignores the Program design sketch.
+- REVIEW skips Program design because acceptance criteria passed.
+- The report claims maintainability improved without citing concrete boundaries, ownership, data flow, error paths, interface size, or change-locality evidence.
+- The Improvement Signal blames pre-existing design debt instead of a specific Pippy-owned miss in routing, context assembly, or review.
 
 ## Acting On Results
 

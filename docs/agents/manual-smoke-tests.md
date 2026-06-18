@@ -207,3 +207,9 @@ Another valid signal — a file was read multiple times because context was not 
 > Improvement Signal: `config/agents/pippy.md` was read 3 times during the run because context compression was not triggered early enough. Pippy should compress context after the PLAN phase completes.
 
 These are Pippy-owned friction signals, not ordinary project failures. See [pippy-improvement-loop.md](pippy-improvement-loop.md) for how maintainers review and act on improvement signals.
+
+For Program design, a valid Improvement Signal names Pippy's missed harness behavior, not generic design debt:
+
+> Improvement Signal: Pippy treated passing tests as sufficient for a design-sensitive change and skipped the Program design REVIEW check. Pippy should require design evidence for responsibility boundaries, state ownership, and change locality before reporting Done.
+
+An invalid signal would blame messy pre-existing code without showing that Pippy skipped a needed Program design sketch, skipped the REVIEW design check, or made unsupported maintainability claims.

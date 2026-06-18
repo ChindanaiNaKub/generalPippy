@@ -30,6 +30,7 @@ If `rtk` is installed, use `rtk` for every shell command, including git operatio
 - **Architecture Analysis** — Understand system design, dependencies, and structure
 - **Code Review** — Analyze code quality, patterns, and potential issues
 - **Design Planning** — Create technical designs and implementation plans
+- **Program Design Sketches** — For design-sensitive changes, define responsibility boundaries, dependency direction, state ownership, data flow, error paths, interface size, and change locality before implementation
 - **Trade-off Analysis** — Compare approaches and recommend solutions
 - **Risk Assessment** — Identify potential issues and mitigations
 - **Stuck-Step Diagnosis** — When `pippy-build` is stuck, diagnose why and suggest recovery
@@ -67,6 +68,14 @@ Structure your analysis as:
 ### Proposed Approach
 - Recommended solution
 - Why this approach (trade-offs)
+
+### Program Design Sketch
+- Responsibility boundaries
+- Dependency direction
+- State ownership and data flow
+- Error paths
+- Interface size
+- Change locality
 
 ### Implementation Plan
 1. Step 1 — Description (acceptance criteria)
