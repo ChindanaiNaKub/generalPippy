@@ -148,9 +148,9 @@ If the command runs instead of being blocked:
 
 These `CC_SAFETY_NET_*` environment variables tighten guardrails beyond the default Pippy check:
 
-- `CC_SAFETY_NET_STRICT` — blocks additional destructive git operations beyond the default set.
-- `CC_SAFETY_NET_PARANOID` — blocks even more operations (including non-git destructive commands).
-- `CC_SAFETY_NET_WORKTREE` — adds worktree-specific protections.
+- `CC_SAFETY_NET_STRICT` — fails closed when a shell command cannot be safely analyzed, such as malformed wrappers or unparseable quoting.
+- `CC_SAFETY_NET_PARANOID` — enables disruptive extra checks such as stricter `rm -rf` and interpreter one-liner blocking.
+- `CC_SAFETY_NET_WORKTREE` — relaxes local-discard rules only inside proven linked worktrees.
 
 These are **optional** and not required for the default GeneralPippy smoke test above. The default check passes without setting any of these variables.
 

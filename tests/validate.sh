@@ -369,6 +369,7 @@ test_cc_safety_net_pinned() {
   local installer="$REPO_ROOT/install.sh"
   local adr="$REPO_ROOT/docs/adr/0003-pin-external-dependencies.md"
   local readme="$REPO_ROOT/README.md"
+  local manual_smoke="$REPO_ROOT/docs/agents/manual-smoke-tests.md"
 
   if grep -q 'cc-safety-net@1.0.6' "$config"; then
     pass "opencode.jsonc contains cc-safety-net@1.0.6"
@@ -398,6 +399,18 @@ test_cc_safety_net_pinned() {
     fail "install.sh must not install cc-safety-net through opencode plugin -g"
   else
     pass "install.sh does not use global opencode plugin install"
+  fi
+
+  if grep -q 'CC_SAFETY_NET_STRICT' "$manual_smoke" &&
+     grep -qi 'fails closed' "$manual_smoke" &&
+     grep -qi 'cannot be safely analyzed' "$manual_smoke" &&
+     grep -q 'CC_SAFETY_NET_PARANOID' "$manual_smoke" &&
+     grep -qi 'interpreter one-liner' "$manual_smoke" &&
+     grep -q 'CC_SAFETY_NET_WORKTREE' "$manual_smoke" &&
+     grep -qi 'proven linked worktrees' "$manual_smoke"; then
+    pass "manual smoke docs describe cc-safety-net modes accurately"
+  else
+    fail "manual smoke docs must describe strict/paranoid/worktree modes according to upstream cc-safety-net behavior"
   fi
 }
 

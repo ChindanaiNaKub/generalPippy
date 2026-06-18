@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `cc-safety-net@1.0.6` as a pinned default OpenCode guardrail plugin, with ADR-0010 documenting the default-mode-only decision.
+- Assumption audit as a validated REVIEW sub-step so Pippy checks report claims against authoritative sources, executable evidence, or concrete scenarios.
+- OpenCode LSP enabled by default with validation, doctor, installer, README, and manual smoke-test coverage.
+
+### Changed
+- Installer plugin merging now lets pinned default plugin identities replace stale user `@latest` entries while preserving unrelated user plugins.
+- RTK Force guidance now documents `rtk proxy git diff -- <paths>` for path-scoped diffs.
+
+### Fixed
+- Corrected cc-safety-net mode documentation: strict mode fails closed on unparseable commands, while paranoid mode enables the more disruptive extra checks.
+
 ## [2.5.0] - 2026-06-18
 
 ### Added
