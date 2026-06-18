@@ -23,6 +23,7 @@ Each scenario passes only when all relevant checks hold:
 - **Verification** includes concrete evidence, not a claim that the change "looks good."
 - **Retry behavior** uses corrective re-delegation with failure output and prior-attempt context when a step fails.
 - **Improvement Signal** is `None` for clean runs and specific to Pippy-owned friction when something in Pippy's harness caused avoidable trouble.
+- **Cross-run memory** is recalled before UNDERSTAND when a project memory anchor exists, and ignored gracefully when no anchor exists.
 
 ## Eval 1: Clean Documentation Edit
 
@@ -118,6 +119,39 @@ Failure signals:
 - The report skips review because there was no diff.
 - The outcome is `Done` without concrete search output or file evidence.
 
+## Eval 6: Cross-Run Memory Recall
+
+Create a temporary project memory anchor:
+
+```bash
+cat > PIPPY_MEMORY.md <<'EOF'
+# Pippy Memory
+
+## Lessons
+
+- For documentation-only changes in this repo, verify the diff with `rtk git diff` and run `bash tests/validate.sh` before reporting success.
+EOF
+```
+
+Then run:
+
+```text
+/goal "make a harmless one-line documentation wording improvement and report whether any project memory was recalled"
+```
+
+Expected behavior:
+
+- Pippy reads `PIPPY_MEMORY.md` before shaping acceptance criteria.
+- The plan applies the relevant memory lesson to verification.
+- The report mentions recalled memory in the `Plan` evidence trail.
+- Pippy does not edit `PIPPY_MEMORY.md` automatically.
+
+Failure signals:
+
+- Pippy ignores an existing memory anchor.
+- Pippy treats memory as proof instead of guidance verified by current commands.
+- Pippy writes or rewrites memory without explicit human request.
+
 ## Acting On Results
 
-Use [pippy-improvement-loop.md](pippy-improvement-loop.md) to decide whether failed evals justify prompt, command, skill, test, or documentation changes. Do not turn an eval failure into automatic self-modification; maintainers review and apply changes deliberately.
+Use [pippy-improvement-loop.md](pippy-improvement-loop.md) to decide whether failed evals justify prompt, command, skill, test, documentation, or cross-run memory changes. Do not turn an eval failure into automatic self-modification; maintainers review and apply changes deliberately.

@@ -10,9 +10,16 @@ The Pippy improvement loop is a human-reviewed process for refining Pippy's prom
 4. **Turn accepted signals into changes.** A maintainer reviews accepted signals and decides whether to modify Pippy's prompts (pippy.md, SKILL.md, goal.md), add or adjust commands, update skills, write new tests, update documentation, or add a specific Assumption audit check. Each change should be scoped to one signal and verifiable.
 5. **Verify the change.** After modifying Pippy config, run `bash tests/validate.sh` and `bash scripts/doctor.sh` to confirm nothing broke. Run a `/goal` smoke test if the change affects routing or verification behavior.
 
+## Cross-Run Memory
+
+When an accepted Improvement Signal is useful for future `/goal` runs but is not yet stable enough to become a prompt, command, skill, ADR, or validation rule, a maintainer may promote it into cross-run memory. See [cross-run-memory.md](cross-run-memory.md).
+
+Cross-run memory is human-reviewed and curated. It is not a raw trace, telemetry store, vector database, hidden model memory, or automatic self-modification path. Pippy recalls it before each run when a project memory anchor exists, then verifies any relevant lesson against the current objective, repo docs, and code.
+
 ## What This Loop Does Not Do
 
 - It does **not** automatically modify Pippy. All changes are human-reviewed and manually applied.
+- It does not automatically write durable memory. Humans decide whether an Improvement Signal becomes cross-run memory.
 - It does **not** train or fine-tune any model. Signals inform prompt and config changes only.
 - It does **not** replace ordinary project debugging. If a `/goal` run fails due to a codebase bug, that is not an improvement signal.
 - It does **not** add runtime guardrail hooks from generic concern alone. Treat possible guardrails as guardrail candidates until repeated run evidence shows a specific safety or workflow rule is needed. The accepted exception is `cc-safety-net`, a reviewed platform-level guardrail plugin added in [ADR-0010](../adr/0010-default-cc-safety-net-guardrail-plugin.md).
@@ -25,7 +32,7 @@ Do not add runtime hooks just because a category sounds important. GeneralPippy 
 
 ## Relationship to the Pippy Loop Stack
 
-The improvement loop is one layer of the [Pippy loop stack](../../README.md#pippy-loop-stack), sitting alongside the self-driving loop, verification feedback, and external trigger recipes. It closes the loop between run evidence and prompt evolution.
+The improvement loop is one layer of the [Pippy loop stack](../../README.md#pippy-loop-stack), sitting alongside cross-run memory, the self-driving loop, verification feedback, and external trigger recipes. It closes the loop between run evidence and prompt evolution.
 
 ## See Also
 

@@ -12,15 +12,16 @@ Start the self-driving loop.
 ```
 
 Pippy will:
-1. Parse the objective into acceptance criteria (each must be observable and testable — e.g., "a test passes", "a file exists", "a command produces expected output"; vague criteria like "make it better" are banned)
-2. Explore the codebase with jcodemunch
-3. Plan step-by-step, in execution order, with a single independently verifiable deliverable per step
-4. Assemble a context bundle (fresh or forked) for each delegation
-5. Execute and verify each step
-6. Corrective re-delegate failures (3 cheap + 1 strong diagnosis)
-7. Review the diff and verification evidence
-8. Run final verification
-9. Report outcome as exactly one of `Done`, `Blocked`, or `Partial`
+1. Recall human-approved cross-run memory from the first existing project anchor: `PIPPY_MEMORY.md`, `.pippy/memory.md`, or `docs/agents/pippy-memory.md`
+2. Parse the objective into acceptance criteria (each must be observable and testable — e.g., "a test passes", "a file exists", "a command produces expected output"; vague criteria like "make it better" are banned)
+3. Explore the codebase with jcodemunch
+4. Plan step-by-step, in execution order, with a single independently verifiable deliverable per step
+5. Assemble a context bundle (fresh or forked) for each delegation
+6. Execute and verify each step
+7. Corrective re-delegate failures (3 cheap + 1 strong diagnosis)
+8. Review the diff and verification evidence
+9. Run final verification
+10. Report outcome as exactly one of `Done`, `Blocked`, or `Partial`
 
 ### Acceptance Criteria Rules
 
@@ -42,7 +43,7 @@ The plan must list steps **in execution order** with dependencies respected. Eac
 Every `/goal` run must report four things at the end:
 
 1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against run evidence; each criterion must include final evidence (command output, test result, file path, diff)
-2. **Plan** — the compact run evidence trail showing what was done and in what order; include commands run, verification outputs, trajectory checkpoints for explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, or persistent observability system.
+2. **Plan** — the compact run evidence trail showing what was done and in what order; include whether cross-run memory was recalled, commands run, verification outputs, trajectory checkpoints for recalled memory when present, explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, durable memory write, or persistent observability system.
 3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal
 4. **Outcome** — one of:
    - `Done` — all acceptance criteria met, verification passes
@@ -70,6 +71,7 @@ Review and final verification are the closing gates of `/goal`, not standalone c
 
 - YOLO mode is on by default (auto-allow reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`).
 - RTK Force is mandatory when `rtk` is installed: `command -v rtk` is the only allowed raw detection command, then every later shell command must go through `rtk` (`rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>` for path-scoped diffs, `rtk make all`, or `rtk run` / `rtk proxy`). Raw `git` of any kind, `gh`, `make`, or test commands after rtk was found are Pippy-owned routing failures and must appear in the Improvement Signal.
+- Recalled cross-run memory is guidance, not proof; Pippy must verify it against the current objective, repo docs, and code, and must not write memory automatically.
 - Pippy stops only when acceptance criteria are met by evidence.
 - Use `/ship` as a shortcut for PR prep.
 - Use OpenCode's session usage display for exact tokens/cost, and `/budget` for routing and efficiency guidance.
