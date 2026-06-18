@@ -89,7 +89,7 @@ The installer handles:
 - Installing npm plugins if package.json exists
 - Cleaning up obsolete v1.0 files
 
-**Note:** Always use `install.sh` rather than manually copying files. The installer provides safety features like backups, rollback on failure, and plugin merging that manual copying bypasses.
+**Note:** Always use `install.sh` rather than manually copying files. The installer provides safety features such as backups, automatic rollback on failure, and plugin merging that manual copying bypasses.
 
 ## Usage
 
@@ -106,10 +106,11 @@ or troubleshooting guidance.
 ## The Self-Driving Loop
 
 ```
-UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
+RECALL → UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
 ```
 
 Pippy:
+- Recalls human-approved project memory when a memory anchor exists
 - Parses your objective into acceptance criteria
 - Explores the codebase with jcodemunch
 - Plans with step-by-step verification
@@ -123,6 +124,7 @@ Pippy:
 
 GeneralPippy stays config-only, but frames Pippy as a stack of useful loops:
 
+- **Cross-run memory** — optional project memory anchors let Pippy recall human-approved lessons before `/goal` planning without storing raw traces or telemetry. See [cross-run-memory.md](docs/agents/cross-run-memory.md).
 - **Self-driving loop** — `/goal` plans, executes, verifies, retries, reviews, runs final verification, and reports.
 - **Verification feedback** — acceptance criteria, verification evidence, and retry context keep each run grounded.
 - **Pippy harness** — the prompts, commands, skills, context assembly, routing, verification gates, reports, evals, and improvement-loop docs maintainers tune. See [pippy-harness.md](docs/agents/pippy-harness.md).

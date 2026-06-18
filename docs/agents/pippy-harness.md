@@ -11,6 +11,7 @@ GeneralPippy remains config-only. This inventory names harness components; it do
 | Agent prompts | `config/agents/pippy.md`, `config/agents/pippy-plan.md`, `config/agents/pippy-build.md` | Role boundaries, model roles, permissions, self-driving loop behavior, review behavior, and reporting expectations |
 | Slash commands | `config/commands/goal.md`, `config/commands/ship.md`, `config/commands/budget.md`, `config/commands/advice.md` | User-facing entry points, output contracts, budget guidance, advisor requests, and ship workflow shortcuts |
 | Skills | `config/skills/pippy/SKILL.md` | Portable `/goal` behavior and progressive-disclosure guidance for OpenCode skill loading |
+| Cross-run memory | `docs/agents/cross-run-memory.md`, optional project anchors such as `PIPPY_MEMORY.md`, `.pippy/memory.md`, or `docs/agents/pippy-memory.md` | Human-approved lessons recalled before `/goal` planning without adding raw traces, telemetry, or automatic memory writes |
 | Context assembly | `config/agents/pippy.md`, `config/skills/pippy/SKILL.md`, `docs/adr/0006-dynamic-subagent-dispatch.md` | Fresh and forked bundles for implementation, retry, review, and stuck-step diagnosis |
 | Subagent routing | `config/agents/pippy.md`, `config/agents/pippy-build.md`, `config/agents/pippy-plan.md`, `docs/adr/0002-primary-coordination-boundary.md` | Primary coordination boundary, read-only planning, implementation delegation, and corrective re-delegation |
 | Verification gates | `config/commands/goal.md`, `config/agents/pippy.md`, `config/skills/pippy/SKILL.md` | Acceptance criteria, verification rigor, REVIEW, final verification, the review checklist, and the Assumption audit |
@@ -29,6 +30,7 @@ When changing the Pippy harness, update the smallest component that owns the beh
 - Change commands when the user-facing contract changes.
 - Change docs when maintainers need shared language or repeatable evals.
 - Change validation when the behavior should not regress.
+- Change cross-run memory when a human-approved lesson should guide future runs but is not yet stable enough for prompts, commands, skills, ADRs, or validation.
 - Consider an ADR only for hard-to-reverse, surprising trade-offs.
 
 Do not add runtime hooks, schedulers, telemetry stores, or automatic self-modification as harness changes unless a separate decision record accepts that platform-level commitment. The accepted exception is `cc-safety-net`, a reviewed guardrail plugin added per [ADR-0010](../adr/0010-default-cc-safety-net-guardrail-plugin.md).

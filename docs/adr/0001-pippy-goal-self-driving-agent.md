@@ -51,9 +51,10 @@ Removed: `/think`, `/verify`, `/cheap`, `/smart`.
 ### Self-Driving Loop
 
 ```
-UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
+RECALL → UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
 ```
 
+- RECALL checks for an optional project-owned cross-run memory anchor and applies relevant human-approved lessons as guidance. ADR-0011 defines the memory boundary.
 - Max 50 iterations, 30 minutes wall time, 5 consecutive failures → escalate
 - Strong model only for: planning, stuck-step diagnosis
 - Cheap model for everything else

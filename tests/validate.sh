@@ -480,6 +480,8 @@ test_goal_output_format() {
     local label
     label="$(basename "$file")"
     if grep -q "trajectory checkpoints" "$file" &&
+       grep -qi "cross-run memory" "$file" &&
+       grep -qi "recalled memory" "$file" &&
        grep -q "explored" "$file" &&
        grep -q "delegated edits to \`pippy-build\`" "$file" &&
        grep -q "verified each step" "$file" &&
@@ -519,6 +521,57 @@ test_goal_output_format() {
     pass "CONTEXT.md defines Run evidence"
   else
     fail "CONTEXT.md must define Run evidence as compact report-local evidence, not telemetry"
+  fi
+}
+
+test_cross_run_memory() {
+  run_test "#53 cross-run memory is config-only, human-reviewed, and recalled before /goal planning"
+  local context="$REPO_ROOT/CONTEXT.md"
+  local goal="$REPO_ROOT/config/commands/goal.md"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local doc="$REPO_ROOT/docs/agents/cross-run-memory.md"
+  local harness="$REPO_ROOT/docs/agents/pippy-harness.md"
+  local improvement="$REPO_ROOT/docs/agents/pippy-improvement-loop.md"
+  local adr="$REPO_ROOT/docs/adr/0011-cross-run-memory.md"
+
+  if [[ -f "$doc" && -f "$adr" ]]; then
+    pass "cross-run memory doc and ADR exist"
+  else
+    fail "cross-run memory must have docs/agents/cross-run-memory.md and ADR-0011"
+  fi
+
+  if grep -q "Cross-run memory" "$context" &&
+     grep -qi "human-approved" "$context" &&
+     grep -qi "raw traces" "$context" &&
+     grep -qi "telemetry" "$context"; then
+    pass "CONTEXT.md defines Cross-run memory"
+  else
+    fail "CONTEXT.md must define Cross-run memory as human-approved and not telemetry/raw traces"
+  fi
+
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -q "PIPPY_MEMORY.md" "$file" &&
+       grep -q ".pippy/memory.md" "$file" &&
+       grep -q "docs/agents/pippy-memory.md" "$file" &&
+       grep -qi "guidance, not proof\|not proof" "$file" &&
+       grep -qi "must not write memory automatically\|Do not create, edit, or append memory automatically" "$file"; then
+      pass "$label defines recall anchors and no-auto-write rule"
+    else
+      fail "$label must define memory anchors, guidance-not-proof, and no automatic writes"
+    fi
+  done
+
+  if grep -qi "Cross-run memory" "$harness" &&
+     grep -qi "Cross-Run Memory" "$improvement" &&
+     grep -qi "does not.*automatically write durable memory\|does not automatically write" "$improvement" &&
+     grep -qi "automatic semantic store\|semantic store" "$adr" &&
+     grep -qi "config-only" "$adr"; then
+    pass "harness, improvement loop, and ADR preserve config-only memory boundary"
+  else
+    fail "cross-run memory docs must preserve config-only, human-reviewed boundary"
   fi
 }
 
@@ -1472,6 +1525,7 @@ main() {
   test_cc_safety_net_pinned
   test_pippy_build_bash_permissions
   test_goal_output_format
+  test_cross_run_memory
   test_goal_rtk_force
   test_verify_is_part_of_goal
   test_assumption_audit_review_gate

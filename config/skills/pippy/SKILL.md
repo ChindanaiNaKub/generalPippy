@@ -29,11 +29,12 @@ Use `/goal` when you want autonomous execution:
 ## The Self-Driving Loop
 
 ```
-UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
+RECALL → UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT
 ```
 
 | Phase | What happens |
 |-------|-------------|
+| RECALL | Read the first project cross-run memory anchor that exists and apply relevant human-approved lessons as guidance |
 | UNDERSTAND | Parse objective into acceptance criteria and scale verification rigor to task risk |
 | EXPLORE | Map codebase with jcodemunch + rtk |
 | PLAN | Step-by-step plan with verification per step |
@@ -52,7 +53,7 @@ Scale verification rigor to task risk while shaping acceptance criteria. Use hig
 Every `/goal` run must report four things at the end:
 
 1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against run evidence; each criterion must include final evidence (command output, test result, file path, diff), not just a status summary
-2. **Plan** — the compact run evidence trail showing what was done and in what order; include commands run, verification outputs, trajectory checkpoints for explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, or persistent observability system.
+2. **Plan** — the compact run evidence trail showing what was done and in what order; include whether cross-run memory was recalled, commands run, verification outputs, trajectory checkpoints for recalled memory when present, explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, durable memory write, or persistent observability system.
 3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal; always present and limited to Pippy-owned friction
 4. **Outcome** — the final line must be exactly one of:
    - `Done` — all acceptance criteria met, verification passes
@@ -60,6 +61,12 @@ Every `/goal` run must report four things at the end:
    - `Partial` — what was completed, what remains, why it stopped
 
 No other outcome labels are permitted. The word must be exactly `Done`, `Blocked`, or `Partial`.
+
+### Cross-Run Memory
+
+Before UNDERSTAND, check for a project-owned memory anchor in this order: `PIPPY_MEMORY.md`, `.pippy/memory.md`, then `docs/agents/pippy-memory.md`. Read the first one that exists. Use relevant human-approved lessons as guidance for acceptance criteria, planning, context assembly, routing, and verification. If no anchor exists, continue silently.
+
+Memory is not proof. Current objective, repo docs, ADRs, verified code facts, and command output override recalled memory. Do not create, edit, or append memory automatically; use the Improvement Signal to recommend a memory item when future runs would benefit.
 
 ### Review And Verification
 
