@@ -7,7 +7,22 @@
 
 # GeneralPippy v2.6.0 — Self-Driving Goal Agent for OpenCode
 
-Take a verifiable objective, and Pippy drives to completion — plan, execute, verify, review, iterate.
+Adding error handling to an API layer in OpenCode means juggling multiple agents, planning steps, verifying each change, and reviewing the diff yourself. In practice, that looks like:
+
+> **You:** "Create a planner subagent with read-only access."
+> **You:** "Now delegate implementation to a build agent."
+> **You:** "Execute this plan step by step."
+> **You:** "Verify each step before moving on."
+> **You:** "Now review the diff."
+> **You:** "Run final verification."
+
+With GeneralPippy, one command drives the whole loop:
+
+> **You:** `/goal "add error handling to the API layer"`
+>
+> Pippy plans, executes, verifies, retries failures, reviews, and reports done.
+
+No manual orchestration. No switching agents. No babysitting.
 
 ## What's Included
 
@@ -18,6 +33,7 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 
 ### Commands
 - `/goal "<objective>"` — Start the self-driving loop
+- `/grill-to-goal` — Clarify an under-specified idea into a goal-ready prompt
 - `/ship` — Review, verify, and prepare for PR
 - `/budget` — Audit budget health and routing behavior
 - `/advice <adapter>` — Request read-only advice from an advisor adapter
@@ -93,9 +109,27 @@ The installer handles:
 
 ## Usage
 
+### Before GeneralPippy
+
+Writing a feature in OpenCode manually requires coordinating multiple agents and orchestrating every phase yourself:
+
+```
+Step 1:  Plan the changes with a planner agent
+Step 2:  Hand off to an implementation agent
+Step 3:  Run each step, verify, and retry on failure
+Step 4:  Review the diff yourself
+Step 5:  Run final checks and prepare a PR
+```
+
+Each step is a separate prompt. If something fails, you diagnose it and re-drive manually.
+
+### After GeneralPippy
+
+Pippy handles the full loop from a single objective:
+
 1. Run `opencode` to start
-2. Pippy is your default agent
-3. Run `/goal "add error handling to the API layer"` — Pippy drives to completion
+2. Run `/goal "add error handling to the API layer"` — Pippy plans, executes, verifies, retries, reviews, and reports
+3. Run `/grill-to-goal "rough feature idea"` when intent, non-goals, constraints, or trade-offs are under-specified
 4. Run `/ship` when ready for PR
 5. Use OpenCode's session usage display for exact tokens/cost, and run `/budget` for routing and efficiency guidance
 
@@ -111,6 +145,7 @@ RECALL → UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] �
 
 Pippy:
 - Recalls human-approved project memory when a memory anchor exists
+- Checks Goal readiness before planning and recommends `/grill-to-goal` when the objective would require invented product direction
 - Parses your objective into acceptance criteria
 - Explores the codebase with jcodemunch
 - Plans with step-by-step verification
