@@ -1,5 +1,5 @@
 #!/bin/bash
-# GeneralPippy v2.6.0 — Self-Driving Goal Agent for OpenCode
+# GeneralPippy v3.0.0 — Self-Driving Goal Agent for OpenCode
 # Install script: copies config files to ~/.config/opencode/
 
 set -euo pipefail
@@ -9,7 +9,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/utils.sh
 source "$REPO_ROOT/lib/utils.sh"
 
-VERSION="2.6.0"
+VERSION="3.0.0"
 DRY_RUN=0
 
 # XDG Base Directory support: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
