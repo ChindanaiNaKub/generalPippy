@@ -6,6 +6,8 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=lib/utils.sh
+source "$REPO_ROOT/lib/utils.sh"
 INSTALLED_CONFIG="${OPENCODE_CONFIG:-}"
 SOURCE_CONFIG="$REPO_ROOT/config"
 
@@ -33,42 +35,6 @@ ok() {
 section() {
   echo ""
   echo "▶ $1"
-}
-
-json_get() {
-  local file="$1"
-  local path="$2"
-
-  if ! command -v python3 &> /dev/null; then
-    return 1
-  fi
-
-  python3 - "$file" "$path" <<'PY'
-import json
-import sys
-
-path = sys.argv[1]
-parts = sys.argv[2].split(".")
-
-with open(path) as f:
-    data = json.load(f)
-
-for part in parts:
-    data = data[part]
-
-print(data)
-PY
-}
-
-model_frontmatter() {
-  local file="$1"
-  sed -n 's/^model:[[:space:]]*//p' "$file" | head -1
-}
-
-jsonc_model_value() {
-  local file="$1"
-  local key="$2"
-  sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" "$file" | head -1
 }
 
 section "Config target"

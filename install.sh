@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# Resolve repo root for sourcing shared utilities.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/utils.sh
+source "$REPO_ROOT/lib/utils.sh"
+
 VERSION="2.6.0"
 DRY_RUN=0
 
@@ -705,42 +710,7 @@ write_profile_metadata() {
   fi
 
   mkdir -p "$GENERALPIPPY_DIR"
-  if command -v python3 &> /dev/null; then
-    python3 - "$GENERALPIPPY_DIR/profile.json" "$profile" "$planning" "$implementation" "$system" <<'PY'
-import json, sys
-
-path = sys.argv[1]
-profile = sys.argv[2]
-planning = sys.argv[3]
-implementation = sys.argv[4]
-system = sys.argv[5]
-
-data = {
-    "profile": profile,
-    "models": {
-        "planning": planning,
-        "implementation": implementation,
-        "system": system
-    }
-}
-
-with open(path, 'w') as f:
-    json.dump(data, f, indent=2)
-    f.write('\n')
-PY
-  else
-    cat > "$GENERALPIPPY_DIR/profile.json" <<EOF
-{
-  "profile": "$profile",
-  "models": {
-    "planning": "$planning",
-    "implementation": "$implementation",
-    "system": "$system"
-  }
-}
-EOF
-  fi
-
+  write_profile_json "$profile" "$planning" "$implementation" "$system"
   success "Profile metadata written to $GENERALPIPPY_DIR/profile.json"
 }
 
