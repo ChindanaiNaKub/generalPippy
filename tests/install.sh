@@ -351,6 +351,7 @@ EOF
 {
   "plugin": [
     "@tarquinen/opencode-dcp@latest",
+    "cc-safety-net@latest",
     "@mycompany/custom-plugin@1.2.3"
   ]
 }
@@ -378,6 +379,25 @@ EXISTING
     pass "pinned version used instead of @latest"
   else
     fail "expected pinned version 0.0.4"
+  fi
+
+  if grep -q "@tarquinen/opencode-dcp@latest" "$config_dir/opencode.jsonc"; then
+    fail "stale opencode-dcp@latest user plugin was preserved"
+  else
+    pass "stale opencode-dcp@latest user plugin removed"
+  fi
+
+  # Verify cc-safety-net@1.0.6 pinned plugin is also present.
+  if grep -q "cc-safety-net@1.0.6" "$config_dir/opencode.jsonc"; then
+    pass "cc-safety-net@1.0.6 pinned plugin present"
+  else
+    fail "cc-safety-net@1.0.6 pinned plugin missing after install"
+  fi
+
+  if grep -q "cc-safety-net@latest" "$config_dir/opencode.jsonc"; then
+    fail "stale cc-safety-net@latest user plugin was preserved"
+  else
+    pass "stale cc-safety-net@latest user plugin removed"
   fi
 
   rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"

@@ -1,6 +1,6 @@
 # ADR-0009: Agentic Engineering Harness Adaptation
 
-Status: accepted
+Status: accepted; default destructive-command guardrail exception accepted by ADR-0010.
 
 ## Context
 
@@ -25,7 +25,7 @@ Rejected alternatives:
 
 - Do not add runtime telemetry or raw traces.
 - Do not add a runtime evaluator or model benchmark harness.
-- Do not add OpenCode hook infrastructure for guardrails yet.
+- Do not add OpenCode hook infrastructure for generic guardrails yet. ADR-0010 later accepts `cc-safety-net` as a specific default destructive-command guardrail for YOLO mode.
 - Do not add a new rigor mode flag or command surface.
 
 ## Consequences
@@ -33,7 +33,7 @@ Rejected alternatives:
 - Pippy gets more disciplined agentic-engineering behavior while preserving GeneralPippy's config-only invariant.
 - Maintainers have shared vocabulary and docs for harness changes without implying a service, telemetry store, scheduler, or automatic self-modification.
 - Goal-run reports become more useful for human-reviewed improvement because they include trajectory checkpoints, compact run evidence, and clearer improvement signals.
-- The trade-off is that evals and guardrail decisions remain manual for now. Runtime hooks, persistent traces, and automated evaluators can be revisited only if repeated run evidence justifies a specific platform-level commitment.
+- The trade-off is that evals and most guardrail decisions remain manual for now. Runtime hooks, persistent traces, and automated evaluators can be revisited only if repeated run evidence justifies a specific platform-level commitment; ADR-0010 records the accepted `cc-safety-net` exception.
 
 ## References
 

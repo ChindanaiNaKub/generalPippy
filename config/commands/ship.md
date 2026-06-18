@@ -17,7 +17,7 @@ Pippy will:
 
 ### RTK Force
 
-When `rtk` is installed, `/ship` MUST route every shell command through `rtk`. Use `rtk git status`, `rtk git log`, `rtk git diff`, `rtk gh ...`, and `rtk make all` instead of raw `git`, `gh`, or `make`. For commands without a specialized wrapper, use `rtk run` or `rtk proxy`. Fall back to raw shell only if `rtk` is missing or the wrapper fails for that exact command, and mention the fallback in the report.
+When `rtk` is installed, `/ship` MUST route every shell command through `rtk`. Use `rtk git status`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>` for path-scoped diffs, `rtk gh ...`, and `rtk make all` instead of raw `git`, `gh`, or `make`. For commands without a specialized wrapper, use `rtk run` or `rtk proxy`. Fall back to raw shell only if `rtk` is missing or the wrapper fails for that exact command, and mention the fallback in the report.
 
 ### Early Context Compression
 

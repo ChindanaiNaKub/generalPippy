@@ -13,8 +13,8 @@ GeneralPippy remains config-only. This inventory names harness components; it do
 | Skills | `config/skills/pippy/SKILL.md` | Portable `/goal` behavior and progressive-disclosure guidance for OpenCode skill loading |
 | Context assembly | `config/agents/pippy.md`, `config/skills/pippy/SKILL.md`, `docs/adr/0006-dynamic-subagent-dispatch.md` | Fresh and forked bundles for implementation, retry, review, and stuck-step diagnosis |
 | Subagent routing | `config/agents/pippy.md`, `config/agents/pippy-build.md`, `config/agents/pippy-plan.md`, `docs/adr/0002-primary-coordination-boundary.md` | Primary coordination boundary, read-only planning, implementation delegation, and corrective re-delegation |
-| Verification gates | `config/commands/goal.md`, `config/agents/pippy.md`, `config/skills/pippy/SKILL.md` | Acceptance criteria, verification rigor, REVIEW, final verification, and the review checklist |
-| Reporting | `config/commands/goal.md`, `config/agents/pippy.md`, `config/skills/pippy/SKILL.md` | Acceptance Criteria, Plan with run evidence, Improvement Signal, and exact Outcome labels |
+| Verification gates | `config/commands/goal.md`, `config/agents/pippy.md`, `config/skills/pippy/SKILL.md` | Acceptance criteria, verification rigor, REVIEW, final verification, the review checklist, and the Assumption audit |
+| Reporting | `config/commands/goal.md`, `config/agents/pippy.md`, `config/skills/pippy/SKILL.md` | Acceptance Criteria, Plan with run evidence including Assumption audit checkpoints, Improvement Signal, and exact Outcome labels |
 | Model profiles and advisors | `config/model-profiles/balanced.json`, `config/commands/advice.md`, `install.sh`, `docs/adr/0005-model-profiles-and-read-only-advisor-agents.md` | Planning/implementation/system model defaults and read-only external advisor behavior |
 | Installer defaults | `install.sh`, `config/opencode.jsonc`, `config/references/opencode/REFERENCE.md` | Installed OpenCode configuration, backups, profile metadata, advisor metadata, and local OpenCode reference packaging |
 | Optional efficiency tools | `config/commands/budget.md`, `config/commands/ship.md`, `config/agents/pippy.md`, `config/skills/pippy/SKILL.md` | rtk usage, Caveman mode, context compression hygiene, jcodemunch guidance, and ponytail reuse guidance |
@@ -31,4 +31,4 @@ When changing the Pippy harness, update the smallest component that owns the beh
 - Change validation when the behavior should not regress.
 - Consider an ADR only for hard-to-reverse, surprising trade-offs.
 
-Do not add runtime hooks, schedulers, telemetry stores, or automatic self-modification as harness changes unless a separate decision record accepts that platform-level commitment.
+Do not add runtime hooks, schedulers, telemetry stores, or automatic self-modification as harness changes unless a separate decision record accepts that platform-level commitment. The accepted exception is `cc-safety-net`, a reviewed guardrail plugin added per [ADR-0010](../adr/0010-default-cc-safety-net-guardrail-plugin.md).

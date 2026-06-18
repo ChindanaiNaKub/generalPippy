@@ -11,7 +11,8 @@
 
   // Plugins
   "plugin": [
-    "@tarquinen/opencode-dcp@0.0.4"
+    "@tarquinen/opencode-dcp@0.0.4",
+    "cc-safety-net@1.0.6"
   ],
 
   // MCP servers
