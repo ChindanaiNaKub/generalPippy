@@ -493,6 +493,19 @@ test_goal_output_format() {
     fi
   done
 
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -q "Program design handling" "$file" &&
+       grep -q "skipped a needed sketch\|skipped a needed Program design sketch" "$file" &&
+       grep -q "passing tests without design evidence" "$file" &&
+       grep -qi "pre-existing code\|pre-existing project code" "$file"; then
+      pass "$label Improvement Signal covers Pippy-owned Program design misses"
+    else
+      fail "$label must limit Program design Improvement Signals to Pippy-owned misses"
+    fi
+  done
+
   # Run evidence must stay compact and report-local, not become telemetry.
   for file in "$goal" "$pippy" "$skill" "$improvement_loop"; do
     local label
@@ -999,6 +1012,12 @@ test_context_assembly() {
       fail "$label first-attempt bundle must include acceptance criteria and file paths"
     fi
 
+    if grep -q "Program design sketch" "$file" && grep -qi "when present" "$file"; then
+      pass "$label first-attempt bundle includes Program design sketch when present"
+    else
+      fail "$label first-attempt bundle must include Program design sketch when present"
+    fi
+
     # Retry bundle contents
     if grep -qi "retry\|bug fix\|forked" "$file" && grep -q "failure output\|prior-attempt" "$file"; then
       pass "$label retry bundle includes failure output and prior-attempt summary"
@@ -1020,6 +1039,60 @@ test_context_assembly() {
       fail "$label diagnosis bundle must include failure history and ranked code context"
     fi
   done
+}
+
+test_program_design_sketch_routing() {
+  run_test "Program design sketch is conditional, read-only, and routed through pippy-plan"
+  local context="$REPO_ROOT/CONTEXT.md"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local goal="$REPO_ROOT/config/commands/goal.md"
+  local plan="$REPO_ROOT/config/agents/pippy-plan.md"
+  local build="$REPO_ROOT/config/agents/pippy-build.md"
+  local harness="$REPO_ROOT/docs/agents/pippy-harness.md"
+  local adr6="$REPO_ROOT/docs/adr/0006-dynamic-subagent-dispatch.md"
+
+  if grep -q "Design-sensitive change" "$context" &&
+     grep -q "Program design sketch" "$context"; then
+    pass "CONTEXT.md defines design-sensitive change and Program design sketch"
+  else
+    fail "CONTEXT.md must define design-sensitive change and Program design sketch"
+  fi
+
+  for file in "$pippy" "$skill" "$goal"; do
+    local label
+    label="$(basename "$file")"
+    if grep -q "Program design sketch" "$file" &&
+       grep -q "design-sensitive" "$file" &&
+       grep -qi "multi-file" "$file" &&
+       grep -qi "small mechanical edits" "$file"; then
+      pass "$label gates Program design sketch to design-sensitive changes"
+    else
+      fail "$label must gate Program design sketch to design-sensitive changes and skip small mechanical edits"
+    fi
+  done
+
+  if grep -q "Program Design Sketches" "$plan" &&
+     grep -q "Responsibility boundaries" "$plan" &&
+     grep -q "Dependency direction" "$plan" &&
+     grep -q "State ownership" "$plan"; then
+    pass "pippy-plan can produce Program design sketches"
+  else
+    fail "pippy-plan must define a Program Design Sketch output shape"
+  fi
+
+  if grep -q "Program design sketch" "$build" && grep -q "pippy-plan" "$build"; then
+    pass "pippy-build follows Program design sketches from pippy-plan"
+  else
+    fail "pippy-build must follow Program design sketches from pippy-plan when present"
+  fi
+
+  if grep -q "read-only Program design sketches" "$harness" &&
+     grep -q "Program design sketch when present" "$adr6"; then
+    pass "harness and ADR-0006 document Program design sketch routing"
+  else
+    fail "harness and ADR-0006 must document Program design sketch routing"
+  fi
 }
 
 test_corrective_redelegation() {
@@ -1147,6 +1220,15 @@ test_improvement_loop_doc() {
     fail "doc must distinguish Pippy-owned friction from ordinary project failure"
   fi
 
+  if grep -q "Program design handling" "$doc" &&
+     grep -q "Program design sketch" "$doc" &&
+     grep -q "passing tests without Program design evidence" "$doc" &&
+     grep -q "pre-existing design debt" "$doc"; then
+    pass "doc distinguishes Pippy-owned Program design misses from pre-existing design debt"
+  else
+    fail "doc must distinguish Pippy-owned Program design misses from pre-existing design debt"
+  fi
+
   if grep -qi "guardrail candidate" "$doc" &&
      grep -qi "runtime guardrail hooks" "$doc" &&
      grep -qi "repeated run evidence" "$doc" &&
@@ -1221,6 +1303,14 @@ test_improvement_signal_smoke() {
   else
     fail "smoke test must include a valid Pippy-owned improvement signal example"
   fi
+
+  if grep -q "Program design" "$file" &&
+     grep -q "skipped the Program design REVIEW check" "$file" &&
+     grep -q "messy pre-existing code" "$file"; then
+    pass "smoke test includes valid and invalid Program design Improvement Signal examples"
+  else
+    fail "smoke test must include valid and invalid Program design Improvement Signal examples"
+  fi
 }
 
 test_goal_run_evals_doc() {
@@ -1253,6 +1343,18 @@ test_goal_run_evals_doc() {
     pass "eval doc includes /goal scenarios with expected behavior and failure signals"
   else
     fail "eval doc must include /goal scenarios with expected behavior and failure signals"
+  fi
+
+  if grep -q "Passing Tests, Bad Program Design" "$doc" &&
+     grep -q "Program design sketch" "$doc" &&
+     grep -q "passing tests" "$doc" &&
+     grep -q "overloaded interfaces" "$doc" &&
+     grep -q "state ownership" "$doc" &&
+     grep -q "skipped a needed sketch" "$doc" &&
+     grep -q "pre-existing design debt" "$doc"; then
+    pass "eval doc includes passing-tests/bad-program-design scenario"
+  else
+    fail "eval doc must include a passing-tests/bad-program-design scenario"
   fi
 
   if grep -q "goal-run-evals.md" "$readme"; then
@@ -1538,6 +1640,7 @@ main() {
   test_ship_budget_efficiency_smoke_test
   test_adr_bump_process
   test_context_assembly
+  test_program_design_sketch_routing
   test_corrective_redelegation
   test_review_routing
   test_deferred_dispatch

@@ -16,12 +16,13 @@ Pippy will:
 2. Parse the objective into acceptance criteria (each must be observable and testable — e.g., "a test passes", "a file exists", "a command produces expected output"; vague criteria like "make it better" are banned)
 3. Explore the codebase with jcodemunch
 4. Plan step-by-step, in execution order, with a single independently verifiable deliverable per step
-5. Assemble a context bundle (fresh or forked) for each delegation
-6. Execute and verify each step
-7. Corrective re-delegate failures (3 cheap + 1 strong diagnosis)
-8. Review the diff and verification evidence
-9. Run final verification
-10. Report outcome as exactly one of `Done`, `Blocked`, or `Partial`
+5. Request a read-only Program design sketch from `pippy-plan` before design-sensitive changes
+6. Assemble a context bundle (fresh or forked) for each delegation
+7. Execute and verify each step
+8. Corrective re-delegate failures (3 cheap + 1 strong diagnosis)
+9. Review the diff and verification evidence
+10. Run final verification
+11. Report outcome as exactly one of `Done`, `Blocked`, or `Partial`
 
 ### Acceptance Criteria Rules
 
@@ -38,13 +39,15 @@ Scale verification rigor to task risk while shaping acceptance criteria. Use hig
 
 The plan must list steps **in execution order** with dependencies respected. Each step must have a **single, independently verifiable deliverable** — one clear thing that can be checked as done or not done.
 
+Before implementation, route design-sensitive changes to `pippy-plan` for a read-only Program design sketch. A change is design-sensitive when it is multi-file, refactor-heavy, touches core abstractions, changes state ownership or error paths, or introduces a new interface. Skip the sketch for small mechanical edits. Include any sketch in the `pippy-build` context bundle.
+
 ### Output Format
 
 Every `/goal` run must report four things at the end:
 
 1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against run evidence; each criterion must include final evidence (command output, test result, file path, diff)
-2. **Plan** — the compact run evidence trail showing what was done and in what order; include whether cross-run memory was recalled, commands run, verification outputs, trajectory checkpoints for recalled memory when present, explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, durable memory write, or persistent observability system.
-3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal
+2. **Plan** — the compact run evidence trail showing what was done and in what order; include whether cross-run memory was recalled, commands run, verification outputs, trajectory checkpoints for recalled memory when present, explored, planned, requested a Program design sketch when used, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, durable memory write, or persistent observability system.
+3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, Program design handling, or verification habits; use `None` when there is no actionable signal. Program design failures are Pippy-owned only when Pippy skipped a needed sketch, skipped the Program design REVIEW check, accepted passing tests without design evidence, or made maintainability claims without concrete boundaries/ownership/data-flow evidence; messy pre-existing code is not a Pippy-owned signal.
 4. **Outcome** — one of:
    - `Done` — all acceptance criteria met, verification passes
    - `Blocked` — what's blocking progress, what needs human action
@@ -54,10 +57,11 @@ Every `/goal` run must report four things at the end:
 
 Review and final verification are the closing gates of `/goal`, not standalone commands. The plan must always end with review followed by final verification before reporting outcome. After all execution steps complete:
 1. Cheap self-review of the full diff (use `rtk git diff` when `rtk` is installed)
-2. Apply the review checklist for last-20% failures: edge cases, error handling, integration assumptions, hallucinated dependencies, and clever-looking generated code that passes shallow tests but may be conceptually wrong
-3. Run an **Assumption audit** before reporting: check each claim Pippy is about to make against an authoritative source, executable evidence, or a concrete scenario; source-check external links/package metadata, scenario-check behavior claims, and dry-run runnable docs. Scale depth to verification rigor: quick for low-risk work, deeper for installer, permissions, dependencies, external links, public docs, security, or data-loss risks. Put audit evidence in the existing Plan evidence trail, not in a fifth report field.
-4. Run the combined verification command (`rtk make all` when `rtk` and `make all` are available, otherwise `rtk test` / `rtk err` equivalents)
-5. Check docs for public API changes
+2. Apply the review checklist for last-20% failures: edge cases, error handling, integration assumptions, hallucinated dependencies, program design regressions, and clever-looking generated code that passes shallow tests but may be conceptually wrong
+3. Run a **Program design** check inside REVIEW: inspect responsibility boundaries, dependency direction, state ownership, data flow, error paths, interface size, and change locality; route findings to `pippy-build`, then re-verify and rerun REVIEW
+4. Run an **Assumption audit** before reporting: check each claim Pippy is about to make against an authoritative source, executable evidence, or a concrete scenario; source-check external links/package metadata, scenario-check behavior claims, and dry-run runnable docs. Scale depth to verification rigor: quick for low-risk work, deeper for installer, permissions, dependencies, external links, public docs, security, or data-loss risks. Put audit evidence in the existing Plan evidence trail, not in a fifth report field.
+5. Run the combined verification command (`rtk make all` when `rtk` and `make all` are available, otherwise `rtk test` / `rtk err` equivalents)
+6. Check docs for public API changes
 
 ### Examples
 

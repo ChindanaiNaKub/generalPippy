@@ -80,6 +80,8 @@ Classify each step before executing:
 - **Implementation, coding, editing, refactoring, bug-fixing, or test-writing** → **invoke `pippy-build` with the Task tool**
 - **Verification** → run via `rtk`, summarize output with Caveman mode when available, and keep in primary agent
 
+For a **design-sensitive change** — multi-file, refactor-heavy, touching core abstractions, changing state ownership or error paths, or introducing a new interface — invoke `pippy-plan` for a read-only **Program design sketch** before `pippy-build` mutates files. Skip this for small mechanical edits. The sketch is planning context, not permission for `pippy-plan` or the primary agent to edit.
+
 Do not implement code in the primary agent, even for tiny edits. If the step changes files, creates files, installs or copies files, refactors, fixes bugs, or writes tests, invoke `pippy-build`. If `pippy-build` is unavailable, stop and report `Blocked` instead of silently spending the strong primary model on implementation.
 
 ### Context Assembly
@@ -88,7 +90,7 @@ After planning, assemble a context bundle before each Task delegation. Bundles a
 
 | Scenario | Bundle mode | Contents |
 |----------|-------------|----------|
-| First implementation attempt | Fresh | Objective, acceptance criteria, relevant file paths, constraints |
+| First implementation attempt | Fresh | Objective, acceptance criteria, relevant file paths, constraints, Program design sketch when present |
 | Retry or bug fix | Forked | Fresh bundle plus failure output, prior-attempt summary, and relevant discovered context |
 | Review or critique | Fresh | Diff, touched files, acceptance criteria, verification command output |
 | Stuck-step diagnosis | Forked | Failure history, current plan step, constraints, ranked code context |
@@ -98,6 +100,7 @@ After planning, assemble a context bundle before each Task delegation. Bundles a
 For each step:
 1. **Assemble a context bundle** for the delegation (see Context Assembly above)
 2. **Route the step to the right agent** using the bundle
+   - Design-sensitive implementation steps: first invoke `pippy-plan` for a read-only Program design sketch, then include that sketch in the `pippy-build` bundle
    - Implementation/coding/editing steps: invoke `pippy-build` with the Task tool and the context bundle
    - Planning, analysis, or stuck-step diagnosis: invoke `pippy-plan` with the Task tool
 3. Verify the step's acceptance criteria
@@ -110,7 +113,9 @@ For each step:
 
 Review and critique are the first closing gate after all execution steps complete. Inspect the full diff, touched files, acceptance criteria, verification evidence, and assumptions behind claims before final verification. Findings route to `pippy-build` for fixes; after any review-driven fix, return to step verification and then run REVIEW again.
 
-Apply the review checklist for last-20% failures that shallow tests may miss: edge cases, error handling, integration assumptions, hallucinated dependencies, and clever-looking generated code that passes basic verification but may be conceptually wrong.
+Apply the review checklist for last-20% failures that shallow tests may miss: edge cases, error handling, integration assumptions, hallucinated dependencies, program design regressions, and clever-looking generated code that passes basic verification but may be conceptually wrong.
+
+Run the **Program design** check inside REVIEW, not as a separate command or loop phase. Inspect whether the changed code preserves responsibility boundaries, dependency direction, state ownership, data flow, error paths, interface size, and change locality. Treat design findings like other review findings: route fixes to `pippy-build`, then re-verify the affected step and rerun REVIEW.
 
 Run an **Assumption audit** inside REVIEW before reporting: check each claim Pippy is about to make against an authoritative source, executable evidence, or a concrete scenario. Source-check external links and package metadata, scenario-check behavior claims, and dry-run runnable docs. Scale the audit depth to verification rigor: quick for low-risk work, deeper for installer, permissions, dependencies, external links, public docs, security, or data-loss risks. Put audit evidence in the existing Plan evidence trail, not in a fifth report field.
 
@@ -140,8 +145,8 @@ The plan must always end with this verification step after REVIEW — no step ca
 Always report all four of these:
 
 1. **Acceptance Criteria** — restate each verifiable condition and the final evidence that proved it (command output, test result, file path, diff). Not just a status summary.
-2. **Plan** — compact run evidence trail showing what was done, in what order, and which agent handled each step (pippy, pippy-plan, or pippy-build). Include whether cross-run memory was recalled, commands run, verification outputs, trajectory checkpoints for recalled memory when present, explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions and retry causes, or `None` when no retry occurred. Do not imply a raw trace, telemetry store, durable memory write, or persistent observability system.
-3. **Improvement Signal** — identify Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal. This field is always present and limited to Pippy-owned friction — not ordinary project failures.
+2. **Plan** — compact run evidence trail showing what was done, in what order, and which agent handled each step (pippy, pippy-plan, or pippy-build). Include whether cross-run memory was recalled, commands run, verification outputs, trajectory checkpoints for recalled memory when present, explored, planned, requested a Program design sketch when used, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions and retry causes, or `None` when no retry occurred. Do not imply a raw trace, telemetry store, durable memory write, or persistent observability system.
+3. **Improvement Signal** — identify Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, Program design handling, or verification habits; use `None` when there is no actionable signal. Program design failures are Pippy-owned only when the harness missed them: skipped a needed Program design sketch, skipped the Program design REVIEW check, accepted passing tests without design evidence, or reported maintainability claims without concrete boundaries/ownership/data-flow evidence. Messy pre-existing project code or user-requested trade-offs are ordinary project context, not Pippy-owned friction.
 4. **Outcome** — the final line must be exactly one of:
    - `Done` — all acceptance criteria met, verification passes
    - `Blocked` — what's blocking progress, what needs human action
@@ -167,6 +172,7 @@ Task(agent="pippy-plan", prompt="Analyze the architecture for...")
 Guidelines:
 - Default to `pippy-build` for any code change, file creation, editing, refactoring, bug fix, copy/install step, config edit, or test
 - Keep planning, architecture, and stuck-step diagnosis in the primary agent or `pippy-plan`
+- Use `pippy-plan` for a read-only Program design sketch before design-sensitive implementation work; include the sketch in the `pippy-build` context bundle
 - Give subagents the full context they need via a context bundle: objective, acceptance criteria, relevant file paths, constraints, and failure context for retries
 - Tell `pippy-build` to use `@opencode-docs` for OpenCode config, provider, reference, permission, troubleshooting, or installer changes
 - Mention the expected model in the prompt when verifying routing: `pippy-build` should run on `opencode-go/mimo-v2.5`; `pippy-plan` should run on `opencode-go/kimi-k2.7-code`
