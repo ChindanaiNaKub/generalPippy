@@ -7,13 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-06-18
+
 ### Added
 - Cross-run memory recall for `/goal`, including `PIPPY_MEMORY.md`, ADR-0011, user-facing docs, and validation coverage for load/update behavior.
 - Program Design checks before implementation so Pippy confirms boundaries, interfaces, and verification shape before handing work to `pippy-build`.
+- Goal readiness and `/grill-to-goal`, including a reusable skill, ADR-0012, eval coverage, and `/goal` readiness checks for under-specified objectives.
+- ADR-0013 documenting the removal of advisor adapters.
 
 ### Changed
 - Extracted shared installer and doctor shell helpers into `lib/utils.sh`, with lint coverage updated for the shared utility file.
 - Expanded Pippy harness, improvement-loop, smoke-test, and goal-run eval docs around cross-run memory and Program Design behavior.
+- Reworked the README opening and usage sections to lead with a concrete OpenCode before/after workflow.
+- Installer and validation coverage now treat `/goal`, `/grill-to-goal`, `/ship`, and `/budget` as the active command surface.
+
+### Removed
+- Removed the `/advice` command, advisor adapter detection, `advisors.json` generation, and active advisor docs/tests. Reinstalling now cleans up old installed advisor files.
 
 ## [2.6.0] - 2026-06-18
 
