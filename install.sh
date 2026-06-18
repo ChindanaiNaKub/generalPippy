@@ -26,7 +26,9 @@ declare -a COPY_TARGETS=(
   "config/commands/ship.md:$OPENCODE_CONFIG/commands/ship.md"
   "config/commands/budget.md:$OPENCODE_CONFIG/commands/budget.md"
   "config/commands/advice.md:$OPENCODE_CONFIG/commands/advice.md"
+  "config/commands/grill-to-goal.md:$OPENCODE_CONFIG/commands/grill-to-goal.md"
   "config/skills/pippy/SKILL.md:$OPENCODE_CONFIG/skills/pippy/SKILL.md"
+  "config/skills/grill-to-goal/SKILL.md:$OPENCODE_CONFIG/skills/grill-to-goal/SKILL.md"
   "config/references/opencode/REFERENCE.md:$OPENCODE_CONFIG/references/opencode/REFERENCE.md"
 )
 
@@ -846,13 +848,14 @@ main() {
 
   log "📁 Preparing directories..."
   if [[ $DRY_RUN -eq 1 ]]; then
-    info "Would create: $OPENCODE_CONFIG/{agents,commands,skills/pippy,generalpippy}"
+    info "Would create: $OPENCODE_CONFIG/{agents,commands,skills/pippy,skills/grill-to-goal,generalpippy}"
   else
     local _dirs=(
       "$OPENCODE_CONFIG"
       "$OPENCODE_CONFIG/agents"
       "$OPENCODE_CONFIG/commands"
       "$OPENCODE_CONFIG/skills/pippy"
+      "$OPENCODE_CONFIG/skills/grill-to-goal"
       "$OPENCODE_CONFIG/references/opencode"
       "$GENERALPIPPY_DIR"
     )

@@ -30,8 +30,9 @@ test_required_files_exist() {
   for file in config/opencode.jsonc \
               config/agents/pippy.md config/agents/pippy-plan.md config/agents/pippy-build.md \
               config/commands/goal.md config/commands/ship.md config/commands/budget.md \
-              config/commands/advice.md \
+              config/commands/advice.md config/commands/grill-to-goal.md \
               config/skills/pippy/SKILL.md \
+              config/skills/grill-to-goal/SKILL.md \
               config/references/opencode/REFERENCE.md \
               config/model-profiles/balanced.json; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
@@ -825,6 +826,83 @@ test_acceptance_criteria_are_verifiable() {
       fail "$label must scale verification rigor to task risk without adding a separate mode flag"
     fi
   done
+}
+
+test_goal_readiness_and_grill_to_goal() {
+  run_test "Goal readiness and /grill-to-goal are documented, packaged, and reusable"
+  local command="$REPO_ROOT/config/commands/grill-to-goal.md"
+  local skill="$REPO_ROOT/config/skills/grill-to-goal/SKILL.md"
+  local goal="$REPO_ROOT/config/commands/goal.md"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local pippy_skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local context="$REPO_ROOT/CONTEXT.md"
+  local adr="$REPO_ROOT/docs/adr/0012-goal-readiness-and-grill-to-goal.md"
+  local evals="$REPO_ROOT/docs/agents/goal-run-evals.md"
+  local installer="$REPO_ROOT/install.sh"
+
+  if [[ -f "$command" ]] && [[ -f "$skill" ]]; then
+    pass "/grill-to-goal command and skill exist"
+  else
+    fail "/grill-to-goal command and skill must exist"
+  fi
+
+  if grep -q "Shared Design Concept" "$command" &&
+     grep -q "Goal-Ready Prompt" "$command" &&
+     grep -q "Do not perform implementation edits during grilling" "$command"; then
+    pass "grill-to-goal command defines output and no-implementation contract"
+  else
+    fail "grill-to-goal command must define output and no-implementation contract"
+  fi
+
+  if grep -q "Ask one question at a time" "$skill" &&
+     grep -q "CONTEXT.md is a glossary" "$skill" &&
+     grep -q "docs/goals/YYYY-MM-DD-short-slug.md" "$skill"; then
+    pass "grill-to-goal skill defines interactive docs-aware workflow"
+  else
+    fail "grill-to-goal skill must define interactive docs-aware workflow and goal brief path"
+  fi
+
+  for file in "$goal" "$pippy" "$pippy_skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -q "Goal readiness" "$file" &&
+       grep -q "/grill-to-goal" "$file" &&
+       grep -q "inventing product direction" "$file"; then
+      pass "$label checks Goal readiness before planning"
+    else
+      fail "$label must check Goal readiness and recommend /grill-to-goal for invented product direction"
+    fi
+  done
+
+  if grep -q "Goal readiness" "$context" &&
+     grep -q "Goal-ready prompt" "$context" &&
+     grep -q "Goal brief" "$context"; then
+    pass "CONTEXT.md defines Goal readiness terms"
+  else
+    fail "CONTEXT.md must define Goal readiness, Goal-ready prompt, and Goal brief"
+  fi
+
+  if grep -q "Status: accepted" "$adr" &&
+     grep -q "slash command and a reusable skill" "$adr" &&
+     grep -q "docs/goals/YYYY-MM-DD-short-slug.md" "$adr"; then
+    pass "ADR-0012 records Goal readiness decision"
+  else
+    fail "ADR-0012 must record Goal readiness command/skill and brief path decision"
+  fi
+
+  if grep -q "Eval 8: Goal Readiness Clarification" "$evals" &&
+     grep -q "make the settings screen better" "$evals"; then
+    pass "goal-run evals cover Goal readiness clarification"
+  else
+    fail "goal-run evals must include Goal readiness clarification scenario"
+  fi
+
+  if grep -q 'config/commands/grill-to-goal.md' "$installer" &&
+     grep -q 'config/skills/grill-to-goal/SKILL.md' "$installer"; then
+    pass "install.sh includes grill-to-goal command and skill"
+  else
+    fail "install.sh must copy grill-to-goal command and skill"
+  fi
 }
 
 test_plan_steps_ordered_scoped() {
@@ -1634,6 +1712,7 @@ main() {
   test_ship_guidance
   test_doctor_script
   test_acceptance_criteria_are_verifiable
+  test_goal_readiness_and_grill_to_goal
   test_plan_steps_ordered_scoped
   test_outcome_must_be_done_blocked_partial
   test_final_verification_gate_required

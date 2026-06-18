@@ -13,7 +13,7 @@ Start the self-driving loop.
 
 Pippy will:
 1. Recall human-approved cross-run memory from the first existing project anchor: `PIPPY_MEMORY.md`, `.pippy/memory.md`, or `docs/agents/pippy-memory.md`
-2. Parse the objective into acceptance criteria (each must be observable and testable — e.g., "a test passes", "a file exists", "a command produces expected output"; vague criteria like "make it better" are banned)
+2. Check Goal readiness, then parse the objective into acceptance criteria (each must be observable and testable — e.g., "a test passes", "a file exists", "a command produces expected output"; vague criteria like "make it better" are banned)
 3. Explore the codebase with jcodemunch
 4. Plan step-by-step, in execution order, with a single independently verifiable deliverable per step
 5. Request a read-only Program design sketch from `pippy-plan` before design-sensitive changes
@@ -32,6 +32,12 @@ Each acceptance criterion must be **observable and testable**. Valid examples:
 - "A command produces expected output" (verifiable by running the command)
 
 Banned: vague criteria like "make it better", "improve performance", "clean up the code". If a criterion cannot be checked by evidence, rewrite it until it can.
+
+### Goal Readiness Rules
+
+Before planning, check whether the objective has enough shared intent for Pippy to execute without inventing product direction. Recommend `/grill-to-goal` when the work depends on subjective taste, UX direction, architecture preference, non-goals, constraints, or trade-offs that are not stated.
+
+Hard block only when Pippy cannot form observable acceptance criteria without guessing the user's intent. Otherwise, ask one clarifying question, soft-recommend `/grill-to-goal`, or proceed when the user explicitly accepts listed assumptions. If proceeding with assumptions, include those assumptions in the plan and verify them during REVIEW.
 
 Scale verification rigor to task risk while shaping acceptance criteria. Use higher rigor when the objective touches release prep, auth, security, data loss, installer behavior, permissions, or public docs/config: require stronger evidence such as targeted tests, full validation commands, diff review, and docs checks. For low-risk prototype or small documentation work, lightweight evidence such as a focused diff or file check is acceptable. Do not introduce a separate mode flag; express the rigor through the acceptance criteria and plan.
 

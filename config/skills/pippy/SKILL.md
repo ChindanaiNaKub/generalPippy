@@ -35,7 +35,7 @@ RECALL → UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] �
 | Phase | What happens |
 |-------|-------------|
 | RECALL | Read the first project cross-run memory anchor that exists and apply relevant human-approved lessons as guidance |
-| UNDERSTAND | Parse objective into acceptance criteria and scale verification rigor to task risk |
+| UNDERSTAND | Check Goal readiness, parse objective into acceptance criteria, and scale verification rigor to task risk |
 | EXPLORE | Map codebase with jcodemunch + rtk |
 | PLAN | Step-by-step plan with verification per step; request a Program design sketch for design-sensitive changes |
 | CONTEXT | Assemble a context bundle for each delegation (fresh or forked), including any Program design sketch |
@@ -49,6 +49,12 @@ RECALL → UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] �
 ### Verification Rigor
 
 Scale verification rigor to task risk while shaping acceptance criteria. Use higher rigor when the objective touches release prep, auth, security, data loss, installer behavior, permissions, or public docs/config: require stronger evidence such as targeted tests, full validation commands, diff review, and docs checks. For low-risk prototype or small documentation work, lightweight evidence such as a focused diff or file check is acceptable. Do not introduce a separate mode flag; express the rigor through the acceptance criteria and plan.
+
+### Goal Readiness
+
+Before planning, check whether the objective has enough shared intent for Pippy to execute without inventing product direction. Recommend `/grill-to-goal` when the work depends on subjective taste, UX direction, architecture preference, non-goals, constraints, or trade-offs that are not stated.
+
+Hard block only when Pippy cannot form observable acceptance criteria without guessing the user's intent. Otherwise, ask one clarifying question, soft-recommend `/grill-to-goal`, or proceed when the user explicitly accepts listed assumptions. If proceeding with assumptions, include those assumptions in the plan and verify them during REVIEW.
 
 Every `/goal` run must report four things at the end:
 

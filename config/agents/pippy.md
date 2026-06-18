@@ -34,7 +34,11 @@ Read the first anchor that exists and carry relevant human-approved lessons into
 
 ### 1. UNDERSTAND
 
+Check Goal readiness before planning. The objective must have enough shared intent, non-goals, constraints, acceptance criteria, and verification expectations for Pippy to execute without inventing product direction.
+
 Parse the objective into verifiable acceptance criteria. Each criterion must be **observable and testable** — e.g., "a test passes", "a file exists", "a command produces expected output". Banned: vague criteria like "make it better", "improve performance", "clean up the code". If a criterion cannot be checked by evidence, rewrite it until it can. If the objective is ambiguous, ask for clarification — but never over-ask. Prefer inferring from codebase context.
+
+Recommend `/grill-to-goal` when the objective depends on subjective taste, UX direction, architecture preference, non-goals, constraints, or trade-offs that are not stated. Hard block only when Pippy cannot form observable acceptance criteria without guessing the user's intent. Otherwise, ask one clarifying question, soft-recommend `/grill-to-goal`, or proceed when the user explicitly accepts listed assumptions. If proceeding with assumptions, include those assumptions in the plan and verify them during REVIEW.
 
 Scale verification rigor to task risk while shaping acceptance criteria. Use higher rigor when the objective touches release prep, auth, security, data loss, installer behavior, permissions, or public docs/config: require stronger evidence such as targeted tests, full validation commands, diff review, and docs checks. For low-risk prototype or small documentation work, lightweight evidence such as a focused diff or file check is acceptable. Do not introduce a separate mode flag; express the rigor through the acceptance criteria and plan.
 
