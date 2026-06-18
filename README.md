@@ -34,8 +34,8 @@ No manual orchestration. No switching agents. No babysitting.
 ### Commands
 - `/goal "<objective>"` — Start the self-driving loop
 - `/grill-to-goal` — Clarify an under-specified idea into a goal-ready prompt
-- `/ship` — Review, verify, and prepare for PR
-- `/budget` — Audit budget health and routing behavior
+- `/ship` — Review, verify, push, and create a green-gate PR
+- `/budget` — Report exact OpenCode-recorded role usage accounting plus budget guidance
 
 ### Plugins
 - **[cc-safety-net](https://github.com/kenryu42/cc-safety-net)** `@1.0.6` — Default guardrail plugin, enabled by GeneralPippy. Blocks known destructive filesystem and git commands. Default mode only; stricter modes (`CC_SAFETY_NET_STRICT`, `CC_SAFETY_NET_PARANOID`, `CC_SAFETY_NET_WORKTREE`) are user/project opt-ins.
@@ -123,8 +123,8 @@ Pippy handles the full loop from a single objective:
 1. Run `opencode` to start
 2. Run `/goal "add error handling to the API layer"` — Pippy plans, executes, verifies, retries, reviews, and reports
 3. Run `/grill-to-goal "rough feature idea"` when intent, non-goals, constraints, or trade-offs are under-specified
-4. Run `/ship` when ready for PR
-5. Use OpenCode's session usage display for exact tokens/cost, and run `/budget` for routing and efficiency guidance
+4. Run `/ship` when ready for a green-gate PR
+5. Run `/budget` for OpenCode-recorded role usage accounting and routing/efficiency guidance
 
 The installer also registers `@opencode-docs`, a local reference directory that
 Pippy can use when editing OpenCode config, providers, references, permissions,
@@ -169,7 +169,7 @@ Default permissions (auto-allow):
 - Git, gh, make, dependency, and repo-local commands without approval prompts
 - Implementation edits inside `pippy-build`
 
-YOLO mode keeps safety in the workflow instead of permission prompts: Pippy stays scoped to the objective, reports risky commands, and does not auto-push or auto-PR unless explicitly requested.
+YOLO mode keeps safety in the workflow instead of permission prompts: Pippy stays scoped to the objective, reports risky commands, and only pushes or creates PRs through explicit green-gate flows such as `/ship`.
 
 Pippy's primary agent coordinates and verifies. Workspace edits, file copies, config changes, bug fixes, refactors, and tests route to `pippy-build` on the selected implementation role model (`opencode-go/mimo-v2.5` for Balanced).
 
@@ -184,7 +184,7 @@ Pippy's primary agent coordinates and verifies. Workspace edits, file copies, co
 
 ## Budget Guidance
 
-OpenCode's built-in session usage display is the authoritative source for exact token usage and cost. GeneralPippy's `/budget` command does not estimate spend; it audits whether Pippy used the intended low-cost routing and token-efficiency practices.
+OpenCode-recorded session usage is the authoritative source for exact token usage and cost. GeneralPippy's `/budget` command reports Coordinator (`pippy`), Planning (`pippy-plan`), Implementation (`pippy-build`), and Total rows with model, session count, input tokens, output tokens, cache-read tokens, cache-write tokens, and cost. It also audits whether Pippy used the intended low-cost routing and token-efficiency practices without estimating from conversation volume.
 
 ## Routing Smoke Test
 

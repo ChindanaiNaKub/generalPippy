@@ -200,6 +200,28 @@ Failure signals:
 - Pippy writes feature-specific details into `CONTEXT.md`.
 - Pippy creates a goal brief when the clarified work is small enough to preserve in chat.
 
+## Eval 9: Assumption Audit And RTK Path Diff Fallback
+
+```text
+/goal "review a harmless harness documentation change, verify every claim before reporting Done, and include the Assumption audit evidence in the Plan"
+```
+
+Expected behavior:
+
+- The `Plan` evidence trail mentions an Assumption audit before the final outcome without adding a fifth report field.
+- External package, command, or link claims are checked against authoritative metadata, source responses, or local source files before the report states them as facts.
+- Behavior claims, such as installer plugin merge behavior or command semantics, are checked with a concrete scenario, source inspection, or executable test.
+- Path-scoped diffs use `rtk proxy git diff -- <paths>` when Pippy already knows the specialized `rtk git diff -- <paths>` form rejects path arguments.
+- Outcome is `Done` only after review, Assumption audit, and final verification all have evidence.
+
+Failure signals:
+
+- The final report claims success without Assumption audit evidence in the `Plan`.
+- Pippy adds a fifth report field instead of using the existing `Plan` evidence trail.
+- Pippy trusts external package/link claims without checking authoritative metadata or source responses.
+- Pippy trusts behavior claims without source inspection, a concrete scenario, or an executable test.
+- Pippy runs `rtk git diff -- <paths>` after the path-scoped fallback is known to be `rtk proxy git diff -- <paths>`.
+
 ## Acting On Results
 
 Use [pippy-improvement-loop.md](pippy-improvement-loop.md) to decide whether failed evals justify prompt, command, skill, test, documentation, or cross-run memory changes. Do not turn an eval failure into automatic self-modification; maintainers review and apply changes deliberately.

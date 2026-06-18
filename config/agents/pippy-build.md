@@ -92,4 +92,4 @@ The primary agent (`pippy`) must NOT make edits. Its `edit` permission is denied
 - Always verify your changes work
 - Follow the plan from `pippy-plan` if one exists, including any Program design sketch in your context bundle
 - If you need to deviate from the plan, explain why
-- Never auto-push or auto-PR — prepare only
+- Never push or create a PR unless Pippy explicitly delegates that exact step after `/ship` green gates pass
