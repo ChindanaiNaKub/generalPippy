@@ -23,6 +23,7 @@ Take a verifiable objective, and Pippy drives to completion — plan, execute, v
 - `/advice <adapter>` — Request read-only advice from an advisor adapter
 
 ### Plugins
+- **[cc-safety-net](https://github.com/kenryu42/cc-safety-net)** `@1.0.6` — Default guardrail plugin, enabled by GeneralPippy. Blocks known destructive filesystem and git commands. Default mode only; stricter modes (`CC_SAFETY_NET_STRICT`, `CC_SAFETY_NET_PARANOID`, `CC_SAFETY_NET_WORKTREE`) are user/project opt-ins.
 - **[jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp)** — AST code indexing (95%+ token savings)
 - **[opencode-dcp](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)** — Dynamic context pruning
 

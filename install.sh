@@ -48,6 +48,7 @@ declare -a CREATED_PATHS=()
 # GeneralPippy's pinned plugin list. User plugins are merged on top.
 PINNED_PLUGINS=(
   "@tarquinen/opencode-dcp@0.0.4"
+  "cc-safety-net@1.0.6"
 )
 
 # Default models for the Balanced profile.
@@ -226,6 +227,16 @@ cleanup_obsolete() {
   done
 }
 
+plugin_identity() {
+  local plugin="$1"
+
+  if [[ "$plugin" =~ ^@[^/]+/[^/@]+@[^/]+$ ]] || [[ "$plugin" =~ ^[^/@]+@[^/]+$ ]]; then
+    printf '%s\n' "${plugin%@*}"
+  else
+    printf '%s\n' "$plugin"
+  fi
+}
+
 merge_plugins() {
   # Merge user's existing plugins with GeneralPippy's pinned list.
   # Writes a new opencode.jsonc to the target path.
@@ -274,22 +285,26 @@ merge_plugins() {
     return 0
   fi
 
-  # Build merged list: pinned first, then user plugins not already present.
+  # Build merged list: pinned first, then user plugins that do not conflict
+  # with a pinned package identity. This lets pinned defaults replace stale
+  # user entries like @latest without dropping unrelated custom plugins.
   local merged=()
-  local seen=()
+  local seen_ids=()
   local p
   for p in "${PINNED_PLUGINS[@]}" "${user_plugins[@]}"; do
     local already=0
+    local identity
+    identity="$(plugin_identity "$p")"
     local s
-    for s in "${seen[@]+"${seen[@]}"}"; do
-      if [[ "$s" == "$p" ]]; then
+    for s in "${seen_ids[@]+"${seen_ids[@]}"}"; do
+      if [[ "$s" == "$identity" ]]; then
         already=1
         break
       fi
     done
     if [[ $already -eq 0 ]]; then
       merged+=("$p")
-      seen+=("$p")
+      seen_ids+=("$identity")
     fi
   done
 
@@ -317,6 +332,11 @@ def extract_plugins(text):
     except Exception:
         return []
 
+def plugin_identity(plugin):
+    if re.match(r"^@[^/]+/[^/@]+@[^/]+$", plugin) or re.match(r"^[^/@]+@[^/]+$", plugin):
+        return plugin.rsplit("@", 1)[0]
+    return plugin
+
 with open(backup_path) as f:
     user_plugins = extract_plugins(f.read())
 
@@ -331,12 +351,14 @@ target_plugins = extract_plugins(target_text)
 seen = set()
 merged = []
 for p in target_plugins:
-    if p not in seen:
-        seen.add(p)
+    identity = plugin_identity(p)
+    if identity not in seen:
+        seen.add(identity)
         merged.append(p)
 for p in user_plugins:
-    if p not in seen:
-        seen.add(p)
+    identity = plugin_identity(p)
+    if identity not in seen:
+        seen.add(identity)
         merged.append(p)
 
 if merged == target_plugins:
@@ -927,6 +949,7 @@ main() {
   log "Plugins configured:"
   log "  • jcodemunch-mcp — AST code indexing"
   log "  • opencode-dcp — Dynamic context pruning"
+  log "  • cc-safety-net — Destructive-command guardrail plugin (default mode)"
   log "  • opencode-docs reference — Config, provider, reference, and troubleshooting guidance"
   log ""
   log "Advisor adapters: detected CLIs written to generalpippy/advisors.json (disabled by default)"

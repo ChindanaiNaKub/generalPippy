@@ -39,7 +39,7 @@ UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW �
 | PLAN | Step-by-step plan with verification per step |
 | CONTEXT | Assemble a context bundle for each delegation (fresh or forked) |
 | EXECUTE → VERIFY | Do the work, check it works, corrective re-delegate if not |
-| REVIEW | Inspect diff, touched files, acceptance criteria, verification evidence, and last-20% failure modes |
+| REVIEW | Inspect diff, touched files, acceptance criteria, verification evidence, last-20% failure modes, and assumptions behind claims |
 | FINAL | Run final verification gate |
 | REPORT | Done / Blocked / Partial with evidence |
 
@@ -52,7 +52,7 @@ Scale verification rigor to task risk while shaping acceptance criteria. Use hig
 Every `/goal` run must report four things at the end:
 
 1. **Acceptance Criteria** — the verifiable conditions that define success, stated upfront and checked against run evidence; each criterion must include final evidence (command output, test result, file path, diff), not just a status summary
-2. **Plan** — the compact run evidence trail showing what was done and in what order; include commands run, verification outputs, trajectory checkpoints for explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, or persistent observability system.
+2. **Plan** — the compact run evidence trail showing what was done and in what order; include commands run, verification outputs, trajectory checkpoints for explored, planned, delegated edits to `pippy-build`, verified each step, reviewed diff, ran the Assumption audit, and final-verified. Include routing decisions for pippy/pippy-plan/pippy-build when used, and retry causes or `None` when no retry happened. Do not imply a raw trace, telemetry store, or persistent observability system.
 3. **Improvement Signal** — Pippy-owned friction in prompts, routing, acceptance-criteria shaping, context handling, or verification habits; use `None` when there is no actionable signal; always present and limited to Pippy-owned friction
 4. **Outcome** — the final line must be exactly one of:
    - `Done` — all acceptance criteria met, verification passes
@@ -63,9 +63,11 @@ No other outcome labels are permitted. The word must be exactly `Done`, `Blocked
 
 ### Review And Verification
 
-Review and final verification are the closing gates of `/goal`, not standalone commands. The plan must always end with review followed by final verification before reporting outcome. After all execution steps complete, run the no-mistakes gate: diff review, review checklist, combined verification command, and docs check.
+Review and final verification are the closing gates of `/goal`, not standalone commands. The plan must always end with review followed by final verification before reporting outcome. After all execution steps complete, run the no-mistakes gate: diff review, review checklist, Assumption audit, combined verification command, and docs check.
 
 Apply the review checklist for last-20% failures that shallow tests may miss: edge cases, error handling, integration assumptions, hallucinated dependencies, and clever-looking generated code that passes basic verification but may be conceptually wrong.
+
+Run an **Assumption audit** inside REVIEW before reporting: check each claim Pippy is about to make against an authoritative source, executable evidence, or a concrete scenario. Source-check external links and package metadata, scenario-check behavior claims, and dry-run runnable docs. Scale the audit depth to verification rigor: quick for low-risk work, deeper for installer, permissions, dependencies, external links, public docs, security, or data-loss risks. Put audit evidence in the existing Plan evidence trail, not in a fifth report field.
 
 ### Context Assembly
 
@@ -110,7 +112,7 @@ Do not ask before git, gh, make, dependency, or repo-local commands. Keep safety
 ## Token Efficiency
 
 - jcodemunch-mcp for all code navigation
-- force all bash commands through rtk when installed. `command -v rtk` is the only allowed raw detection command; after it succeeds, use `rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk make all`, or `rtk run` / `rtk proxy` for every later shell command. Raw `git` of any kind, `gh`, `make`, or test commands after rtk was found are Pippy-owned routing failures.
+- force all bash commands through rtk when installed. `command -v rtk` is the only allowed raw detection command; after it succeeds, use `rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>` for path-scoped diffs, `rtk make all`, or `rtk run` / `rtk proxy` for every later shell command. Raw `git` of any kind, `gh`, `make`, or test commands after rtk was found are Pippy-owned routing failures.
 - Caveman mode `full` compression for status, build, and verification output when OpenCode caveman config is available
 - batch file reads and avoid re-reading the same file
 - compress earlier to keep context pressure low

@@ -23,6 +23,7 @@ Pin all external dependencies to specific versions:
 | Dependency | Location | Pinned Version | Bump Process |
 |------------|----------|----------------|--------------|
 | `@tarquinen/opencode-dcp` | `config/opencode.jsonc` | `0.0.4` | Update `plugin` array entry |
+| `cc-safety-net` | `config/opencode.jsonc` | `1.0.6` | Update `plugin` array entry |
 | `jcodemunch-mcp` | `config/opencode.jsonc` | `v1.0.0` (git tag) | Update `--from` URL tag |
 | `rtk` | `install.sh` | `1.78.0` | Update `rtk_version` variable |
 
@@ -31,6 +32,7 @@ Pin all external dependencies to specific versions:
 1. **Check upstream releases** — Visit the dependency's GitHub releases page and choose the latest stable release. Avoid pre-release or RC versions unless testing a specific fix.
 2. **Update the pin** — Edit the relevant file:
    - `@tarquinen/opencode-dcp`: update the version string in the `plugin` array in `config/opencode.jsonc`
+   - `cc-safety-net`: update the version string in the `plugin` array in `config/opencode.jsonc`
    - `jcodemunch-mcp`: update the git tag in the `--from` URL in `config/opencode.jsonc`
    - `rtk`: update the `rtk_version` variable in `install.sh`
 3. **Validate the install** — Run `make all` (which runs `install.sh` and `tests/validate.sh`) to verify nothing breaks. Also run `scripts/doctor.sh` to check config health.

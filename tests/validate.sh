@@ -325,6 +325,44 @@ test_external_deps_are_pinned() {
   fi
 }
 
+test_cc_safety_net_pinned() {
+  run_test "cc-safety-net@1.0.6 is pinned in config, installer, and ADR"
+  local config="$REPO_ROOT/config/opencode.jsonc"
+  local installer="$REPO_ROOT/install.sh"
+  local adr="$REPO_ROOT/docs/adr/0003-pin-external-dependencies.md"
+  local readme="$REPO_ROOT/README.md"
+
+  if grep -q 'cc-safety-net@1.0.6' "$config"; then
+    pass "opencode.jsonc contains cc-safety-net@1.0.6"
+  else
+    fail "opencode.jsonc must contain cc-safety-net@1.0.6"
+  fi
+
+  if grep -q 'cc-safety-net@1.0.6' "$installer"; then
+    pass "install.sh contains cc-safety-net@1.0.6"
+  else
+    fail "install.sh must contain cc-safety-net@1.0.6 in pinned plugins"
+  fi
+
+  if grep -q 'cc-safety-net' "$adr" && grep -q '1.0.6' "$adr"; then
+    pass "ADR-0003 contains cc-safety-net pin at 1.0.6"
+  else
+    fail "ADR-0003 must document cc-safety-net as pinned to 1.0.6"
+  fi
+
+  if grep -q 'https://github.com/kenryu42/cc-safety-net' "$readme"; then
+    pass "README links to cc-safety-net upstream"
+  else
+    fail "README must link to https://github.com/kenryu42/cc-safety-net"
+  fi
+
+  if grep -q 'opencode plugin -g' "$installer"; then
+    fail "install.sh must not install cc-safety-net through opencode plugin -g"
+  else
+    pass "install.sh does not use global opencode plugin install"
+  fi
+}
+
 test_pippy_build_bash_permissions() {
   run_test "pippy-build uses unrestricted YOLO bash permissions"
   local file="$REPO_ROOT/config/agents/pippy-build.md"
@@ -447,6 +485,7 @@ test_goal_rtk_force() {
        grep -q "rtk git status --short" "$file" &&
        grep -q "rtk git log" "$file" &&
        grep -q "rtk git diff" "$file" &&
+       grep -q "rtk proxy git diff -- <paths>" "$file" &&
        grep -qi "Raw.*git.*any kind\|raw.*git.*any kind" "$file" &&
        grep -qi "Improvement Signal\|Pippy-owned routing failure" "$file"; then
       pass "$label forces rtk after detection"
@@ -501,6 +540,61 @@ test_verify_is_part_of_goal() {
     pass "no stale /verify command references"
   else
     fail "found stale /verify references: $stale_refs"
+  fi
+}
+
+test_assumption_audit_review_gate() {
+  run_test "Assumption audit is a validated REVIEW sub-step"
+  local goal="$REPO_ROOT/config/commands/goal.md"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local harness="$REPO_ROOT/docs/agents/pippy-harness.md"
+  local improvement="$REPO_ROOT/docs/agents/pippy-improvement-loop.md"
+  local context="$REPO_ROOT/CONTEXT.md"
+
+  if grep -q "Assumption audit" "$context" &&
+     grep -qi "authoritative source" "$context" &&
+     grep -qi "executable evidence" "$context" &&
+     grep -qi "concrete scenario" "$context"; then
+    pass "CONTEXT.md defines Assumption audit"
+  else
+    fail "CONTEXT.md must define Assumption audit as source/evidence/scenario checking"
+  fi
+
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -q "Assumption audit" "$file" &&
+       grep -qi "REVIEW" "$file" &&
+       grep -qi "authoritative source" "$file" &&
+       grep -qi "executable evidence" "$file" &&
+       grep -qi "concrete scenario" "$file" &&
+       grep -qi "source-check external links" "$file" &&
+       grep -qi "package metadata" "$file" &&
+       grep -qi "dry-run runnable docs" "$file" &&
+       grep -qi "verification rigor\|audit depth" "$file" &&
+       grep -qi "Plan.*evidence" "$file" &&
+       grep -qi "fifth report field" "$file"; then
+      pass "$label includes Assumption audit in REVIEW without adding a report field"
+    else
+      fail "$label must define Assumption audit as a REVIEW sub-step with scaled source/evidence/scenario checks and no fifth report field"
+    fi
+  done
+
+  if grep -q "Assumption audit" "$harness" &&
+     grep -qi "Verification gates" "$harness" &&
+     grep -qi "Plan with run evidence" "$harness"; then
+    pass "pippy-harness.md includes Assumption audit in verification/reporting ownership"
+  else
+    fail "pippy-harness.md must include Assumption audit in verification and reporting ownership"
+  fi
+
+  if grep -q "Assumption audit" "$improvement" &&
+     grep -qi "missed an unsupported external-link/package claim" "$improvement" &&
+     grep -qi "add a specific Assumption audit check" "$improvement"; then
+    pass "pippy-improvement-loop.md routes accepted signals into Assumption audit checks"
+  else
+    fail "pippy-improvement-loop.md must describe Assumption audit misses and accepted audit checks"
   fi
 }
 
@@ -1287,10 +1381,12 @@ main() {
   test_opencode_reference_pack
   test_caveman_mode_not_cli_only
   test_external_deps_are_pinned
+  test_cc_safety_net_pinned
   test_pippy_build_bash_permissions
   test_goal_output_format
   test_goal_rtk_force
   test_verify_is_part_of_goal
+  test_assumption_audit_review_gate
   test_ship_guidance
   test_doctor_script
   test_acceptance_criteria_are_verifiable
