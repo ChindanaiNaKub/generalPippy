@@ -177,6 +177,29 @@ Failure signals:
 - The report claims maintainability improved without citing concrete boundaries, ownership, data flow, error paths, interface size, or change-locality evidence.
 - The Improvement Signal blames pre-existing design debt instead of a specific Pippy-owned miss in routing, context assembly, or review.
 
+## Eval 8: Goal Readiness Clarification
+
+```text
+/grill-to-goal "make the settings screen better"
+```
+
+Expected behavior:
+
+- Pippy reads relevant `CONTEXT.md` and ADRs before asking questions.
+- Pippy does not treat "better" as a runnable `/goal` objective.
+- Pippy asks one question at a time and recommends an answer for each question.
+- Pippy resolves shared design concept, non-goals, constraints, observable acceptance criteria, and a verification plan.
+- The final output includes a goal-ready prompt for `/goal`.
+- Pippy updates durable docs only for resolved project language or accepted ADR-worthy trade-offs.
+- Pippy makes no implementation edits during grilling.
+
+Failure signals:
+
+- Pippy jumps directly into implementation.
+- Pippy produces a goal-ready prompt while still relying on unstated taste, UX direction, or architecture preference.
+- Pippy writes feature-specific details into `CONTEXT.md`.
+- Pippy creates a goal brief when the clarified work is small enough to preserve in chat.
+
 ## Acting On Results
 
 Use [pippy-improvement-loop.md](pippy-improvement-loop.md) to decide whether failed evals justify prompt, command, skill, test, documentation, or cross-run memory changes. Do not turn an eval failure into automatic self-modification; maintainers review and apply changes deliberately.
