@@ -36,7 +36,6 @@ No manual orchestration. No switching agents. No babysitting.
 - `/grill-to-goal` — Clarify an under-specified idea into a goal-ready prompt
 - `/ship` — Review, verify, and prepare for PR
 - `/budget` — Audit budget health and routing behavior
-- `/advice <adapter>` — Request read-only advice from an advisor adapter
 
 ### Plugins
 - **[cc-safety-net](https://github.com/kenryu42/cc-safety-net)** `@1.0.6` — Default guardrail plugin, enabled by GeneralPippy. Blocks known destructive filesystem and git commands. Default mode only; stricter modes (`CC_SAFETY_NET_STRICT`, `CC_SAFETY_NET_PARANOID`, `CC_SAFETY_NET_WORKTREE`) are user/project opt-ins.
@@ -81,12 +80,6 @@ Custom model IDs must be non-empty. GeneralPippy passes them through to OpenCode
 Check [OpenCode Go](https://opencode.ai/go) or OpenCode's session usage display for current pricing and actual spend.
 
 The installer records your selected profile in `~/.config/opencode/generalpippy/profile.json`.
-
-## Advisor Adapters
-
-GeneralPippy can request read-only advice from external AI coding tools (claude-code, aider, codex, gemini, cursor) through advisor adapters. These are detected during installation but disabled by default to avoid surprising cost or privacy behavior.
-
-To enable an adapter, edit `~/.config/opencode/generalpippy/advisors.json` and set `"enabled": true` for the desired adapter. Use `/advice <adapter-name>` to request advice from an enabled adapter.
 
 ## Installation
 

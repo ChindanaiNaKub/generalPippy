@@ -96,23 +96,7 @@ Expected behavior:
 - `pippy-plan` edits files or invokes implementation work.
 - `/budget` invents exact cost numbers.
 
-## 4. Advisor Adapter Checks
-
-After install, inspect detected advisor adapters:
-
-```bash
-cat ~/.config/opencode/generalpippy/advisors.json
-```
-
-Expected behavior:
-
-- Detected advisor adapters are present with `"enabled": false`.
-- Each adapter has a read-only-oriented command template.
-- `/advice <adapter-name>` refuses disabled or unknown adapters and lists available adapters.
-- After manually setting one adapter to `"enabled": true`, `/advice <adapter-name>` prepares an advisor context bundle and treats the advisor response as non-authoritative evidence.
-- `/advice all` reports no enabled advisors when none are enabled, and summarizes agreement, disagreement, assumptions, and unresolved product or architecture conflicts when multiple advisors are enabled.
-
-## 5. /ship Budget-Efficiency Checks
+## 4. /ship Budget-Efficiency Checks
 
 Run `/ship` in OpenCode and verify these budget-efficiency behaviors:
 

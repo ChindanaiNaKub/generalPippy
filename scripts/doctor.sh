@@ -118,7 +118,6 @@ managed_paths=(
   "$CONFIG_ROOT/commands/goal.md"
   "$CONFIG_ROOT/commands/ship.md"
   "$CONFIG_ROOT/commands/budget.md"
-  "$CONFIG_ROOT/commands/advice.md"
   "$CONFIG_ROOT/commands/grill-to-goal.md"
   "$CONFIG_ROOT/skills/pippy"
   "$CONFIG_ROOT/skills/grill-to-goal"
@@ -278,19 +277,6 @@ fi
 
 # --- 8. Auxiliary commands ---
 section "Auxiliary commands"
-
-advice="$CONFIG_ROOT/commands/advice.md"
-if [[ ! -f "$advice" ]]; then
-  error "config/commands/advice.md missing"
-else
-  ok "config/commands/advice.md exists"
-
-  if head -1 "$advice" | grep -q '^---$'; then
-    ok "advice.md has frontmatter"
-  else
-    error "advice.md missing frontmatter"
-  fi
-fi
 
 grill_to_goal="$CONFIG_ROOT/commands/grill-to-goal.md"
 if [[ ! -f "$grill_to_goal" ]]; then

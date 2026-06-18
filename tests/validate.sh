@@ -30,7 +30,7 @@ test_required_files_exist() {
   for file in config/opencode.jsonc \
               config/agents/pippy.md config/agents/pippy-plan.md config/agents/pippy-build.md \
               config/commands/goal.md config/commands/ship.md config/commands/budget.md \
-              config/commands/advice.md config/commands/grill-to-goal.md \
+              config/commands/grill-to-goal.md \
               config/skills/pippy/SKILL.md \
               config/skills/grill-to-goal/SKILL.md \
               config/references/opencode/REFERENCE.md \
@@ -1604,8 +1604,8 @@ test_decision_records() {
   fi
 }
 
-test_model_profile_and_advice() {
-  run_test "#34-40 model profiles and /advice command"
+test_model_profile_metadata() {
+  run_test "#34-40 model profile metadata"
 
   # Balanced profile JSON exists and matches current defaults.
   local profile="$REPO_ROOT/config/model-profiles/balanced.json"
@@ -1622,37 +1622,15 @@ test_model_profile_and_advice() {
     fail "balanced.json missing"
   fi
 
-  # Advice command exists with required content.
-  local advice="$REPO_ROOT/config/commands/advice.md"
-  if [[ -f "$advice" ]]; then
-    pass "advice.md exists"
-    if grep -q '/advice <adapter-name>' "$advice" && grep -q '/advice all' "$advice"; then
-      pass "advice.md supports /advice <adapter-name> and /advice all"
-    else
-      fail "advice.md must contain '/advice <adapter-name>' and '/advice all' usage"
-    fi
-    if grep -qi "read-only\|read.only" "$advice" && grep -qi "must not edit\|do not edit\|do not execute\|not execute" "$advice"; then
-      pass "advice.md states advisors remain read-only"
-    else
-      fail "advice.md must state advisors remain read-only"
-    fi
-    if grep -q "no adapters are enabled" "$advice" &&
-       grep -q "conflict-aware summary" "$advice" &&
-       grep -q "asks the user instead of silently choosing" "$advice"; then
-      pass "advice.md covers no-advisor and conflict escalation behavior"
-    else
-      fail "advice.md must cover no-advisor and conflict escalation behavior"
-    fi
-  else
-    fail "advice.md missing"
-  fi
-
-  # install.sh adds advice.md to COPY_TARGETS.
   local installer="$REPO_ROOT/install.sh"
-  if grep -q 'config/commands/advice.md' "$installer"; then
-    pass "install.sh includes advice.md in COPY_TARGETS"
+  if [[ ! -f "$REPO_ROOT/config/commands/advice.md" ]] &&
+     ! grep -q 'config/commands/advice.md:.*commands/advice.md' "$installer" &&
+     ! grep -q 'detect_advisors\|Advisor adapters' "$installer" &&
+     grep -q 'commands/advice.md' "$installer" &&
+     grep -q 'advisors.json' "$installer"; then
+    pass "advisor command and installer metadata are removed"
   else
-    fail "install.sh must include config/commands/advice.md in COPY_TARGETS"
+    fail "advisor command and metadata generation must be removed while stale installed files are cleaned up"
   fi
 
   # install.sh writes profile.json to generalpippy/.
@@ -1662,30 +1640,20 @@ test_model_profile_and_advice() {
     fail "install.sh must write profile.json to generalpippy/"
   fi
 
-  # install.sh writes advisors.json to generalpippy/.
-  if grep -q 'advisors.json' "$installer"; then
-    pass "install.sh writes advisors.json"
-  else
-    fail "install.sh must write advisors.json to generalpippy/"
-  fi
-
   if grep -q "read_required_model" "$installer" &&
-     grep -q "not provider-verified" "$installer" &&
-     grep -q "command_template" "$installer"; then
-    pass "install.sh rejects blank Custom models and records advisor command templates"
+     grep -q "not provider-verified" "$installer"; then
+    pass "install.sh rejects blank Custom models"
   else
-    fail "install.sh must reject blank Custom models and record advisor command templates"
+    fail "install.sh must reject blank Custom models"
   fi
 
   local readme="$REPO_ROOT/README.md"
   local budget="$REPO_ROOT/config/commands/budget.md"
-  local manual_smoke="$REPO_ROOT/docs/agents/manual-smoke-tests.md"
   if grep -q "passes them through to OpenCode without provider verification" "$readme" &&
-     grep -q "selected model profile and role-based model routing" "$budget" &&
-     grep -q "Advisor Adapter Checks" "$manual_smoke"; then
-    pass "docs cover Custom pass-through, profile-aware budget, and advisor smoke checks"
+     grep -q "selected model profile and role-based model routing" "$budget"; then
+    pass "docs cover Custom pass-through and profile-aware budget"
   else
-    fail "docs must cover Custom pass-through, profile-aware budget, and advisor smoke checks"
+    fail "docs must cover Custom pass-through and profile-aware budget"
   fi
 }
 
@@ -1729,7 +1697,7 @@ main() {
   test_goal_run_evals_doc
   test_pippy_harness_doc
   test_decision_records
-  test_model_profile_and_advice
+  test_model_profile_metadata
 
   echo ""
   echo "========================="
