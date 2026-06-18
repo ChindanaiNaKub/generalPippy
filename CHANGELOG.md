@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Cross-run memory recall for `/goal`, including `PIPPY_MEMORY.md`, ADR-0011, user-facing docs, and validation coverage for load/update behavior.
+- Program Design checks before implementation so Pippy confirms boundaries, interfaces, and verification shape before handing work to `pippy-build`.
+
+### Changed
+- Extracted shared installer and doctor shell helpers into `lib/utils.sh`, with lint coverage updated for the shared utility file.
+- Expanded Pippy harness, improvement-loop, smoke-test, and goal-run eval docs around cross-run memory and Program Design behavior.
+
 ## [2.6.0] - 2026-06-18
 
 ### Added
