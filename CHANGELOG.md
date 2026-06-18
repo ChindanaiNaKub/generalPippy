@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-06-18
+
 ### Added
 - `cc-safety-net@1.0.6` as a pinned default OpenCode guardrail plugin, with ADR-0010 documenting the default-mode-only decision.
 - Assumption audit as a validated REVIEW sub-step so Pippy checks report claims against authoritative sources, executable evidence, or concrete scenarios.
