@@ -94,14 +94,39 @@ test_markdown_frontmatter() {
   done
 }
 
-test_budget_command_is_guidance_only() {
-  run_test "/budget avoids fake cost estimates"
+test_budget_command_is_role_usage_accounting() {
+  run_test "/budget reports exact role usage accounting without fake estimates"
   local file="$REPO_ROOT/config/commands/budget.md"
 
-  if grep -qi "authoritative source" "$file" && grep -qi "Do \\*\\*not\\*\\* estimate" "$file"; then
-    pass "budget command states authoritative source and no-estimate rule"
+  if grep -qi "OpenCode-recorded session usage is authoritative" "$file" && grep -qi "Do \\*\\*not\\*\\* estimate" "$file"; then
+    pass "budget command states OpenCode-recorded source and no-estimate rule"
   else
-    fail "budget command must state authoritative source and no-estimate rule"
+    fail "budget command must state OpenCode-recorded source and no-estimate rule"
+  fi
+
+  if grep -q "Coordinator (\`pippy\`)" "$file" &&
+     grep -q "Planning (\`pippy-plan\`)" "$file" &&
+     grep -q "Implementation (\`pippy-build\`)" "$file" &&
+     grep -q "Total" "$file"; then
+    pass "budget command defines role usage rows"
+  else
+    fail "budget command must define Coordinator, Planning, Implementation, and Total rows"
+  fi
+
+  for field in "model" "session count" "input tokens" "output tokens" "cache-read tokens" "cache-write tokens" "cost"; do
+    if grep -qi "$field" "$file"; then
+      pass "budget command includes $field"
+    else
+      fail "budget command must include $field in each role row"
+    fi
+  done
+
+  if grep -q "/budget <session-id>" "$file" &&
+     grep -qi "ambiguous" "$file" &&
+     grep -qi "stop instead of guessing" "$file"; then
+    pass "budget command documents historical session ids and ambiguous auto-detection"
+  else
+    fail "budget command must document /budget <session-id> and ambiguous auto-detection behavior"
   fi
 
   if grep -qE '\\$[0-9]+(\\.[0-9]+)?\\s*/\\s*\\$[0-9]+(\\.[0-9]+)?' "$file"; then
@@ -718,8 +743,37 @@ test_assumption_audit_review_gate() {
 }
 
 test_ship_guidance() {
-  run_test "/ship includes rtk routing, caveman reports, compress, and release confirmation"
+  run_test "/ship includes green-gate PR creation, rtk routing, caveman reports, compress, and release confirmation"
   local file="$REPO_ROOT/config/commands/ship.md"
+
+  if grep -q "Green-Gate PR Creation" "$file" &&
+     grep -q "clean-tree gate" "$file" &&
+     grep -q "Branch-safety gate" "$file" &&
+     grep -q "GitHub-readiness gate" "$file" &&
+     grep -q "Existing-PR gate" "$file"; then
+    pass "/ship defines green-gate sequence before PR creation"
+  else
+    fail "/ship must define clean-tree, branch-safety, GitHub-readiness, and existing-PR gates"
+  fi
+
+  if grep -q "not the default branch" "$file" &&
+     grep -q "dirty working tree" "$file" &&
+     grep -q "non-interactive" "$file" &&
+     grep -q "gh pr create --title" "$file"; then
+    pass "/ship forbids unsafe branches/dirty trees and creates PRs non-interactively"
+  else
+    fail "/ship must refuse default branch/dirty tree PRs and create PRs non-interactively"
+  fi
+
+  if grep -q "\`Shipped\`" "$file" &&
+     grep -q "PR URL" "$file" &&
+     grep -q "\`Ready, PR blocked\`" "$file" &&
+     grep -q "failed command" "$file" &&
+     grep -q "generated PR title/body" "$file"; then
+    pass "/ship defines Shipped and Ready, PR blocked outcomes"
+  else
+    fail "/ship must define Shipped with PR URL and Ready, PR blocked with retry details"
+  fi
 
   # #18: rtk force routing
   if grep -q "RTK Force" "$file" &&
@@ -983,7 +1037,7 @@ test_final_verification_gate_required() {
 }
 
 test_ship_budget_efficiency_smoke_test() {
-  run_test "#21 /ship budget-efficiency smoke test exists"
+  run_test "#21 /ship green-gate and budget-efficiency smoke test exists"
   local file="$REPO_ROOT/docs/agents/manual-smoke-tests.md"
 
   if [[ ! -f "$file" ]]; then
@@ -1008,6 +1062,16 @@ test_ship_budget_efficiency_smoke_test() {
     pass "/ship smoke test checks caveman-full reporting"
   else
     fail "/ship smoke test must check caveman-full reporting"
+  fi
+
+  if grep -q "Green-gate sequence" "$file" &&
+     grep -q "Auto-PR success" "$file" &&
+     grep -q "Blocked PR outcome" "$file" &&
+     grep -q "\`Shipped\`" "$file" &&
+     grep -q "\`Ready, PR blocked\`" "$file"; then
+    pass "/ship smoke test covers successful and blocked auto-PR behavior"
+  else
+    fail "/ship smoke test must cover successful auto-PR behavior and blocked PR behavior"
   fi
 
   if grep -qi "re-fetch\|re-fetches\|no re-fetch\|does not re-fetch" "$file"; then
@@ -1262,7 +1326,7 @@ test_deferred_dispatch() {
   local combined
   combined="$(cat "$pippy" "$skill")"
   for cap in "mid-run steering\|mid-run steer" "queueing\|queue" "parallel children" "recipe-style dynamic subagent\|recipe-style" "persistent step manifest"; do
-    if echo "$combined" | grep -qi "$cap"; then
+    if grep -qi "$cap" <<< "$combined"; then
       pass "deferred capability found: $cap"
     else
       fail "deferred capability missing: $cap"
@@ -1435,6 +1499,18 @@ test_goal_run_evals_doc() {
     fail "eval doc must include a passing-tests/bad-program-design scenario"
   fi
 
+  if grep -q "Assumption Audit And RTK Path Diff Fallback" "$doc" &&
+     grep -q "Assumption audit evidence" "$doc" &&
+     grep -q "authoritative metadata" "$doc" &&
+     grep -q "concrete scenario" "$doc" &&
+     grep -q "rtk proxy git diff -- <paths>" "$doc" &&
+     grep -q "rtk git diff -- <paths>" "$doc" &&
+     grep -q "fifth report field" "$doc"; then
+    pass "eval doc includes Assumption audit and RTK path-scoped diff fallback scenario"
+  else
+    fail "eval doc must include Assumption audit and RTK path-scoped diff fallback scenario"
+  fi
+
   if grep -q "goal-run-evals.md" "$readme"; then
     pass "README links goal-run evals"
   else
@@ -1494,6 +1570,7 @@ test_decision_records() {
   local adr7="$REPO_ROOT/docs/adr/0007-dynamic-model-routing-decision.md"
   local adr8="$REPO_ROOT/docs/adr/0008-improve-pippy-command-decision.md"
   local adr9="$REPO_ROOT/docs/adr/0009-agentic-engineering-harness-adaptation.md"
+  local adr14="$REPO_ROOT/docs/adr/0014-role-usage-accounting-and-green-gate-pr-creation.md"
 
   for adr in "$adr7" "$adr8" "$adr9"; do
     local label
@@ -1602,6 +1679,25 @@ test_decision_records() {
   else
     fail "ADR-0009 must record rejected runtime alternatives"
   fi
+
+  if [[ -f "$adr14" ]] &&
+     grep -q "Status: accepted" "$adr14" &&
+     grep -q "Role usage accounting" "$adr14" &&
+     grep -q "Green-gate PR creation" "$adr14" &&
+     grep -q "OpenCode-recorded session usage is authoritative" "$adr14" &&
+     grep -q "Coordinator (\`pippy\`)" "$adr14" &&
+     grep -q "Planning (\`pippy-plan\`)" "$adr14" &&
+     grep -q "Implementation (\`pippy-build\`)" "$adr14" &&
+     grep -q "clean-tree, branch-safety, GitHub-readiness, and existing-PR gates" "$adr14" &&
+     grep -q "\`Shipped\`" "$adr14" &&
+     grep -q "\`Ready, PR blocked\`" "$adr14" &&
+     grep -q "config/commands/budget.md" "$adr14" &&
+     grep -q "config/commands/ship.md" "$adr14" &&
+     grep -q "CONTEXT.md" "$adr14"; then
+    pass "ADR-0014 records precise budget accounting and green-gate PR creation"
+  else
+    fail "ADR-0014 must record /budget and /ship behavior changes with command/glossary references"
+  fi
 }
 
 test_model_profile_metadata() {
@@ -1664,7 +1760,7 @@ main() {
   test_opencode_jsonc_valid
   test_no_stale_v1_references
   test_markdown_frontmatter
-  test_budget_command_is_guidance_only
+  test_budget_command_is_role_usage_accounting
   test_subagent_routing_config
   test_opencode_reference_pack
   test_opencode_default_tools

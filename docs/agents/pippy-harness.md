@@ -9,7 +9,7 @@ GeneralPippy remains config-only. This inventory names harness components; it do
 | Component | Files | What It Controls |
 |-----------|-------|------------------|
 | Agent prompts | `config/agents/pippy.md`, `config/agents/pippy-plan.md`, `config/agents/pippy-build.md` | Role boundaries, model roles, permissions, self-driving loop behavior, review behavior, and reporting expectations |
-| Slash commands | `config/commands/goal.md`, `config/commands/grill-to-goal.md`, `config/commands/ship.md`, `config/commands/budget.md` | User-facing entry points, output contracts, Goal readiness clarification, budget guidance, and ship workflow shortcuts |
+| Slash commands | `config/commands/goal.md`, `config/commands/grill-to-goal.md`, `config/commands/ship.md`, `config/commands/budget.md` | User-facing entry points, output contracts, Goal readiness clarification, role usage accounting plus budget guidance, and green-gate PR creation |
 | Skills | `config/skills/pippy/SKILL.md`, `config/skills/grill-to-goal/SKILL.md` | Portable `/goal` and `/grill-to-goal` behavior and progressive-disclosure guidance for OpenCode skill loading |
 | Cross-run memory | `docs/agents/cross-run-memory.md`, optional project anchors such as `PIPPY_MEMORY.md`, `.pippy/memory.md`, or `docs/agents/pippy-memory.md` | Human-approved lessons recalled before `/goal` planning without adding raw traces, telemetry, or automatic memory writes |
 | Context assembly | `config/agents/pippy.md`, `config/skills/pippy/SKILL.md`, `docs/adr/0006-dynamic-subagent-dispatch.md` | Fresh and forked bundles for implementation, retry, review, stuck-step diagnosis, and Program design sketches when present |

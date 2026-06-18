@@ -187,13 +187,43 @@ else
   ok "no stale /verify command in config/commands/"
 fi
 
-# --- 6. Budget command guidance ---
-section "Budget command guidance"
+# --- 6. Budget command role usage accounting ---
+section "Budget command role usage accounting"
 
 budget="$REPO_ROOT/config/commands/budget.md"
 if [[ ! -f "$budget" ]]; then
   error "config/commands/budget.md missing"
 else
+  if grep -qi "OpenCode-recorded session usage is authoritative" "$budget" &&
+     grep -qi "Do \\*\\*not\\*\\* estimate" "$budget"; then
+    ok "budget uses OpenCode-recorded usage and forbids estimates"
+  else
+    error "budget must use OpenCode-recorded usage and forbid estimates"
+  fi
+
+  if grep -q "Coordinator (\`pippy\`)" "$budget" &&
+     grep -q "Planning (\`pippy-plan\`)" "$budget" &&
+     grep -q "Implementation (\`pippy-build\`)" "$budget" &&
+     grep -q "Total" "$budget" &&
+     grep -qi "input tokens" "$budget" &&
+     grep -qi "output tokens" "$budget" &&
+     grep -qi "cache-read tokens" "$budget" &&
+     grep -qi "cache-write tokens" "$budget" &&
+     grep -qi "session count" "$budget" &&
+     grep -qi "cost" "$budget"; then
+    ok "budget defines exact role usage accounting rows and columns"
+  else
+    error "budget must define Coordinator/Planning/Implementation/Total rows with token, session, model, and cost columns"
+  fi
+
+  if grep -q "/budget <session-id>" "$budget" &&
+     grep -qi "ambiguous" "$budget" &&
+     grep -qi "stop instead of guessing" "$budget"; then
+    ok "budget documents explicit session ids and ambiguous auto-detection"
+  else
+    error "budget must document /budget <session-id> and ambiguous auto-detection"
+  fi
+
   # ponytail constraint vs ponytail plugin
   if grep -q "ponytail constraint" "$budget" && grep -q "ponytail plugin" "$budget"; then
     ok "budget distinguishes ponytail constraint from ponytail plugin"

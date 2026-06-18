@@ -36,13 +36,13 @@ Expected behavior:
 - Pippy invokes `pippy-build` with the Task tool for the edit.
 - The `pippy-build` child session uses the implementation role model from `profile.json`.
 - Pippy runs review and final verification from the primary session.
-- `/budget` reports routing guidance only, not estimated tokens or cost.
+- `/budget` reports OpenCode-recorded role usage accounting plus routing guidance, not estimated tokens or cost from conversation volume.
 
 ## How to Inspect
 
 - Use OpenCode child-session navigation to inspect subagent sessions.
 - Check the session header/model display for `pippy-build`.
-- Use OpenCode's built-in session usage display for exact tokens and spend.
+- Use `/budget` when OpenCode session records are visible; it reports exact role usage from those records and stops with candidate sessions when auto-detection is ambiguous.
 
 ## Failure Signals
 
@@ -52,4 +52,4 @@ Expected behavior:
 - `pippy-plan` is used for edits or other write actions.
 - The `pippy-build` child session is not created for a non-trivial edit.
 - `pippy-build` runs on the planning role model instead of the implementation role model.
-- `/budget` estimates exact spend instead of pointing to OpenCode's usage display.
+- `/budget` estimates exact spend from conversation volume or guesses among ambiguous sessions.

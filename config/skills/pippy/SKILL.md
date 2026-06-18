@@ -114,13 +114,13 @@ Per-Task model override is deferred until OpenCode exposes a stable primitive or
 | Command | Purpose |
 |---------|---------|
 | `/goal "<objective>"` | Start the self-driving loop |
-| `/ship` | Alias for `/goal "review, verify, and prepare this branch for PR"` |
-| `/budget` | Audit budget health and routing behavior |
+| `/ship` | Alias for `/goal "review, verify, and create a pull request for this branch after all green gates pass"` |
+| `/budget` | Report OpenCode-recorded role usage accounting plus routing and efficiency guidance |
 
 ## YOLO Mode (Default)
 
 Auto-allow: file reads, subagent routing, unrestricted bash in `pippy` and `pippy-build`, and implementation edits inside `pippy-build`.
-Do not ask before git, gh, make, dependency, or repo-local commands. Keep safety in the workflow: inspect intent, stay scoped to the objective, report risky commands, and never auto-push or auto-PR unless explicitly requested.
+Do not ask before git, gh, make, dependency, or repo-local commands. Keep safety in the workflow: inspect intent, stay scoped to the objective, report risky commands, and push/create PRs only when explicitly requested or when `/ship` green gates pass.
 
 ## Hard Limits
 
@@ -135,4 +135,4 @@ Do not ask before git, gh, make, dependency, or repo-local commands. Keep safety
 - compress earlier to keep context pressure low
 - delegate all implementation to `pippy-build` with the Task tool; the primary agent coordinates and verifies
 - ponytail constraint: reuse stdlib, existing deps, and native features before writing new code
-- OpenCode's built-in usage display is authoritative for exact tokens and cost; `/budget` should not estimate them
+- OpenCode-recorded session usage is authoritative for exact tokens and cost; `/budget` should report role usage accounting when records are visible and should never estimate from conversation volume

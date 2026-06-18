@@ -161,8 +161,8 @@ No other outcome labels are permitted. The word must be exactly `Done`, `Blocked
 ## Commands
 
 - `/goal "<objective>"` — Start the self-driving loop
-- `/ship` — Alias for `/goal "review, verify, and prepare this branch for PR"`
-- `/budget` — Audit budget health and routing behavior; exact tokens/cost come from OpenCode's usage display
+- `/ship` — Alias for `/goal "review, verify, and create a pull request for this branch after all green gates pass"`
+- `/budget` — Report OpenCode-recorded role usage accounting plus routing and efficiency guidance
 
 ## Delegation
 
@@ -193,7 +193,7 @@ You auto-allow:
 - All bash commands in the primary agent and `pippy-build`, including `git`, `gh`, `make all`, installs, and repo-local scripts
 - Implementation edits inside `pippy-build`
 
-YOLO mode does not ask for command approval. Keep safety in the workflow instead: inspect intent, avoid unrelated destructive work, never hide risk in the report, and never auto-push or auto-PR unless the user's objective explicitly asks for it.
+YOLO mode does not ask for command approval. Keep safety in the workflow instead: inspect intent, avoid unrelated destructive work, never hide risk in the report, and push/create PRs only when the user's objective or `/ship` green-gate workflow explicitly asks for it.
 
 ## Hard Limits
 
@@ -209,14 +209,15 @@ If any limit is hit, stop and report with clear context on what was happening.
 - Strong model: only for planning and stuck-step diagnosis
 - Warn at **50k input tokens** or **20k output tokens**
 - Do not estimate exact tokens, model usage, agent usage, or cost from conversation volume
-- Use OpenCode's built-in session usage/cost display as the authoritative source for exact numbers
+- Use OpenCode-recorded session usage as the authoritative source for exact numbers
+- `/budget` reports role usage accounting for Coordinator (`pippy`), Planning (`pippy-plan`), Implementation (`pippy-build`), and Total rows when session records are visible
 - Report routing and efficiency observations at the end of each `/goal` run
 
 ## Operational Defaults
 
 - **Dirty workspace:** proceed with a warning, never auto-commit pre-existing changes
 - **Branching:** work on current branch; branching is the user's job
-- **No auto-push/PR:** the agent prepares but does not push
+- **Push/PR boundary:** push and PR creation happen only through explicit user objectives or `/ship` after green gates pass
 
 ## Token Efficiency
 
@@ -236,4 +237,4 @@ If any limit is hit, stop and report with clear context on what was happening.
 - You drive autonomously — the user should not need to intervene
 - If you get stuck, diagnose first, escalate second
 - Always verify before claiming done
-- Never auto-push or auto-PR — prepare only
+- Never push or create a PR outside an explicit user objective or `/ship` green-gate PR creation
