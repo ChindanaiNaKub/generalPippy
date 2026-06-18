@@ -1,5 +1,7 @@
 # ADR-0005: Model Profiles and Read-Only Advisor Agents
 
+Status: superseded by ADR-0013 for advisor adapters; model profiles remain accepted.
+
 GeneralPippy will separate stable agent roles from user-selected models by introducing model profiles: beginner-friendly bundles for planning, implementation, and system-task models. The installer will render concrete OpenCode config from source templates, starting with the current tested defaults as `Balanced` plus a lightly validated `Custom` profile, so installed files stay ordinary OpenCode config while the repo stops being locked to one provider/model set.
 
 Pippy may also request read-only advice from external AI coding tools through advisor adapters. Advisor agents provide plans, critiques, diagnoses, or context summaries from Pippy-prepared advisor context bundles; they do not execute work, edit files, or outrank the user objective, repo docs/ADRs, or verified code facts. The first user-facing surface will be an explicit `/advice` command, with advisor adapters detected but disabled by default during install to avoid surprising cost, privacy, or authentication behavior.

@@ -25,7 +25,6 @@ declare -a COPY_TARGETS=(
   "config/commands/goal.md:$OPENCODE_CONFIG/commands/goal.md"
   "config/commands/ship.md:$OPENCODE_CONFIG/commands/ship.md"
   "config/commands/budget.md:$OPENCODE_CONFIG/commands/budget.md"
-  "config/commands/advice.md:$OPENCODE_CONFIG/commands/advice.md"
   "config/commands/grill-to-goal.md:$OPENCODE_CONFIG/commands/grill-to-goal.md"
   "config/skills/pippy/SKILL.md:$OPENCODE_CONFIG/skills/pippy/SKILL.md"
   "config/skills/grill-to-goal/SKILL.md:$OPENCODE_CONFIG/skills/grill-to-goal/SKILL.md"
@@ -41,8 +40,10 @@ declare -a OBSOLETE_FILES=(
   "$OPENCODE_CONFIG/commands/verify.md"
   "$OPENCODE_CONFIG/commands/cheap.md"
   "$OPENCODE_CONFIG/commands/smart.md"
+  "$OPENCODE_CONFIG/commands/advice.md"
   "$OPENCODE_CONFIG/skills/orchestrate"
   "$OPENCODE_CONFIG/skills/verify"
+  "$OPENCODE_CONFIG/generalpippy/advisors.json"
 )
 
 # Tracks files we backed up so we can restore on failure: target:backup_path
@@ -716,118 +717,6 @@ write_profile_metadata() {
   success "Profile metadata written to $GENERALPIPPY_DIR/profile.json"
 }
 
-detect_advisors() {
-  # Detect common advisor CLI executables and write advisors.json.
-  # All detected advisors are disabled by default.
-  local advisors_json="$GENERALPIPPY_DIR/advisors.json"
-
-  # Define known advisors: name:command:read_only_flag:description
-  local -a known_advisors=(
-    "claude-code:claude-code:--read-only:Anthropic Claude Code CLI"
-    "aider:aider:--readonly:Aider AI pair programming"
-    "codex:codex::OpenAI Codex CLI"
-    "gemini:gemini::Google Gemini CLI"
-    "cursor:cursor::Cursor CLI"
-  )
-
-  local detected=()
-
-  for entry in "${known_advisors[@]}"; do
-    IFS=':' read -r name cmd flag desc <<< "$entry"
-    if command -v "$cmd" &> /dev/null; then
-      detected+=("$name:$cmd:$flag:$desc")
-    fi
-  done
-
-  if [[ $DRY_RUN -eq 1 ]]; then
-    if [[ ${#detected[@]} -gt 0 ]]; then
-      info "Would detect advisor CLIs:"
-      for entry in "${detected[@]}"; do
-        IFS=':' read -r name cmd flag desc <<< "$entry"
-        info "  $name ($cmd) — $desc"
-      done
-    else
-      info "Would detect advisor CLIs (none found)"
-    fi
-    return 0
-  fi
-
-  mkdir -p "$GENERALPIPPY_DIR"
-
-  # Build JSON using python3 if available, otherwise heredoc.
-  if command -v python3 &> /dev/null; then
-    local advisors_tsv
-    advisors_tsv="$(mktemp)"
-    {
-      for entry in "${detected[@]}"; do
-        IFS=':' read -r name cmd flag desc <<< "$entry"
-        printf '%s\t%s\t%s\t%s\n' "$name" "$cmd" "$flag" "$desc"
-      done
-    } > "$advisors_tsv"
-
-    python3 - "$advisors_json" "$advisors_tsv" <<'PY'
-import json, sys
-
-path = sys.argv[1]
-tsv_path = sys.argv[2]
-data = {"adapters": {}}
-
-with open(tsv_path) as f:
-    for line in f:
-        line = line.rstrip("\n")
-        if not line:
-            continue
-        name, command, read_only_flag, description = line.split("\t", 3)
-        data["adapters"][name] = {
-            "detected": True,
-            "enabled": False,
-            "command": command,
-            "read_only_flag": read_only_flag,
-            "command_template": " ".join(part for part in [command, read_only_flag, "{bundle_path}"] if part),
-            "description": description,
-        }
-
-with open(path, 'w') as f:
-    json.dump(data, f, indent=2)
-    f.write('\n')
-PY
-    rm -f "$advisors_tsv"
-  else
-    # Fallback: build JSON with heredoc.
-    {
-      echo '{'
-      echo '  "adapters": {'
-      local first=1
-      for entry in "${detected[@]}"; do
-        IFS=':' read -r name cmd flag desc <<< "$entry"
-        if [[ $first -eq 1 ]]; then
-          first=0
-        else
-          echo ','
-        fi
-        local template="$cmd"
-        if [[ -n "$flag" ]]; then
-          template="$template $flag"
-        fi
-        template="$template {bundle_path}"
-        printf '    "%s": {"detected": true, "enabled": false, "command": "%s", "read_only_flag": "%s", "command_template": "%s", "description": "%s"}' \
-          "$name" "$cmd" "$flag" "$template" "$desc"
-      done
-      echo ''
-      echo '  }'
-      echo '}'
-    } > "$advisors_json"
-  fi
-
-  if [[ ${#detected[@]} -gt 0 ]]; then
-    success "Detected ${#detected[@]} advisor CLI(s)"
-  else
-    info "No advisor CLIs detected (empty adapters written)"
-  fi
-
-  success "Advisor metadata written to $advisors_json"
-}
-
 main() {
   parse_args "$@"
 
@@ -890,10 +779,6 @@ main() {
   write_profile_metadata "$SELECTED_PROFILE" "$SELECTED_PLANNING" "$SELECTED_IMPLEMENTATION" "$SELECTED_SYSTEM"
   log ""
 
-  log "🔍 Detecting advisor CLIs..."
-  detect_advisors
-  log ""
-
   log "🧹 Cleaning up obsolete v1.0 files..."
   cleanup_obsolete
   log ""
@@ -934,9 +819,6 @@ main() {
   log "OpenCode defaults:"
   log "  • formatter — Built-in formatters enabled"
   log "  • lsp — Built-in language servers enabled"
-  log ""
-  log "Advisor adapters: detected CLIs written to generalpippy/advisors.json (disabled by default)"
-  log "  • Use /advice <adapter-name> to request read-only advice from an enabled advisor"
   log ""
   log "Optional tools (install for best experience):"
   log "  • rtk — Token-efficient bash wrapper"
