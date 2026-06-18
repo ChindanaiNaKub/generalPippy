@@ -258,6 +258,44 @@ test_opencode_reference_pack() {
   fi
 }
 
+test_opencode_default_tools() {
+  run_test "OpenCode formatter and LSP defaults are enabled"
+  local opencode="$REPO_ROOT/config/opencode.jsonc"
+  local readme="$REPO_ROOT/README.md"
+  local smoke="$REPO_ROOT/docs/agents/manual-smoke-tests.md"
+  local installer="$REPO_ROOT/install.sh"
+
+  if grep -q '"formatter"[[:space:]]*:[[:space:]]*true' "$opencode"; then
+    pass "opencode.jsonc enables formatter"
+  else
+    fail "opencode.jsonc must enable formatter by default"
+  fi
+
+  if grep -q '"lsp"[[:space:]]*:[[:space:]]*true' "$opencode"; then
+    pass "opencode.jsonc enables LSP"
+  else
+    fail "opencode.jsonc must enable LSP by default"
+  fi
+
+  if grep -q "LSP servers" "$readme" && grep -q "Built-in language servers are enabled by default" "$readme"; then
+    pass "README documents LSP default"
+  else
+    fail "README must document that LSP servers are enabled by default"
+  fi
+
+  if grep -q "lsp" "$smoke" && grep -q "\`lsp\` is \`true\`" "$smoke"; then
+    pass "manual smoke test checks resolved LSP config"
+  else
+    fail "manual smoke test must check resolved lsp=true"
+  fi
+
+  if grep -q "lsp" "$installer" && grep -q "Built-in language servers enabled" "$installer"; then
+    pass "installer reports LSP default"
+  else
+    fail "installer must report that LSP servers are enabled"
+  fi
+}
+
 test_caveman_mode_not_cli_only() {
   run_test "caveman mode is not treated as CLI-only"
   local pippy="$REPO_ROOT/config/agents/pippy.md"
@@ -1415,6 +1453,7 @@ main() {
   test_budget_command_is_guidance_only
   test_subagent_routing_config
   test_opencode_reference_pack
+  test_opencode_default_tools
   test_caveman_mode_not_cli_only
   test_external_deps_are_pinned
   test_cc_safety_net_pinned
