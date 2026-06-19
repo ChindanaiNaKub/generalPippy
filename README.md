@@ -8,7 +8,7 @@
   </a>
 </p>
 
-# GeneralPippy v3.3.0
+# GeneralPippy v3.3.1
 
 **GeneralPippy turns OpenCode into a self-driving goal agent.**
 
@@ -63,6 +63,8 @@ curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/in
 ```
 
 The installer is interactive by default. It lets you choose Budget, Thorough, or Custom model profiles. Custom model IDs must be non-empty; GeneralPippy passes them through to OpenCode without provider verification.
+
+Stable launch compatibility: GeneralPippy supports OpenCode 1.17.8 or newer. The Budget profile is the default public profile.
 
 For unattended installs:
 

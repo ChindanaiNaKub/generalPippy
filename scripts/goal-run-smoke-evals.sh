@@ -135,7 +135,7 @@ write_report_slice() {
   if grep -Eqi '^##[[:space:]]+REPORT[[:space:]]*$' "$clean_log"; then
     awk '
       BEGIN { in_report = 0 }
-      /^##[[:space:]]+REPORT[[:space:]]*$/ { in_report = 1 }
+      tolower($0) ~ /^##[[:space:]]+report[[:space:]]*$/ { in_report = 1 }
       in_report { print }
     ' "$clean_log" >"$report_log"
   else
