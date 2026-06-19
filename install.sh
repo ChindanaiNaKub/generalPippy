@@ -9,6 +9,7 @@ DRY_RUN=0
 ASSUME_YES=0
 PROFILE_ARG=""
 RECONFIGURE=0
+PROMPT_FD=""
 REPO_OWNER="ChindanaiNaKub"
 REPO_NAME="generalPippy"
 REPO_REF="${GENERALPIPPY_INSTALL_REF:-main}"
@@ -537,8 +538,38 @@ install_plugins() {
 prompt_yes_no() {
   local prompt="$1"
   local reply
-  read -r -p "$prompt" reply
+  if ! read_prompt "$prompt" reply "optional"; then
+    return 1
+  fi
   [[ "$reply" =~ ^[Yy](es)?$ ]]
+}
+
+read_prompt() {
+  local prompt="$1"
+  local dest_var="$2"
+  local mode="${3:-required}"
+  local prompt_value=""
+
+  if [[ -z "$PROMPT_FD" ]]; then
+    if [[ -n "${GENERALPIPPY_PROMPT_INPUT:-}" ]]; then
+      exec {PROMPT_FD}<<<"$GENERALPIPPY_PROMPT_INPUT"
+    elif { exec {PROMPT_FD}</dev/tty; } 2>/dev/null; then
+      :
+    elif [[ "$mode" == "optional" ]]; then
+      return 1
+    else
+      error "Interactive model profile selection requires a terminal. Re-run with --yes --profile budget, --profile thorough, or attach a terminal to choose Custom models."
+    fi
+  fi
+
+  printf "%s" "$prompt" >&2
+  if ! IFS= read -r prompt_value <&"$PROMPT_FD"; then
+    if [[ "$mode" == "optional" ]]; then
+      return 1
+    fi
+    error "Interactive input ended before model profile selection completed. Re-run with --yes --profile budget, --profile thorough, or attach a terminal."
+  fi
+  printf -v "$dest_var" '%s' "$prompt_value"
 }
 
 install_rtk() {
@@ -627,10 +658,7 @@ read_required_model() {
 
   while true; do
     input=""
-    if ! read -r -p "  $prompt: " input; then
-      warn "Model string cannot be empty."
-      return 1
-    fi
+    read_prompt "  $prompt: " input
     if [[ -n "$input" ]]; then
       printf -v "$dest_var" '%s' "$input"
       return 0
@@ -732,6 +760,7 @@ choose_model_profile() {
 
   if [[ $RECONFIGURE -eq 0 ]] && load_saved_profile; then
     success "Using saved profile from $GENERALPIPPY_DIR/profile.json"
+    info "Run this installer with --reconfigure to choose a different model profile."
     report_selected_profile
     return 0
   fi
@@ -759,7 +788,7 @@ choose_model_profile() {
   log ""
 
   local choice=""
-  read -r -p "  Select profile [1]: " choice || true
+  read_prompt "  Select profile [1]: " choice
   choice="${choice:-1}"
 
   if [[ "$choice" == "2" ]]; then

@@ -104,6 +104,8 @@ One-command install:
 curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh | bash
 ```
 
+The one-command installer is interactive by default. Even though the script is piped through stdin, model-profile prompts read from your terminal so you can choose Budget, Thorough, or Custom models. If no terminal is available, the installer stops instead of silently choosing Budget.
+
 Contributor/local install:
 
 ```bash
@@ -128,6 +130,8 @@ For unattended automation, pass explicit defaults:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh | bash -s -- --yes --profile budget
 ```
+
+Use `--reconfigure` on a later install when you want to change the saved model profile.
 
 **Note:** Always use `install.sh` rather than manually copying files. The installer provides safety features such as backups, automatic rollback on failure, and plugin merging that manual copying bypasses.
 
