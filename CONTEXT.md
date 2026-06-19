@@ -12,6 +12,7 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 | **Acceptance criteria** | Observable conditions that define whether a `/goal` objective or plan step has succeeded. _Avoid_: goal rubric, vague success condition |
 | **Assumption audit** | A REVIEW sub-step where Pippy checks every claim it is about to report against an authoritative source, executable evidence, or a concrete scenario. _Avoid_: intuition check, confidence boost |
 | **Command** | A slash command registered with OpenCode (e.g., `/goal`, `/ship`, `/budget`, `/pippy-update`). |
+| **Budget-first `/goal`** | The public positioning for using `/goal` with low-cost default routing and verifiable usage reporting. It promises budget-aware coordination, implementation, and evidence, not guaranteed low absolute spend for every objective. _Avoid_: cheap reliable output, cheapest agent |
 | **Budget guidance** | Non-authoritative recommendations from `/budget` about model routing and token efficiency. It sits alongside Role usage accounting but does not replace or estimate exact session usage. |
 | **Role usage accounting** | The `/budget` behavior of reporting OpenCode-recorded token usage and cost by Pippy role for a specific root session and its child sessions. It auto-detects only when the current run is unambiguous. _Avoid_: estimated spend, conversation-volume guess |
 | **Context compression hygiene** | The budget-guidance practice of closing finished exploration, planning, shipping, or issue-management work into compact summaries before context pressure degrades coordination. _Avoid_: exact token accounting, cost measurement |
@@ -48,7 +49,7 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 | **Verification gate** | An evidence-backed decision point that determines whether a `/goal` run may continue, retry, escalate, or report `Done`. It covers acceptance criteria, step verification, REVIEW, Assumption audit, and final verification rather than only tests. _Avoid_: tests, review step, verify box |
 | **Verifier mismatch** | A Pippy-owned failure where a Verification gate uses evidence that is real but does not prove the acceptance criterion or claim it is attached to. _Avoid_: flaky test, ordinary project failure, weak confidence |
 | **YOLO mode** | Default permission mode that auto-allows file reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`. Safety comes from scoped agent workflow and reporting, not command approval prompts. |
-| **Hard limits** | The safety bounds: 50 iterations, 30 minutes wall time, 5 consecutive failures before escalation. |
+| **Hard limits** | The safety bounds that keep a `/goal` run from wandering or spending without control: 50 iterations, 30 minutes wall time, and 5 consecutive failures before escalation. _Avoid_: capability ceiling, maximum possible output |
 | **jcodemunch** | The MCP server that indexes the codebase for token-efficient navigation. |
 | **Caveman mode** | An OpenCode prompt/command compression mode that makes Pippy and its subagents communicate tersely while preserving technical accuracy. _Avoid_: caveman CLI, build-output compressor |
 | **Caveman CLI** | An optional shell executable named `caveman`, if a user installs one separately. It is not required for Caveman mode. |
