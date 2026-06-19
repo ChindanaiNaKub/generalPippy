@@ -93,7 +93,7 @@ make_minimal_path() {
   local coreutils_dir
   coreutils_dir="$(mktemp -d)"
   local cmd
-  for cmd in basename bash cp mv mkdir rm dirname cat date mktemp sort md5sum find echo chmod sleep tr python3 perl sed grep head; do
+  for cmd in basename bash cp mv mkdir rm dirname cat date mktemp sort md5sum find echo chmod sleep tr python3 perl sed grep head tar gzip; do
     if command -v "$cmd" &> /dev/null; then
       ln -s "$(command -v "$cmd")" "$coreutils_dir/$cmd"
     fi
@@ -216,6 +216,51 @@ EOF
   fi
 
   rm -rf "$tmp_home" "$tmp_bin" "$other_cwd" "${min_path##*:}"
+}
+
+test_one_command_install_bootstraps_from_stdin() {
+  run_test "one-command install bootstraps when installer is piped to bash"
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+  local archive
+  archive="$(mktemp)"
+
+  tar -czf "$archive" -C "$REPO_ROOT" .
+
+  cat > "$tmp_bin/curl" <<EOF
+#!/bin/bash
+cat "$archive"
+EOF
+  chmod +x "$tmp_bin/curl"
+
+  for cmd in opencode uv npm; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
+
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
+  local output
+  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" bash -s -- --yes --profile budget < "$INSTALLER" 2>&1)"; then
+    pass "piped installer exits 0"
+  else
+    fail "piped installer should exit 0:\n$output"
+  fi
+
+  if [[ "$output" == *"Downloading GeneralPippy"* &&
+        -f "$tmp_home/.config/opencode/agents/pippy.md" &&
+        -f "$tmp_home/.config/opencode/generalpippy/version.json" ]]; then
+    pass "piped installer downloaded archive and installed files"
+  else
+    fail "piped installer must bootstrap archive before installing"
+  fi
+
+  rm -rf "$tmp_home" "$tmp_bin" "$archive" "${min_path##*:}"
 }
 
 test_install_backs_up_existing_config() {
@@ -751,6 +796,7 @@ main() {
   test_missing_core_dependency
   test_install_creates_files
   test_install_works_from_other_cwd
+  test_one_command_install_bootstraps_from_stdin
   test_install_backs_up_existing_config
   test_install_idempotent
   test_caveman_mode_is_opencode_config
