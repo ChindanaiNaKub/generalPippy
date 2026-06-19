@@ -1,0 +1,25 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">GeneralPippy logo</title>
+  <desc id="desc">A clean mascot emblem for GeneralPippy with a simplified cat general mark and code badge.</desc>
+  <rect width="256" height="256" rx="48" fill="#111014"/>
+  <circle cx="128" cy="128" r="91" fill="#1A1720" stroke="#D8A33B" stroke-width="6"/>
+  <path d="M66 126C66 88.445 93.311 64 128 64C162.689 64 190 88.445 190 126V153C190 187.242 164.033 210 128 210C91.967 210 66 187.242 66 153V126Z" fill="#F5F0E6"/>
+  <path d="M73 99L54 55C52.236 50.91 57.025 47.165 60.571 49.85L101 80.45L73 99Z" fill="#F5F0E6" stroke="#111014" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M183 99L202 55C203.764 50.91 198.975 47.165 195.429 49.85L155 80.45L183 99Z" fill="#F5F0E6" stroke="#111014" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M73 89C80.905 61.592 102.989 47 128 47C153.011 47 175.095 61.592 183 89H73Z" fill="#141116" stroke="#D8A33B" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M84 82H172" stroke="#7E4BD8" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="128" cy="66" r="15" fill="#D8A33B" stroke="#111014" stroke-width="5"/>
+  <path d="M128 56L131.09 62.739L138.461 63.61L133.006 68.644L134.455 75.92L128 72.26L121.545 75.92L122.994 68.644L117.539 63.61L124.91 62.739L128 56Z" fill="#111014"/>
+  <path d="M92 133C100 126.333 108 126.333 116 133" stroke="#111014" stroke-width="8" stroke-linecap="round"/>
+  <path d="M140 133C148 126.333 156 126.333 164 133" stroke="#111014" stroke-width="8" stroke-linecap="round"/>
+  <path d="M128 146L119 158H137L128 146Z" fill="#111014"/>
+  <path d="M112 174C122.667 181.333 133.333 181.333 144 174" stroke="#111014" stroke-width="7" stroke-linecap="round"/>
+  <path d="M90 174L62 185" stroke="#111014" stroke-width="5" stroke-linecap="round"/>
+  <path d="M91 188L62 198" stroke="#111014" stroke-width="5" stroke-linecap="round"/>
+  <path d="M166 174L194 185" stroke="#111014" stroke-width="5" stroke-linecap="round"/>
+  <path d="M165 188L194 198" stroke="#111014" stroke-width="5" stroke-linecap="round"/>
+  <rect x="152" y="152" width="52" height="43" rx="10" fill="#111014" stroke="#D8A33B" stroke-width="4"/>
+  <path d="M174 165L163 174L174 183" stroke="#7E4BD8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M183 165L194 174L183 183" stroke="#7E4BD8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M178 186H190" stroke="#D8A33B" stroke-width="4" stroke-linecap="round"/>
+</svg>
