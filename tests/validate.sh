@@ -654,26 +654,33 @@ test_goal_rtk_force() {
     label="$(basename "$file")"
     if grep -q "command -v rtk" "$file" &&
        grep -qi "only allowed raw.*detection command\|only allowed raw shell command" "$file" &&
+       grep -q "RTK-locked" "$file" &&
+       grep -qi "no exploration grace period" "$file" &&
        grep -q "rtk git status --short" "$file" &&
        grep -q "rtk git log" "$file" &&
        grep -q "rtk git diff" "$file" &&
        grep -q "rtk proxy git diff -- <paths>" "$file" &&
+       grep -q "rtk run command -v caveman" "$file" &&
        grep -qi "Raw.*git.*any kind\|raw.*git.*any kind" "$file" &&
        grep -qi "Improvement Signal\|Pippy-owned routing failure" "$file"; then
       pass "$label forces rtk after detection"
     else
-      fail "$label must allow raw command -v rtk only for detection and force rtk for later shell/git commands"
+      fail "$label must enter RTK-locked state after raw command -v rtk and force rtk for later shell/git/probe commands"
     fi
   done
 
   if grep -q "RTK Force" "$evals" &&
      grep -q "command -v rtk" "$evals" &&
+     grep -q "RTK-locked" "$evals" &&
+     grep -qi "no exploration grace period" "$evals" &&
      grep -q "rtk git status --short" "$evals" &&
      grep -q "rtk git log" "$evals" &&
+     grep -q "rtk run command -v caveman" "$evals" &&
+     grep -qi "baseline dirty-workspace checks" "$evals" &&
      grep -qi "raw.*git.*any kind" "$evals"; then
     pass "goal-run evals catch raw git after rtk detection"
   else
-    fail "goal-run evals must catch raw git after rtk detection"
+    fail "goal-run evals must catch raw git/probe/baseline commands after rtk detection"
   fi
 }
 
