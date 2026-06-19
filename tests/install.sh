@@ -163,6 +163,7 @@ EOF
 
   for file in opencode.jsonc agents/pippy.md agents/pippy-plan.md agents/pippy-build.md \
               commands/goal.md commands/ship.md commands/budget.md commands/grill-to-goal.md \
+              commands/pippy-update.md plugins/generalpippy-update-check.js \
               skills/pippy/SKILL.md skills/grill-to-goal/SKILL.md references/opencode/REFERENCE.md; do
     if [[ -f "$config_dir/$file" ]]; then
       pass "created $file"
@@ -171,7 +172,50 @@ EOF
     fi
   done
 
+  for file in generalpippy/update-check.mjs generalpippy/manifest.json generalpippy/version.json; do
+    if [[ -f "$config_dir/$file" ]]; then
+      pass "created $file"
+    else
+      fail "missing $file"
+    fi
+  done
+
   rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
+}
+
+test_install_works_from_other_cwd() {
+  run_test "install works when launched outside repo root"
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+  local other_cwd
+  other_cwd="$(mktemp -d)"
+  local config_dir="$tmp_home/.config/opencode"
+
+  for cmd in opencode uv npm; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
+
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
+  if (cd "$other_cwd" && HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile balanced >/dev/null 2>&1); then
+    pass "installer exits 0 outside repo root"
+  else
+    fail "installer should exit 0 outside repo root"
+  fi
+
+  if [[ -f "$config_dir/agents/pippy.md" && -f "$config_dir/generalpippy/update-check.mjs" ]]; then
+    pass "installer resolved source files from its own repo root"
+  else
+    fail "installer must resolve source files from its own repo root"
+  fi
+
+  rm -rf "$tmp_home" "$tmp_bin" "$other_cwd" "${min_path##*:}"
 }
 
 test_install_backs_up_existing_config() {
@@ -464,6 +508,12 @@ EOF
     fail "references/opencode/REFERENCE.md still present after rollback"
   fi
 
+  if [[ ! -f "$config_dir/plugins/generalpippy-update-check.js" ]]; then
+    pass "update-check plugin removed after rollback"
+  else
+    fail "update-check plugin still present after rollback"
+  fi
+
   # The pre-existing directory itself remains (it was not created by install).
   if [[ -d "$config_dir" ]]; then
     pass "pre-existing config directory preserved"
@@ -518,6 +568,97 @@ EOF
     pass "advisors.json is not created"
   else
     fail "advisors.json should not be created"
+  fi
+
+  local version_file="$config_dir/generalpippy/version.json"
+  if [[ -f "$version_file" ]] && grep -q '"version": "3.0.0"' "$version_file" && grep -q '"installed_at"' "$version_file"; then
+    pass "version.json records installed version metadata"
+  else
+    fail "version.json must record installed version metadata"
+  fi
+
+  rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
+}
+
+test_install_preserves_saved_profile_on_update() {
+  run_test "update preserves saved profile metadata by default"
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+  local config_dir="$tmp_home/.config/opencode"
+
+  for cmd in opencode uv npm; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
+
+  mkdir -p "$config_dir/generalpippy"
+  cat > "$config_dir/generalpippy/profile.json" <<'EOF'
+{
+  "profile": "Custom",
+  "models": {
+    "planning": "saved/plan",
+    "implementation": "saved/impl",
+    "system": "saved/sys"
+  }
+}
+EOF
+
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
+
+  if grep -q '"planning": "saved/plan"' "$config_dir/generalpippy/profile.json" &&
+     grep -q '^model: saved/plan$' "$config_dir/agents/pippy.md" &&
+     grep -q '^model: saved/impl$' "$config_dir/agents/pippy-build.md" &&
+     grep -q '"small_model": "saved/sys"' "$config_dir/opencode.jsonc"; then
+    pass "saved profile reused without prompting"
+  else
+    fail "installer must preserve saved profile on update"
+  fi
+
+  rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
+}
+
+test_unattended_profile_flag() {
+  run_test "--yes --profile balanced installs without optional prompts"
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+  local config_dir="$tmp_home/.config/opencode"
+
+  for cmd in opencode uv npm; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
+
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
+  local output
+  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile balanced 2>&1)"; then
+    pass "unattended install succeeds"
+  else
+    fail "unattended install failed: $output"
+  fi
+
+  if [[ "$output" == *"Skipping rtk in unattended mode"* ]]; then
+    pass "unattended mode skips optional prompts"
+  else
+    fail "unattended mode should skip optional prompts"
+  fi
+
+  if [[ -f "$config_dir/generalpippy/version.json" ]]; then
+    pass "unattended install writes version metadata"
+  else
+    fail "unattended install missing version metadata"
   fi
 
   rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
@@ -605,6 +746,7 @@ main() {
   test_dry_run_does_not_modify
   test_missing_core_dependency
   test_install_creates_files
+  test_install_works_from_other_cwd
   test_install_backs_up_existing_config
   test_install_idempotent
   test_caveman_mode_is_opencode_config
@@ -612,6 +754,8 @@ main() {
   test_install_preserves_existing_plugins
   test_install_rollbacks_on_failure
   test_install_records_profile_metadata
+  test_install_preserves_saved_profile_on_update
+  test_unattended_profile_flag
   test_custom_profile_renders_models_and_doctor_reads_metadata
 
   echo ""

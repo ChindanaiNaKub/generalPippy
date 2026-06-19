@@ -36,9 +36,11 @@ No manual orchestration. No switching agents. No babysitting.
 - `/grill-to-goal` — Clarify an under-specified idea into a goal-ready prompt
 - `/ship` — Review, verify, push, and create a green-gate PR
 - `/budget` — Report exact OpenCode-recorded role usage accounting plus budget guidance
+- `/pippy-update` — Check for GeneralPippy updates and run the installer after consent
 
 ### Plugins
 - **[cc-safety-net](https://github.com/kenryu42/cc-safety-net)** `@1.0.6` — Default guardrail plugin, enabled by GeneralPippy. Blocks known destructive filesystem and git commands. Default mode only; stricter modes (`CC_SAFETY_NET_STRICT`, `CC_SAFETY_NET_PARANOID`, `CC_SAFETY_NET_WORKTREE`) are user/project opt-ins.
+- **generalpippy-update-check** — Local startup update notice. Checks `manifest.json` with a short timeout and asks before any installer run.
 - **[jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp)** — AST code indexing (95%+ token savings)
 - **[opencode-dcp](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)** — Dynamic context pruning
 
@@ -83,6 +85,14 @@ The installer records your selected profile in `~/.config/opencode/generalpippy/
 
 ## Installation
 
+One-command install:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh | bash
+```
+
+Contributor/local install:
+
 ```bash
 # Clone the repo
 git clone https://github.com/ChindanaiNaKub/generalPippy.git
@@ -97,6 +107,14 @@ The installer handles:
 - Merging your existing plugins with GeneralPippy's pinned list
 - Installing npm plugins if package.json exists
 - Cleaning up obsolete v1.0 files
+- Writing installed version/profile metadata under `~/.config/opencode/generalpippy/`
+- Installing the local update-check helper and startup plugin
+
+For unattended automation, pass explicit defaults:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh | bash -s -- --yes --profile balanced
+```
 
 **Note:** Always use `install.sh` rather than manually copying files. The installer provides safety features such as backups, automatic rollback on failure, and plugin merging that manual copying bypasses.
 
@@ -125,10 +143,21 @@ Pippy handles the full loop from a single objective:
 3. Run `/grill-to-goal "rough feature idea"` when intent, non-goals, constraints, or trade-offs are under-specified
 4. Run `/ship` when ready for a green-gate PR
 5. Run `/budget` for OpenCode-recorded role usage accounting and routing/efficiency guidance
+6. Run `/pippy-update` to check GeneralPippy release status manually
 
 The installer also registers `@opencode-docs`, a local reference directory that
 Pippy can use when editing OpenCode config, providers, references, permissions,
 or troubleshooting guidance.
+
+## Updates
+
+GeneralPippy installs a local startup update checker. It fetches only the release `manifest.json`, uses a short timeout and local cache, and never updates silently. If a compatible stable release is newer than the installed version, it records a local reminder and points you to `/pippy-update`.
+
+Update behavior:
+- Stable releases are offered by default; prereleases require `{"update_channel": "prerelease"}` in `~/.config/opencode/generalpippy/settings.json`.
+- Set `GENERALPIPPY_UPDATE_CHECK=0` or `{"update_check": false}` to disable startup checks.
+- Updates preserve the saved model profile unless you run the installer with `--reconfigure`.
+- GeneralPippy-owned installed files are overwritten from the release, with backups kept beside the replaced files.
 
 ## The Self-Driving Loop
 

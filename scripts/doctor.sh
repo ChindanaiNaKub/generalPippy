@@ -177,6 +177,59 @@ else
   error "opencode.jsonc must enable LSP by default"
 fi
 
+# --- 4c. Pippy update system ---
+section "Pippy update system"
+
+update_command="$CONFIG_ROOT/commands/pippy-update.md"
+update_plugin="$CONFIG_ROOT/plugins/generalpippy-update-check.js"
+update_helper="$CONFIG_ROOT/generalpippy/update-check.mjs"
+update_manifest="$REPO_ROOT/manifest.json"
+if [[ "$CONFIG_MODE" == "installed" ]]; then
+  update_manifest="$CONFIG_ROOT/generalpippy/manifest.json"
+fi
+
+if [[ -f "$update_command" ]]; then
+  ok "/pippy-update command is installed"
+else
+  error "/pippy-update command missing"
+fi
+
+if [[ -f "$update_plugin" ]]; then
+  ok "startup update-check plugin is installed"
+else
+  error "startup update-check plugin missing"
+fi
+
+if [[ -f "$update_helper" ]]; then
+  ok "shared update-check helper is installed"
+else
+  error "shared update-check helper missing"
+fi
+
+if [[ -f "$update_manifest" ]] && grep -q '"stable"' "$update_manifest" && grep -q '"minimum_opencode_version"' "$update_manifest"; then
+  ok "release manifest includes stable channel and compatibility metadata"
+else
+  error "release manifest must include stable channel and minimum_opencode_version"
+fi
+
+if [[ "$CONFIG_MODE" == "installed" ]]; then
+  version_metadata="$CONFIG_ROOT/generalpippy/version.json"
+  settings_metadata="$CONFIG_ROOT/generalpippy/settings.json"
+  if [[ -f "$version_metadata" ]] && grep -q '"version"' "$version_metadata"; then
+    ok "installed version metadata exists"
+  else
+    error "installed version metadata missing"
+  fi
+
+  if [[ "${GENERALPIPPY_UPDATE_CHECK:-}" == "0" ]]; then
+    ok "startup update check disabled by GENERALPIPPY_UPDATE_CHECK=0"
+  elif [[ -f "$settings_metadata" ]] && grep -q '"update_check"[[:space:]]*:[[:space:]]*false' "$settings_metadata"; then
+    ok "startup update check disabled by settings.json"
+  else
+    ok "startup update check enabled"
+  fi
+fi
+
 # --- 5. Stale /verify command references ---
 section "No stale /verify command"
 

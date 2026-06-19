@@ -30,10 +30,13 @@ test_required_files_exist() {
   for file in config/opencode.jsonc \
               config/agents/pippy.md config/agents/pippy-plan.md config/agents/pippy-build.md \
               config/commands/goal.md config/commands/ship.md config/commands/budget.md \
-              config/commands/grill-to-goal.md \
+              config/commands/grill-to-goal.md config/commands/pippy-update.md \
               config/skills/pippy/SKILL.md \
               config/skills/grill-to-goal/SKILL.md \
               config/references/opencode/REFERENCE.md \
+              config/plugins/generalpippy-update-check.js \
+              config/generalpippy/update-check.mjs \
+              manifest.json \
               config/model-profiles/balanced.json; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
       pass "exists: $file"
@@ -1753,6 +1756,113 @@ test_model_profile_metadata() {
   fi
 }
 
+test_pippy_update_system() {
+  run_test "Pippy update system is documented, installed, and consent-based"
+
+  local manifest="$REPO_ROOT/manifest.json"
+  local helper="$REPO_ROOT/config/generalpippy/update-check.mjs"
+  local plugin="$REPO_ROOT/config/plugins/generalpippy-update-check.js"
+  local command="$REPO_ROOT/config/commands/pippy-update.md"
+  local installer="$REPO_ROOT/install.sh"
+  local readme="$REPO_ROOT/README.md"
+  local context="$REPO_ROOT/CONTEXT.md"
+  local adr="$REPO_ROOT/docs/adr/0015-pippy-update-check-and-release-manifest.md"
+  local doctor="$REPO_ROOT/scripts/doctor.sh"
+
+  if python3 - "$manifest" <<'PY'
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+stable = data.get("stable") or {}
+assert data.get("schema_version") == 1
+assert stable.get("version")
+assert stable.get("minimum_opencode_version")
+assert stable.get("install_url", "").endswith("/install.sh")
+assert "release_url" in stable
+PY
+  then
+    pass "manifest.json has stable channel, installer URL, and compatibility metadata"
+  else
+    fail "manifest.json must define stable version, install_url, release_url, and minimum_opencode_version"
+  fi
+
+  if grep -q "checkForUpdate" "$helper" &&
+     grep -q "GENERALPIPPY_UPDATE_CHECK" "$helper" &&
+     grep -q "update_channel" "$helper" &&
+     grep -q "dismissed_versions" "$helper" &&
+     grep -q "minimum_opencode_version" "$helper" &&
+     grep -q "Run installer now" "$helper"; then
+    pass "shared helper owns opt-out, channel, skip, compatibility, and consent behavior"
+  else
+    fail "shared update helper must own update logic and explicit installer consent"
+  fi
+
+  if grep -q "../generalpippy/update-check.mjs" "$plugin" &&
+     grep -q "server.connected" "$plugin" &&
+     grep -q "session.created" "$plugin" &&
+     grep -q "/pippy-update" "$plugin"; then
+    pass "startup plugin calls shared helper and points to /pippy-update"
+  else
+    fail "startup plugin must call shared helper at startup and point users to /pippy-update"
+  fi
+
+  if grep -q "update-check.mjs" "$command" &&
+     grep -q -- "--force --interactive" "$command" &&
+     grep -qi "Never update silently" "$command"; then
+    pass "/pippy-update command uses shared helper and requires consent"
+  else
+    fail "/pippy-update must use shared helper with force/interactive behavior and no silent updates"
+  fi
+
+  if grep -q "config/commands/pippy-update.md" "$installer" &&
+     grep -q "config/plugins/generalpippy-update-check.js" "$installer" &&
+     grep -q "config/generalpippy/update-check.mjs" "$installer" &&
+     grep -q "manifest.json" "$installer" &&
+     grep -q "write_version_metadata" "$installer" &&
+     grep -q -- "--profile balanced" "$installer" &&
+     grep -q "load_saved_profile" "$installer"; then
+    pass "installer copies update system, writes version metadata, and preserves saved profile"
+  else
+    fail "installer must copy update files, write version metadata, support --profile balanced, and preserve saved profile"
+  fi
+
+  if grep -q "curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh | bash" "$readme" &&
+     grep -q "/pippy-update" "$readme" &&
+     grep -q "GENERALPIPPY_UPDATE_CHECK=0" "$readme"; then
+    pass "README documents one-command install, manual update, and opt-out"
+  else
+    fail "README must document one-command install, /pippy-update, and update-check opt-out"
+  fi
+
+  if grep -q "Pippy update check" "$context" &&
+     grep -q "GeneralPippy-owned installed file" "$context" &&
+     grep -q "/pippy-update" "$context"; then
+    pass "CONTEXT.md defines update terms and command surface"
+  else
+    fail "CONTEXT.md must define update terms and include /pippy-update command"
+  fi
+
+  if [[ -f "$adr" ]] &&
+     grep -q "Status: accepted" "$adr" &&
+     grep -q "manifest.json" "$adr" &&
+     grep -q "minimum_opencode_version" "$adr" &&
+     grep -q "install.sh remains the only updater" "$adr" &&
+     grep -q "stable release channel by default" "$adr" &&
+     grep -q "share one update-check helper" "$adr"; then
+    pass "ADR-0015 records release manifest and update-check boundaries"
+  else
+    fail "ADR-0015 must record manifest, compatibility, installer ownership, channel, and shared helper decisions"
+  fi
+
+  if grep -q "Pippy update system" "$doctor" &&
+     grep -q "version.json" "$doctor" &&
+     grep -q "update check disabled" "$doctor"; then
+    pass "doctor reports update system and disabled state"
+  else
+    fail "doctor must report update system, version metadata, and disabled state"
+  fi
+}
+
 main() {
   echo "Running GeneralPippy validation tests..."
 
@@ -1794,6 +1904,7 @@ main() {
   test_pippy_harness_doc
   test_decision_records
   test_model_profile_metadata
+  test_pippy_update_system
 
   echo ""
   echo "========================="
