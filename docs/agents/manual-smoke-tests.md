@@ -112,6 +112,7 @@ Run `/ship` in OpenCode on a non-default branch and verify these green-gate beha
 - **Context compression before closing gates**: `/ship` compresses context (via caveman mode or explicit compress) before review and final verification to reduce token usage.
 - **Caveman-full reporting**: When caveman mode is available, `/ship` reports in caveman-full compression style for status, build, and verification output.
 - **Green-gate sequence**: `/ship` runs review, verification, security/docs checks, clean-tree check, branch-safety check, GitHub auth/readiness check, and existing-PR check before creating a PR.
+- **Harness smoke eval gate**: When the diff touches Pippy harness files listed in `docs/agents/pippy-harness.md`, `/ship` runs `rtk bash scripts/goal-run-smoke-evals.sh --dry-run` or reports why it is not applicable. For verification-gate, report-shape, Verifier template, or `/goal` prompt changes, `/ship` runs or strongly recommends `rtk bash scripts/goal-run-smoke-evals.sh --live` before PR creation and includes the decision in the PR body.
 - **Auto-PR success**: After gates pass, `/ship` pushes the branch if needed, creates a non-interactive PR with generated title/body, reports `Shipped`, and includes the PR URL.
 - **Blocked PR outcome**: If review and verification pass but push or PR creation fails, `/ship` reports `Ready, PR blocked`, preserves the generated PR title/body, and includes the failed command/error plus retry guidance.
 - **No re-fetch of releases**: After `gh release create` succeeds, `/ship` trusts the exit status and does not re-fetch the release metadata to confirm it exists.
@@ -121,6 +122,8 @@ Expected failure signals:
 - `/ship` creates a PR from the default branch.
 - `/ship` creates a PR with a dirty working tree.
 - `/ship` creates a duplicate PR instead of reporting an existing open PR for the branch.
+- `/ship` skips `scripts/goal-run-smoke-evals.sh --dry-run` for a harness change without saying why it is not applicable.
+- `/ship` ships verification-gate, report-shape, Verifier template, or `/goal` prompt changes without running or recommending the live goal-run smoke eval.
 - `/ship` reports `Shipped` without a PR URL.
 - `/ship` loses the generated PR title/body after push or PR creation fails.
 - `/ship` re-fetches release info after creating a release.

@@ -12,18 +12,20 @@ Pippy will:
 2. Run the full verification gate (tests, lint, typecheck)
 3. Check for security issues
 4. Check docs for public API changes
-5. Check branch safety: current branch is not the default branch, the working tree is clean, and the branch is safe to push
-6. Check GitHub readiness: `gh auth status` works, an `origin` remote exists, and no open PR already exists for the current branch
-7. Generate a non-interactive PR title and body from the verified diff and evidence
-8. Push the branch with `rtk git push -u origin HEAD` when needed
-9. Create the PR non-interactively with `rtk gh pr create --title ... --body ...`
-10. Report `Shipped` only when a PR URL exists
+5. Check whether the diff touches Pippy harness files; when it does, apply the Harness smoke eval gate
+6. Check branch safety: current branch is not the default branch, the working tree is clean, and the branch is safe to push
+7. Check GitHub readiness: `gh auth status` works, an `origin` remote exists, and no open PR already exists for the current branch
+8. Generate a non-interactive PR title and body from the verified diff and evidence
+9. Push the branch with `rtk git push -u origin HEAD` when needed
+10. Create the PR non-interactively with `rtk gh pr create --title ... --body ...`
+11. Report `Shipped` only when a PR URL exists
 
 ### Green-Gate PR Creation
 
 Create a PR only after all gates pass:
 - Review gate: diff reviewed, review checklist applied, Program design checked when relevant, and Assumption audit completed
 - Verification gate: full verification passes and docs/security checks are complete
+- Harness smoke eval gate: when the diff touches Pippy harness files listed in `docs/agents/pippy-harness.md`, run `rtk bash scripts/goal-run-smoke-evals.sh --dry-run` or explicitly report why it is not applicable; for verification-gate, report-shape, Verifier template, or `/goal` prompt changes, run or strongly recommend `rtk bash scripts/goal-run-smoke-evals.sh --live` before PR creation and include the decision in the PR body
 - clean-tree gate: `rtk git status --short` shows no uncommitted changes
 - Branch-safety gate: current branch is not the default branch, and branch name/remote are known
 - GitHub-readiness gate: `rtk gh auth status` succeeds and repo remote resolves

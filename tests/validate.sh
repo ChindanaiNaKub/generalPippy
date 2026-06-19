@@ -835,17 +835,18 @@ test_assumption_audit_review_gate() {
 }
 
 test_ship_guidance() {
-  run_test "/ship includes green-gate PR creation, rtk routing, caveman reports, compress, and release confirmation"
+  run_test "/ship includes green-gate PR creation, harness smoke evals, rtk routing, caveman reports, compress, and release confirmation"
   local file="$REPO_ROOT/config/commands/ship.md"
 
   if grep -q "Green-Gate PR Creation" "$file" &&
      grep -q "clean-tree gate" "$file" &&
      grep -q "Branch-safety gate" "$file" &&
      grep -q "GitHub-readiness gate" "$file" &&
-     grep -q "Existing-PR gate" "$file"; then
+     grep -q "Existing-PR gate" "$file" &&
+     grep -q "Harness smoke eval gate" "$file"; then
     pass "/ship defines green-gate sequence before PR creation"
   else
-    fail "/ship must define clean-tree, branch-safety, GitHub-readiness, and existing-PR gates"
+    fail "/ship must define harness smoke eval, clean-tree, branch-safety, GitHub-readiness, and existing-PR gates"
   fi
 
   if grep -q "not the default branch" "$file" &&
@@ -896,6 +897,16 @@ test_ship_guidance() {
     pass "/ship trusts gh release exit status"
   else
     fail "/ship must trust gh release exit status instead of re-fetching"
+  fi
+
+  if grep -q "scripts/goal-run-smoke-evals.sh --dry-run" "$file" &&
+     grep -q "scripts/goal-run-smoke-evals.sh --live" "$file" &&
+     grep -q "docs/agents/pippy-harness.md" "$file" &&
+     grep -q "Verifier template" "$file" &&
+     grep -q "PR body" "$file"; then
+    pass "/ship routes harness changes through goal-run smoke eval gate"
+  else
+    fail "/ship must run dry-run smoke evals for harness changes and run/recommend live evals for verifier/report-shape prompt changes"
   fi
 }
 
@@ -1171,6 +1182,15 @@ test_ship_budget_efficiency_smoke_test() {
     pass "/ship smoke test checks no re-fetch of releases"
   else
     fail "/ship smoke test must check no re-fetch of releases"
+  fi
+
+  if grep -q "Harness smoke eval gate" "$file" &&
+     grep -q "scripts/goal-run-smoke-evals.sh --dry-run" "$file" &&
+     grep -q "scripts/goal-run-smoke-evals.sh --live" "$file" &&
+     grep -q "Verifier template" "$file"; then
+    pass "/ship smoke test checks harness goal-run smoke eval gate"
+  else
+    fail "/ship smoke test must cover dry-run and live goal-run smoke eval expectations for harness changes"
   fi
 }
 
