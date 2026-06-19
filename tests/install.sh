@@ -159,7 +159,7 @@ EOF
   # Run non-interactively; optional deps will be skipped because stdin is empty.
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
-  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null >/dev/null 2>&1
 
   for file in opencode.jsonc agents/pippy.md agents/pippy-plan.md agents/pippy-build.md \
               commands/goal.md commands/ship.md commands/budget.md commands/grill-to-goal.md \
@@ -263,6 +263,40 @@ EOF
   rm -rf "$tmp_home" "$tmp_bin" "$archive" "${min_path##*:}"
 }
 
+test_headless_first_install_requires_explicit_profile() {
+  run_test "headless first install refuses to silently select Budget"
+  local tmp_home
+  tmp_home="$(mktemp -d)"
+  local tmp_bin
+  tmp_bin="$(mktemp -d)"
+
+  for cmd in opencode uv npm; do
+    cat > "$tmp_bin/$cmd" <<EOF
+#!/bin/bash
+echo "fake $cmd"
+EOF
+    chmod +x "$tmp_bin/$cmd"
+  done
+
+  local min_path
+  min_path="$(make_minimal_path "$tmp_bin")"
+  local output
+  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null 2>&1)"; then
+    fail "headless first install should fail without explicit profile"
+  else
+    pass "headless first install exits non-zero"
+  fi
+
+  if [[ "$output" == *"Interactive model profile selection requires a terminal"* &&
+        "$output" == *"--yes --profile budget"* ]]; then
+    pass "error explains explicit unattended profile options"
+  else
+    fail "headless failure must explain how to choose a profile explicitly: $output"
+  fi
+
+  rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
+}
+
 test_install_backs_up_existing_config() {
   run_test "install backs up existing config files"
   local tmp_home
@@ -284,7 +318,7 @@ EOF
 
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
-  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null >/dev/null 2>&1
 
   local backups
   backups=("$config_dir"/opencode.jsonc.backup.*)
@@ -323,8 +357,8 @@ EOF
 
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
-  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
-  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null >/dev/null 2>&1
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null >/dev/null 2>&1
 
   local backups
   backups=("$config_dir"/opencode.jsonc.backup.*)
@@ -364,7 +398,7 @@ EOF
   min_path="$(make_minimal_path "$tmp_bin")"
 
   local output
-  output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null 2>&1)"
+  output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null 2>&1)"
 
   if [[ "$output" == *"Caveman mode found"* ]]; then
     pass "detects OpenCode caveman mode"
@@ -402,7 +436,7 @@ EOF
   min_path="$(make_minimal_path "$tmp_bin")"
 
   local output
-  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null 2>&1)"; then
+  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null 2>&1)"; then
     pass "succeeds without npm installed"
   else
     fail "failed without npm: $output"
@@ -448,7 +482,7 @@ EXISTING
 
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
-  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null >/dev/null 2>&1
 
   # Verify the output config has both pinned and user plugins.
   if grep -q "@mycompany/custom-plugin@1.2.3" "$config_dir/opencode.jsonc"; then
@@ -522,7 +556,7 @@ EOF
 
   # Install must fail because config dir is read-only.
   local output
-  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null 2>&1)"; then
+  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null 2>&1)"; then
     fail "install should have failed on read-only directory"
     trap - RETURN
     chmod 755 "$config_dir" 2>/dev/null || true
@@ -587,7 +621,7 @@ EOF
 
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
-  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
+  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget </dev/null >/dev/null 2>&1
 
   # Check profile.json
   local profile_file="$config_dir/generalpippy/profile.json"
@@ -656,7 +690,8 @@ EOF
 
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
-  HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
+  local output
+  output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null 2>&1)"
 
   if grep -q '"coordination": "saved/plan"' "$config_dir/generalpippy/profile.json" &&
      grep -q '"planning": "saved/plan"' "$config_dir/generalpippy/profile.json" &&
@@ -666,6 +701,12 @@ EOF
     pass "saved profile reused without prompting"
   else
     fail "installer must preserve saved profile on update"
+  fi
+
+  if [[ "$output" == *"--reconfigure"* ]]; then
+    pass "saved profile message explains how to choose again"
+  else
+    fail "saved profile reuse should mention --reconfigure"
   fi
 
   rm -rf "$tmp_home" "$tmp_bin" "${min_path##*:}"
@@ -731,7 +772,7 @@ EOF
   min_path="$(make_minimal_path "$tmp_bin")"
 
   local output
-  if output="$(printf '3\n\ncustom/coord\n\ncustom/plan\n\ncustom/impl\n\ncustom/sys\n' | HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" 2>&1)"; then
+  if output="$(GENERALPIPPY_PROMPT_INPUT=$'3\n\ncustom/coord\n\ncustom/plan\n\ncustom/impl\n\ncustom/sys' HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" 2>&1)"; then
     pass "custom profile install succeeds after blank values are corrected"
   else
     fail "custom profile install failed: $output"
@@ -797,6 +838,7 @@ main() {
   test_install_creates_files
   test_install_works_from_other_cwd
   test_one_command_install_bootstraps_from_stdin
+  test_headless_first_install_requires_explicit_profile
   test_install_backs_up_existing_config
   test_install_idempotent
   test_caveman_mode_is_opencode_config

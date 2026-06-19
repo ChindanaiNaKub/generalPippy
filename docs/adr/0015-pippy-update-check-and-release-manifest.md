@@ -10,7 +10,7 @@ The manifest includes compatibility constraints such as `minimum_opencode_versio
 
 When the user consents to update, the plugin launches the published installer command instead of patching files itself. install.sh remains the only updater for installed harness files because it owns backups, rollback, plugin merging, model-profile metadata, obsolete cleanup, and optional dependency checks.
 
-The public one-command installer remains interactive by default so beginners can choose a model profile and optional tools deliberately. Automation uses explicit flags such as `--yes --profile budget` rather than changing the default install path into an unattended mutation.
+The public one-command installer remains interactive by default so beginners can choose a model profile and optional tools deliberately. Because `curl | bash` consumes stdin, required model-profile prompts read from `/dev/tty` when available. If no terminal is available and no saved profile can be reused, the installer stops with instructions to pass explicit flags such as `--yes --profile budget` or `--profile thorough` rather than silently choosing Budget.
 
 Update reminders are rate-limited by local state in `~/.config/opencode/generalpippy/update-state.json`. The plugin may check at startup with a cache TTL, prompt at most once per day for the same newer version, support "remind later", and suppress a version entirely when the user chooses "skip this version".
 
