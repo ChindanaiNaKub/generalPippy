@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-06-19
+
+### Added
+- Budget and Thorough model profiles, with Budget as the default public profile and Balanced retained as a legacy Budget alias.
+- ADR-0016 documenting the budget-first coordination profile decision.
+
+### Changed
+- Split model profile metadata into Coordination, Planning, Implementation, and System-task roles so `pippy` can coordinate on DeepSeek Flash while `pippy-plan` remains available for Kimi-powered design and diagnosis.
+- Updated installer, doctor, README, harness docs, and smoke tests for the Budget default and the Coordination/Planning distinction.
+
+### Fixed
+- `/budget` now reads OpenCode session DB usage before blocking, includes `Cost` in the primary role accounting table, and distinguishes expensive Coordinator sessions from true implementation bypass.
+- Cross-run memory docs now use `rtk bash` in the suggested command examples.
+
 ## [3.1.0] - 2026-06-19
 
 ### Added
