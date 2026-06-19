@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-06-20
+
+### Added
+- Verification gates are now first-class `/goal` harness artifacts, with reportable pass/fail/retry/partial status for acceptance-criteria shaping, step verification, REVIEW, Assumption audit, and final verification.
+- Task-type Verifier templates for docs-only, code, installer/config, public docs/config, security/data-loss, and mixed/unclear goals.
+- `scripts/goal-run-smoke-evals.sh` for optional executable Eval 10 and Eval 11 smoke checks, with dry-run and live OpenCode modes.
+
+### Changed
+- `/goal` reports now name the selected Verifier template inside the existing `Plan` evidence trail and keep template rationale out of separate report fields.
+- `/ship` now treats goal-run smoke evals as a harness shipping gate for Pippy harness changes, requiring dry-run coverage or an explicit not-applicable note and recommending live evals for verifier/report-shape prompt changes.
+- Pippy harness inventory, goal-run eval docs, README guidance, manual smoke tests, and validation now track the verifier and smoke-eval workflow.
+
+### Fixed
+- Improvement Signal guidance now treats malformed or unavailable tool calls as Pippy-owned friction instead of allowing clean `None` reports.
+
 ## [3.2.0] - 2026-06-19
 
 ### Added
