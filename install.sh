@@ -22,10 +22,7 @@ if [[ ! -f "$REPO_ROOT/lib/utils.sh" ]]; then
   command -v tar >/dev/null 2>&1 || { echo "tar is required for one-command install" >&2; exit 1; }
 
   tmp_repo="$(mktemp -d)"
-  cleanup_bootstrap() {
-    rm -rf "$tmp_repo"
-  }
-  trap cleanup_bootstrap EXIT
+  trap 'rm -rf "$tmp_repo"' EXIT
 
   archive_url="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/${REPO_REF}.tar.gz"
   echo "Downloading GeneralPippy ${REPO_REF}..." >&2
