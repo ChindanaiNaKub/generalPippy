@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Rewrote the README as a concise human front door with a vertical self-driving loop diagram and a short Pippy vs goal-state plugins explanation.
 
+### Removed
+- Unused generated Pippy portrait PNG assets now that README uses the SVG logo.
+
 ## [3.3.0] - 2026-06-20
 
 ### Added
