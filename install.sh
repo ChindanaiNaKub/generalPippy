@@ -16,8 +16,12 @@ REPO_REF="${GENERALPIPPY_INSTALL_REF:-main}"
 # Resolve repo root for sourcing shared utilities. When this script is executed
 # through `curl | bash`, there is no local checkout beside the script, so
 # bootstrap a temporary repo archive and re-run the real installer from there.
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ ! -f "$REPO_ROOT/lib/utils.sh" ]]; then
+SCRIPT_PATH="${BASH_SOURCE[0]-}"
+REPO_ROOT=""
+if [[ -n "$SCRIPT_PATH" ]]; then
+  REPO_ROOT="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+fi
+if [[ -z "$REPO_ROOT" || ! -f "$REPO_ROOT/lib/utils.sh" ]]; then
   command -v curl >/dev/null 2>&1 || { echo "curl is required for one-command install" >&2; exit 1; }
   command -v tar >/dev/null 2>&1 || { echo "tar is required for one-command install" >&2; exit 1; }
 
