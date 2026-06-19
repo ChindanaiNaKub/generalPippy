@@ -82,7 +82,7 @@ Review and final verification are the closing gates of `/goal`, not standalone c
 ### Notes
 
 - YOLO mode is on by default (auto-allow reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`).
-- RTK Force is mandatory when `rtk` is installed: `command -v rtk` is the only allowed raw detection command, then every later shell command must go through `rtk` (`rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>` for path-scoped diffs, `rtk make all`, or `rtk run` / `rtk proxy`). Raw `git` of any kind, `gh`, `make`, or test commands after rtk was found are Pippy-owned routing failures and must appear in the Improvement Signal.
+- RTK Force is mandatory when `rtk` is installed: `command -v rtk` is the only allowed raw detection command, then the run is **RTK-locked** and every later shell command must go through `rtk` (`rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>` for path-scoped diffs, `rtk make all`, `rtk run command -v caveman`, or `rtk run` / `rtk proxy`). There is no exploration grace period: baseline dirty-workspace checks, git status/log/diff, optional-tool probes, validation, and final verification all use `rtk` after the lock. Raw `git` of any kind, `gh`, `make`, or test commands after rtk was found are Pippy-owned routing failures and must appear in the Improvement Signal.
 - Recalled cross-run memory is guidance, not proof; Pippy must verify it against the current objective, repo docs, and code, and must not write memory automatically.
 - Pippy stops only when acceptance criteria are met by evidence.
 - Use `/ship` as a shortcut for PR prep.

@@ -47,13 +47,13 @@ Scale verification rigor to task risk while shaping acceptance criteria. Use hig
 ### 2. EXPLORE
 
 At the start of `/goal`, check if optional efficiency tools are available:
-- `rtk`: shell executable, detected with `command -v rtk`. This detection command is the only allowed raw shell command for rtk detection; if it succeeds, immediately switch to RTK Force for all later shell commands.
+- `rtk`: shell executable, detected with `command -v rtk`. This detection command is the only allowed raw shell command for rtk detection; if it succeeds, immediately enter **RTK-locked** state for the rest of the run. In RTK-locked state, every later shell command, including exploration, baseline dirty-workspace checks, git status/log/diff, optional-tool probes, validation, and final verification, must go through `rtk`.
 - Caveman mode: OpenCode command/config mode, detected by any of:
   - `~/.config/opencode/commands/caveman.md`
   - `$XDG_CONFIG_HOME/opencode/commands/caveman.md`
   - `~/.config/opencode/AGENTS.md` containing `caveman-begin`
   - `$XDG_CONFIG_HOME/opencode/AGENTS.md` containing `caveman-begin`
-- Caveman CLI: optional shell executable, detected with `command -v caveman`
+- Caveman CLI: optional shell executable. If RTK-locked, detect it with `rtk run command -v caveman`; use raw `command -v caveman` only when `rtk` is missing.
 
 If `rtk` is missing and the user has not already declined it this session, ask once: "Install `rtk` for better token efficiency? (y/N)". Degrade gracefully if declined.
 
@@ -72,7 +72,7 @@ Use `@opencode-docs` when the task touches OpenCode config, providers, reference
 
 ### RTK Force
 
-If `rtk` is installed, every shell command after the initial `command -v rtk` detection must go through `rtk`. Use the specialized wrapper when one exists (`rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk gh pr view`, `rtk make all`, `rtk npm test`) and use `rtk run` or `rtk proxy` for commands without a specialized wrapper. For path-scoped diffs, prefer `rtk proxy git diff -- <paths>` when the specialized `rtk git diff -- <paths>` form rejects path arguments. Raw shell commands are allowed only when `rtk` is missing or the `rtk` wrapper itself fails for that exact command; note the fallback in the report. Running raw `git` of any kind, `gh`, `make`, or test commands after rtk was found is a Pippy-owned routing failure and must be reported as an Improvement Signal.
+If `rtk` is installed, every shell command after the initial `command -v rtk` detection must go through `rtk`. Treat this as a state transition: once `command -v rtk` succeeds, the run is RTK-locked and there is no exploration grace period. Do not run raw `git status`, `git diff`, or `git log` to establish a baseline after the lock; use `rtk git status --short`, `rtk git diff`, and `rtk git log` immediately. Use the specialized wrapper when one exists (`rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk gh pr view`, `rtk make all`, `rtk npm test`) and use `rtk run` or `rtk proxy` for commands without a specialized wrapper. For path-scoped diffs, prefer `rtk proxy git diff -- <paths>` when the specialized `rtk git diff -- <paths>` form rejects path arguments. Raw shell commands are allowed only when `rtk` is missing or the `rtk` wrapper itself fails for that exact command; note the fallback in the report. Running raw `git` of any kind, `gh`, `make`, or test commands after rtk was found is a Pippy-owned routing failure and must be reported as an Improvement Signal.
 
 ### 3. PLAN
 
@@ -225,7 +225,7 @@ If any limit is hit, stop and report with clear context on what was happening.
 ## Token Efficiency
 
 - Use jcodemunch tools for ALL code navigation (95%+ token savings)
-- If `rtk` is installed, force all bash commands through it (e.g., `rtk ls`, `rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>`, `rtk gh pr view`, `rtk make all`); otherwise keep bash output minimal
+- If `rtk` is installed, force all bash commands through it after the raw `command -v rtk` detection (e.g., `rtk ls`, `rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>`, `rtk gh pr view`, `rtk make all`, `rtk run command -v caveman`); otherwise keep bash output minimal
 - If Caveman mode is available, automatically use its `full` compression style for status, build, and verification output; otherwise be terse
 - Batch file reads: use multi-file `read` or `jcodemunch_get_context_bundle` instead of reading the same file repeatedly
 - Compress earlier: close finished exploration/planning phases with `compress` before context pressure builds

@@ -131,7 +131,7 @@ Do not ask before git, gh, make, dependency, or repo-local commands. Keep safety
 ## Token Efficiency
 
 - jcodemunch-mcp for all code navigation
-- force all bash commands through rtk when installed. `command -v rtk` is the only allowed raw detection command; after it succeeds, use `rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>` for path-scoped diffs, `rtk make all`, or `rtk run` / `rtk proxy` for every later shell command. Raw `git` of any kind, `gh`, `make`, or test commands after rtk was found are Pippy-owned routing failures.
+- force all bash commands through rtk when installed. `command -v rtk` is the only allowed raw detection command; after it succeeds, the run is RTK-locked and there is no exploration grace period. Use `rtk git status --short`, `rtk git log`, `rtk git diff`, `rtk proxy git diff -- <paths>` for path-scoped diffs, `rtk make all`, `rtk run command -v caveman`, or `rtk run` / `rtk proxy` for every later shell command, including baseline dirty-workspace checks, optional-tool probes, validation, and final verification. Raw `git` of any kind, `gh`, `make`, or test commands after rtk was found are Pippy-owned routing failures.
 - Caveman mode `full` compression for status, build, and verification output when OpenCode caveman config is available
 - batch file reads and avoid re-reading the same file
 - compress earlier to keep context pressure low
