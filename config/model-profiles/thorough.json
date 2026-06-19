@@ -1,8 +1,8 @@
 {
-  "name": "Budget",
-  "description": "Budget-first defaults for public and beginner installs",
+  "name": "Thorough",
+  "description": "Old Kimi-heavy defaults for stronger coordination at higher cost",
   "models": {
-    "coordination": "opencode-go/deepseek-v4-flash",
+    "coordination": "opencode-go/kimi-k2.7-code",
     "planning": "opencode-go/kimi-k2.7-code",
     "implementation": "opencode-go/mimo-v2.5",
     "system": "opencode-go/deepseek-v4-flash"

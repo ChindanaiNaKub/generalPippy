@@ -1,7 +1,7 @@
 ---
 description: Self-driving goal agent — plan, execute, verify, iterate until objective is met
 mode: primary
-model: opencode-go/kimi-k2.7-code
+model: opencode-go/deepseek-v4-flash
 temperature: 0.2
 permission:
   edit: deny
@@ -205,8 +205,9 @@ If any limit is hit, stop and report with clear context on what was happening.
 
 ## Budget Policy
 
-- Default: cheap model for execution
-- Strong model: only for planning and stuck-step diagnosis
+- Budget default: cheap coordination model for the primary `pippy` loop
+- Strong planning model: only for `pippy-plan` Program design sketches and stuck-step diagnosis
+- Cheap implementation model: `pippy-build` for workspace mutation
 - Warn at **50k input tokens** or **20k output tokens**
 - Do not estimate exact tokens, model usage, agent usage, or cost from conversation volume
 - Use OpenCode-recorded session usage as the authoritative source for exact numbers

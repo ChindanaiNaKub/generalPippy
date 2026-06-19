@@ -37,6 +37,8 @@ test_required_files_exist() {
               config/plugins/generalpippy-update-check.js \
               config/generalpippy/update-check.mjs \
               manifest.json \
+              config/model-profiles/budget.json \
+              config/model-profiles/thorough.json \
               config/model-profiles/balanced.json; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
       pass "exists: $file"
@@ -124,12 +126,35 @@ test_budget_command_is_role_usage_accounting() {
     fi
   done
 
+  if grep -q "| Role | Model | Sessions | Input Tokens | Output Tokens | Cache-Read Tokens | Cache-Write Tokens | Cost |" "$file" &&
+     grep -q "Do not omit \`Cost\`" "$file"; then
+    pass "budget command includes explicit cost-bearing table template"
+  else
+    fail "budget command must include an explicit role accounting table template with Cost"
+  fi
+
+  if grep -q "Do \\*\\*not\\*\\* say implementation happened directly on a strong model merely because Coordinator cost is high" "$file" &&
+     grep -q "Only report implementation bypass" "$file"; then
+    pass "budget command distinguishes coordinator cost from implementation bypass"
+  else
+    fail "budget command must not blame implementation bypass from coordinator cost alone"
+  fi
+
   if grep -q "/budget <session-id>" "$file" &&
      grep -qi "ambiguous" "$file" &&
      grep -qi "stop instead of guessing" "$file"; then
     pass "budget command documents historical session ids and ambiguous auto-detection"
   else
     fail "budget command must document /budget <session-id> and ambiguous auto-detection behavior"
+  fi
+
+  if grep -q "opencode db path" "$file" &&
+     grep -q "opencode db --format json" "$file" &&
+     grep -q "from session" "$file" &&
+     grep -q "parent_id = '<root-session-id>'" "$file"; then
+    pass "budget command reads OpenCode session DB before blocking"
+  else
+    fail "budget command must query OpenCode's session DB before reporting exact accounting as blocked"
   fi
 
   if grep -qE '\\$[0-9]+(\\.[0-9]+)?\\s*/\\s*\\$[0-9]+(\\.[0-9]+)?' "$file"; then
@@ -836,6 +861,7 @@ test_doctor_script() {
   fi
 
   if grep -q "PROFILE_METADATA" "$script" &&
+     grep -q "coordination role renders as" "$script" &&
      grep -q "planning role renders as" "$script" &&
      grep -q "implementation role renders as" "$script" &&
      grep -q "system-task role renders as" "$script"; then
@@ -1628,7 +1654,7 @@ test_decision_records() {
     fail "ADR-0007 must state dynamic model routing is deferred"
   fi
 
-  if grep -qi "model profile\|profile.json\|Balanced" "$adr7"; then
+  if grep -qi "model profile\|profile.json\|Budget" "$adr7"; then
     pass "ADR-0007 references model profiles"
   else
     fail "ADR-0007 must reference model profiles"
@@ -1706,19 +1732,21 @@ test_decision_records() {
 test_model_profile_metadata() {
   run_test "#34-40 model profile metadata"
 
-  # Balanced profile JSON exists and matches current defaults.
-  local profile="$REPO_ROOT/config/model-profiles/balanced.json"
-  if [[ -f "$profile" ]]; then
-    pass "balanced.json exists"
-    if grep -q '"planning": "opencode-go/kimi-k2.7-code"' "$profile" &&
-       grep -q '"implementation": "opencode-go/mimo-v2.5"' "$profile" &&
-       grep -q '"system": "opencode-go/deepseek-v4-flash"' "$profile"; then
-      pass "balanced.json matches current defaults"
+  local budget="$REPO_ROOT/config/model-profiles/budget.json"
+  local thorough="$REPO_ROOT/config/model-profiles/thorough.json"
+  if [[ -f "$budget" && -f "$thorough" ]]; then
+    pass "budget.json and thorough.json exist"
+    if grep -q '"coordination": "opencode-go/deepseek-v4-flash"' "$budget" &&
+       grep -q '"planning": "opencode-go/kimi-k2.7-code"' "$budget" &&
+       grep -q '"implementation": "opencode-go/mimo-v2.5"' "$budget" &&
+       grep -q '"system": "opencode-go/deepseek-v4-flash"' "$budget" &&
+       grep -q '"coordination": "opencode-go/kimi-k2.7-code"' "$thorough"; then
+      pass "Budget and Thorough profiles match current defaults"
     else
-      fail "balanced.json must contain kimi-k2.7-code, mimo-v2.5, deepseek-v4-flash"
+      fail "Budget/Thorough profiles must define coordination, planning, implementation, and system models"
     fi
   else
-    fail "balanced.json missing"
+    fail "budget.json or thorough.json missing"
   fi
 
   local installer="$REPO_ROOT/install.sh"
@@ -1740,10 +1768,11 @@ test_model_profile_metadata() {
   fi
 
   if grep -q "read_required_model" "$installer" &&
+     grep -q "Coordination model" "$installer" &&
      grep -q "not provider-verified" "$installer"; then
     pass "install.sh rejects blank Custom models"
   else
-    fail "install.sh must reject blank Custom models"
+    fail "install.sh must reject blank Custom models for all roles"
   fi
 
   local readme="$REPO_ROOT/README.md"
@@ -1819,11 +1848,11 @@ PY
      grep -q "config/generalpippy/update-check.mjs" "$installer" &&
      grep -q "manifest.json" "$installer" &&
      grep -q "write_version_metadata" "$installer" &&
-     grep -q -- "--profile balanced" "$installer" &&
+     grep -q -- "--profile budget" "$installer" &&
      grep -q "load_saved_profile" "$installer"; then
     pass "installer copies update system, writes version metadata, and preserves saved profile"
   else
-    fail "installer must copy update files, write version metadata, support --profile balanced, and preserve saved profile"
+    fail "installer must copy update files, write version metadata, support --profile budget, and preserve saved profile"
   fi
 
   if grep -q "curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh | bash" "$readme" &&

@@ -203,7 +203,7 @@ EOF
 
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
-  if (cd "$other_cwd" && HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile balanced >/dev/null 2>&1); then
+  if (cd "$other_cwd" && HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget >/dev/null 2>&1); then
     pass "installer exits 0 outside repo root"
   else
     fail "installer should exit 0 outside repo root"
@@ -553,7 +553,8 @@ EOF
     else
       fail "profile.json missing profile or models keys"
     fi
-    if grep -q '"opencode-go/kimi-k2.7-code"' "$profile_file" && \
+    if grep -q '"coordination": "opencode-go/deepseek-v4-flash"' "$profile_file" && \
+       grep -q '"planning": "opencode-go/kimi-k2.7-code"' "$profile_file" && \
        grep -q '"opencode-go/mimo-v2.5"' "$profile_file" && \
        grep -q '"opencode-go/deepseek-v4-flash"' "$profile_file"; then
       pass "profile.json contains default model values"
@@ -612,7 +613,8 @@ EOF
   min_path="$(make_minimal_path "$tmp_bin")"
   HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" </dev/null >/dev/null 2>&1
 
-  if grep -q '"planning": "saved/plan"' "$config_dir/generalpippy/profile.json" &&
+  if grep -q '"coordination": "saved/plan"' "$config_dir/generalpippy/profile.json" &&
+     grep -q '"planning": "saved/plan"' "$config_dir/generalpippy/profile.json" &&
      grep -q '^model: saved/plan$' "$config_dir/agents/pippy.md" &&
      grep -q '^model: saved/impl$' "$config_dir/agents/pippy-build.md" &&
      grep -q '"small_model": "saved/sys"' "$config_dir/opencode.jsonc"; then
@@ -625,7 +627,7 @@ EOF
 }
 
 test_unattended_profile_flag() {
-  run_test "--yes --profile balanced installs without optional prompts"
+  run_test "--yes --profile budget installs without optional prompts"
   local tmp_home
   tmp_home="$(mktemp -d)"
   local tmp_bin
@@ -643,7 +645,7 @@ EOF
   local min_path
   min_path="$(make_minimal_path "$tmp_bin")"
   local output
-  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile balanced 2>&1)"; then
+  if output="$(HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" --yes --profile budget 2>&1)"; then
     pass "unattended install succeeds"
   else
     fail "unattended install failed: $output"
@@ -684,7 +686,7 @@ EOF
   min_path="$(make_minimal_path "$tmp_bin")"
 
   local output
-  if output="$(printf '2\n\ncustom/plan\n\ncustom/impl\n\ncustom/sys\n' | HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" 2>&1)"; then
+  if output="$(printf '3\n\ncustom/coord\n\ncustom/plan\n\ncustom/impl\n\ncustom/sys\n' | HOME="$tmp_home" XDG_CONFIG_HOME="$tmp_home/.config" PATH="$min_path" "$INSTALLER" 2>&1)"; then
     pass "custom profile install succeeds after blank values are corrected"
   else
     fail "custom profile install failed: $output"
@@ -700,6 +702,7 @@ EOF
 
   local profile_file="$config_dir/generalpippy/profile.json"
   if grep -q '"profile": "Custom"' "$profile_file" &&
+     grep -q '"coordination": "custom/coord"' "$profile_file" &&
      grep -q '"planning": "custom/plan"' "$profile_file" &&
      grep -q '"implementation": "custom/impl"' "$profile_file" &&
      grep -q '"system": "custom/sys"' "$profile_file"; then
@@ -708,10 +711,10 @@ EOF
     fail "profile.json must record custom model values"
   fi
 
-  if grep -q '^model: custom/plan$' "$config_dir/agents/pippy.md" &&
+  if grep -q '^model: custom/coord$' "$config_dir/agents/pippy.md" &&
      grep -q '^model: custom/plan$' "$config_dir/agents/pippy-plan.md" &&
      grep -q '^model: custom/impl$' "$config_dir/agents/pippy-build.md" &&
-     grep -q '"model": "custom/plan"' "$config_dir/opencode.jsonc" &&
+     grep -q '"model": "custom/coord"' "$config_dir/opencode.jsonc" &&
      grep -q '"small_model": "custom/sys"' "$config_dir/opencode.jsonc"; then
     pass "installed OpenCode files render custom role models"
   else
@@ -725,7 +728,8 @@ EOF
     fail "doctor should accept installed custom profile metadata:\n$doctor_output"
   fi
 
-  if [[ "$doctor_output" == *"planning role renders as custom/plan"* &&
+  if [[ "$doctor_output" == *"coordination role renders as custom/coord"* &&
+        "$doctor_output" == *"planning role renders as custom/plan"* &&
         "$doctor_output" == *"implementation role renders as custom/impl"* &&
         "$doctor_output" == *"system-task role renders as custom/sys"* ]]; then
     pass "doctor validates installed models against profile metadata"

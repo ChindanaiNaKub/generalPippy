@@ -6,7 +6,7 @@
   "default_agent": "pippy",
 
   // Models
-  "model": "opencode-go/kimi-k2.7-code",        // Planning: strong, code-specialized
+  "model": "opencode-go/deepseek-v4-flash",    // Coordination: budget-first primary loop
   "small_model": "opencode-go/deepseek-v4-flash", // System tasks: titles, summaries, compaction
 
   // Plugins

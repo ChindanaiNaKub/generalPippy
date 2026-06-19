@@ -133,6 +133,6 @@ Do not ask before git, gh, make, dependency, or repo-local commands. Keep safety
 - Caveman mode `full` compression for status, build, and verification output when OpenCode caveman config is available
 - batch file reads and avoid re-reading the same file
 - compress earlier to keep context pressure low
-- delegate all implementation to `pippy-build` with the Task tool; the primary agent coordinates and verifies
+- delegate all implementation to `pippy-build` with the Task tool; the primary agent coordinates and verifies on the selected coordination model
 - ponytail constraint: reuse stdlib, existing deps, and native features before writing new code
 - OpenCode-recorded session usage is authoritative for exact tokens and cost; `/budget` should report role usage accounting when records are visible and should never estimate from conversation volume

@@ -16,7 +16,7 @@ Defer dynamic per-step model routing inside `/goal` until OpenCode exposes a sta
 
 In the meantime, model choice is handled by two mechanisms:
 
-1. **Model profile selection** — The installer (`install.sh`) offers Balanced or Custom profiles, recording the chosen models in `~/.config/opencode/generalpippy/profile.json`. This gives users control over which models serve planning, implementation, and system roles.
+1. **Model profile selection** — The installer (`install.sh`) offers Budget, Thorough, or Custom profiles, recording the chosen models in `~/.config/opencode/generalpippy/profile.json`. This gives users control over which models serve coordination, planning, implementation, and system roles.
 
 2. **Role-based subagent routing** — Pippy routes planning and diagnosis to `pippy-plan` (strong model) and implementation to `pippy-build` (cheap model) based on role, not per-step complexity. This is the only routing mechanism available today and works reliably.
 
@@ -26,7 +26,7 @@ No ad-hoc model-switching workarounds will be introduced.
 
 - Users select models once at install time via the model profile. Per-step model switching is not available.
 - Pippy-owned routing remains role-based: `pippy-plan` for planning/diagnosis, `pippy-build` for implementation.
-- Cost efficiency depends on profile selection, not dynamic per-step routing. Users who want cheaper runs choose a profile with a cheaper planning model.
+- Cost efficiency depends on profile selection, not dynamic per-step routing. Users who want cheaper runs choose a profile with a cheaper coordination model while reserving stronger models for `pippy-plan`.
 - When OpenCode exposes a stable per-Task model override, this ADR should be revisited. At that point Pippy can route individual plan steps to appropriate models without ad-hoc workarounds.
 - ADR-0006's deferred capabilities list (per-Task model override, mid-run steering, queueing, parallel children, recipe-style dynamic subagents) remains unchanged.
 
@@ -34,6 +34,6 @@ No ad-hoc model-switching workarounds will be introduced.
 
 - ADR-0005: Model Profiles and Read-Only Advisor Agents — `docs/adr/0005-model-profiles-and-read-only-advisor-agents.md`
 - ADR-0006: Context Bundles and Corrective Re-Delegation — `docs/adr/0006-dynamic-subagent-dispatch.md`
-- Model profile JSON: `config/model-profiles/balanced.json`
+- Model profile JSON: `config/model-profiles/budget.json`, `config/model-profiles/thorough.json`
 - Installer profile selection: `install.sh`
 - Profile metadata: `~/.config/opencode/generalpippy/profile.json`

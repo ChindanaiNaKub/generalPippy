@@ -53,23 +53,26 @@ write_profile_json() {
   # Caller must set GENERALPIPPY_DIR and create it before calling.
   # Uses python3 if available; falls back to a heredoc.
   local profile="$1"
-  local planning="$2"
-  local implementation="$3"
-  local system="$4"
+  local coordination="$2"
+  local planning="$3"
+  local implementation="$4"
+  local system="$5"
 
   if command -v python3 &> /dev/null; then
-    python3 - "$GENERALPIPPY_DIR/profile.json" "$profile" "$planning" "$implementation" "$system" <<'PY'
+    python3 - "$GENERALPIPPY_DIR/profile.json" "$profile" "$coordination" "$planning" "$implementation" "$system" <<'PY'
 import json, sys
 
 path = sys.argv[1]
 profile = sys.argv[2]
-planning = sys.argv[3]
-implementation = sys.argv[4]
-system = sys.argv[5]
+coordination = sys.argv[3]
+planning = sys.argv[4]
+implementation = sys.argv[5]
+system = sys.argv[6]
 
 data = {
     "profile": profile,
     "models": {
+        "coordination": coordination,
         "planning": planning,
         "implementation": implementation,
         "system": system
@@ -85,6 +88,7 @@ PY
 {
   "profile": "$profile",
   "models": {
+    "coordination": "$coordination",
     "planning": "$planning",
     "implementation": "$implementation",
     "system": "$system"
