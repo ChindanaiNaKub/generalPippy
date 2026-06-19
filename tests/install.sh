@@ -651,7 +651,7 @@ EOF
   fi
 
   local version_file="$config_dir/generalpippy/version.json"
-  if [[ -f "$version_file" ]] && grep -q '"version": "3.2.0"' "$version_file" && grep -q '"installed_at"' "$version_file"; then
+  if [[ -f "$version_file" ]] && grep -q '"version": "3.3.0"' "$version_file" && grep -q '"installed_at"' "$version_file"; then
     pass "version.json records installed version metadata"
   else
     fail "version.json must record installed version metadata"

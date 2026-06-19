@@ -11,20 +11,20 @@ This doc shows how an outside system can invoke `/goal` for recurring or event-d
 **Verifiable `/goal` objective:**
 
 ```
-/goal "check that README.md references the current version (v3.2.0), that README.md, CONTEXT.md, and all docs/agents/*.md files contain no stale v1.0 references, and that every file linked from README.md exists; report any drift as Blocked with the specific stale references"
+/goal "check that README.md references the current version (v3.3.0), that README.md, CONTEXT.md, and all docs/agents/*.md files contain no stale v1.0 references, and that every file linked from README.md exists; report any drift as Blocked with the specific stale references"
 ```
 
 **Observable acceptance criteria:**
 - `bash tests/validate.sh` passes (exit 0)
 - `bash scripts/doctor.sh` passes (exit 0)
-- `grep -n 'v3.2.0' README.md` returns at least one match
+- `grep -n 'v3.3.0' README.md` returns at least one match
 - `grep -RniE 'v1\.0|orchestrator|/think|/cheap|/smart' config/ README.md AGENTS.md CONTEXT.md docs/agents` returns no matches
 - Every file path linked from README.md exists on disk
 
 **Example cron entry (daily at 06:00 UTC):**
 
 ```cron
-0 6 * * * cd /path/to/generalPippy && opencode --non-interactive '/goal "check that README.md references the current version (v3.2.0), that README.md, CONTEXT.md, and all docs/agents/*.md files contain no stale v1.0 references, and that every file linked from README.md exists; report any drift as Blocked with the specific stale references"' >> /tmp/pippy-doc-check.log 2>&1
+0 6 * * * cd /path/to/generalPippy && opencode --non-interactive '/goal "check that README.md references the current version (v3.3.0), that README.md, CONTEXT.md, and all docs/agents/*.md files contain no stale v1.0 references, and that every file linked from README.md exists; report any drift as Blocked with the specific stale references"' >> /tmp/pippy-doc-check.log 2>&1
 ```
 
 **Notes:**
