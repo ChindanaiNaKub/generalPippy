@@ -18,7 +18,7 @@ OPENCODE_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/opencode" scripts/doctor.sh
 
 This checks agent frontmatter, permission boundaries, stale v1.0 references, and pinned deps. Returns non-zero on problems.
 
-When `~/.config/opencode/generalpippy/profile.json` exists, `scripts/doctor.sh` validates installed role models against that metadata instead of assuming the Balanced defaults.
+When `~/.config/opencode/generalpippy/profile.json` exists, `scripts/doctor.sh` validates installed role models against that metadata instead of assuming the Budget defaults.
 
 ## 1. Resolved Config
 
@@ -39,7 +39,7 @@ opencode debug config | jq '{
 
 Expected behavior:
 
-- `profile.json` records the selected model profile and concrete planning, implementation, and system-task role models.
+- `profile.json` records the selected model profile and concrete coordination, planning, implementation, and system-task role models.
 - `default_agent` is `pippy`.
 - `formatter` is `true`.
 - `lsp` is `true`.
@@ -47,7 +47,9 @@ Expected behavior:
 - `pippy.permission.bash` is `allow`.
 - `pippy.permission.task["pippy-build"]` is `allow`.
 - `pippy.permission.task["pippy-plan"]` is `allow`.
-- `pippy-build.model` matches the implementation role model in `profile.json` (`opencode-go/mimo-v2.5` for Balanced).
+- `pippy.model` matches the coordination role model in `profile.json` (`opencode-go/deepseek-v4-flash` for Budget).
+- `pippy-plan.model` matches the planning role model in `profile.json` (`opencode-go/kimi-k2.7-code` for Budget).
+- `pippy-build.model` matches the implementation role model in `profile.json` (`opencode-go/mimo-v2.5` for Budget).
 - `pippy-build.permission.edit` is `allow`.
 - `pippy-build.permission.bash` is `allow`.
 - `pippy-build.permission.task` is `deny`.
@@ -67,6 +69,7 @@ Expected behavior:
 - The primary `pippy` session plans and verifies, but does not edit files directly.
 - A `pippy-build` child session is created for the edit.
 - The `pippy-build` child session shows `opencode-go/mimo-v2.5`.
+- The primary `pippy` session shows the coordination role model (`opencode-go/deepseek-v4-flash` for Budget).
 - If analysis or stuck-step diagnosis is needed, `pippy-plan` is read-only.
 - Review and final verification run from the primary `pippy` session.
 
@@ -80,6 +83,7 @@ Expected behavior:
 
 - `/budget` reports OpenCode-recorded usage for Coordinator (`pippy`), Planning (`pippy-plan`), Implementation (`pippy-build`), and Total rows.
 - Each role usage row includes model, session count, input tokens, output tokens, cache-read tokens, cache-write tokens, and cost.
+- `/budget` uses `opencode db path` and `opencode db --format json` against the local `session` table before reporting exact accounting as blocked.
 - `/budget <session-id>` is documented for historical reports.
 - Ambiguous auto-detection stops with candidate sessions instead of guessing.
 - `/budget` reports that implementation was delegated to `pippy-build`.
@@ -98,6 +102,7 @@ Expected behavior:
 - `pippy-build` runs on a strong model instead of `opencode-go/mimo-v2.5`.
 - `pippy-plan` edits files or invokes implementation work.
 - `/budget` invents exact cost numbers or guesses a session when auto-detection is ambiguous.
+- `/budget` reports session usage is not visible without first trying OpenCode's local session database.
 
 ## 4. /ship Green-Gate PR Checks
 

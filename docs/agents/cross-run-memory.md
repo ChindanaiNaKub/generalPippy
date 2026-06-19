@@ -33,7 +33,7 @@ Do not store raw command traces, full conversation logs, secrets, private user d
 
 ## Lessons
 
-- YYYY-MM-DD: When changing installer behavior, run `bash tests/validate.sh` and `bash scripts/doctor.sh` before reporting success. Source: accepted Improvement Signal from run report.
+- YYYY-MM-DD: When changing installer behavior, run `rtk bash tests/validate.sh` and `rtk bash scripts/doctor.sh` before reporting success. Source: accepted Improvement Signal from run report.
 ```
 
 Keep entries short. If a lesson becomes stable product language, move it into `CONTEXT.md`, an ADR, a prompt, a command, a skill, or validation instead of letting the memory file become a second spec.

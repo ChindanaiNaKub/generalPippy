@@ -2,7 +2,7 @@
 
 Status: superseded by ADR-0013 for advisor adapters; model profiles remain accepted.
 
-GeneralPippy will separate stable agent roles from user-selected models by introducing model profiles: beginner-friendly bundles for planning, implementation, and system-task models. The installer will render concrete OpenCode config from source templates, starting with the current tested defaults as `Balanced` plus a lightly validated `Custom` profile, so installed files stay ordinary OpenCode config while the repo stops being locked to one provider/model set.
+GeneralPippy will separate stable agent roles from user-selected models by introducing model profiles: beginner-friendly bundles for coordination, planning, implementation, and system-task models. The installer will render concrete OpenCode config from source templates, starting with a Budget default plus Thorough and Custom profiles, so installed files stay ordinary OpenCode config while the repo stops being locked to one provider/model set.
 
 Pippy may also request read-only advice from external AI coding tools through advisor adapters. Advisor agents provide plans, critiques, diagnoses, or context summaries from Pippy-prepared advisor context bundles; they do not execute work, edit files, or outrank the user objective, repo docs/ADRs, or verified code facts. The first user-facing surface will be an explicit `/advice` command, with advisor adapters detected but disabled by default during install to avoid surprising cost, privacy, or authentication behavior.
 
@@ -14,13 +14,14 @@ Accepted
 
 ### Files created
 
-- `config/model-profiles/balanced.json` — Defines the Balanced profile with current tested model defaults (planning, implementation, system).
+- `config/model-profiles/budget.json` — Defines the Budget profile with a low-cost coordinator and strong planner.
+- `config/model-profiles/thorough.json` — Preserves the old Kimi-heavy coordinator setup for users who prefer stronger coordination over lower spend.
 - `config/commands/advice.md` — Slash command for requesting read-only advice from advisor adapters. Supports `/advice <adapter-name>` and `/advice all`.
 
 ### Installer changes
 
-- `install.sh` adds a `choose_model_profile` step before copying files, offering Balanced (default) or Custom profiles.
-- For Custom profiles, the installer interactively prompts for planning, implementation, and system-tasks model strings, then patches installed config files (`opencode.jsonc`, agent markdown frontmatter) using python3 (with perl/sed fallback).
+- `install.sh` adds a `choose_model_profile` step before copying files, offering Budget (default), Thorough, or Custom profiles.
+- For Custom profiles, the installer interactively prompts for coordination, planning, implementation, and system-tasks model strings, then patches installed config files (`opencode.jsonc`, agent markdown frontmatter) using python3 (with perl/sed fallback).
 - The installer writes `~/.config/opencode/generalpippy/profile.json` with the selected profile and model values.
 - The installer detects common advisor CLIs (claude-code, aider, codex, gemini) and writes `~/.config/opencode/generalpippy/advisors.json` with detected adapters disabled by default.
 - The installer copies `config/commands/advice.md` to the user's config directory.
@@ -41,7 +42,8 @@ Accepted
 ## References
 
 - `/advice` command: `config/commands/advice.md`
-- Balanced model profile: `config/model-profiles/balanced.json`
+- Budget model profile: `config/model-profiles/budget.json`
+- Thorough model profile: `config/model-profiles/thorough.json`
 - Profile metadata: `~/.config/opencode/generalpippy/profile.json`
 - Advisor metadata: `~/.config/opencode/generalpippy/advisors.json`
 - README Model Profiles section: `README.md#model-profiles`

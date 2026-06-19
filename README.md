@@ -60,12 +60,24 @@ No manual orchestration. No switching agents. No babysitting.
 
 GeneralPippy routes work by role. The installer offers model profiles so you can choose your preferred models or customize them.
 
-### Balanced (default)
+### Budget (default)
 
-Current tested defaults. Recommended for most users.
+Budget-first defaults for public and beginner installs. Routine coordination uses a cheap model; Kimi is reserved for read-only planning and stuck-step diagnosis.
 
 | Role | Model |
 |------|-------|
+| Coordination | `opencode-go/deepseek-v4-flash` |
+| Planning | `opencode-go/kimi-k2.7-code` |
+| Implementation | `opencode-go/mimo-v2.5` |
+| System tasks | `opencode-go/deepseek-v4-flash` |
+
+### Thorough
+
+Old Kimi-heavy defaults for users who prefer stronger coordination over lower default spend.
+
+| Role | Model |
+|------|-------|
+| Coordination | `opencode-go/kimi-k2.7-code` |
 | Planning | `opencode-go/kimi-k2.7-code` |
 | Implementation | `opencode-go/mimo-v2.5` |
 | System tasks | `opencode-go/deepseek-v4-flash` |
@@ -73,6 +85,7 @@ Current tested defaults. Recommended for most users.
 ### Custom
 
 Choose your own models during installation. The installer prompts for:
+- Coordination model
 - Planning model
 - Implementation model
 - System-tasks model
@@ -113,7 +126,7 @@ The installer handles:
 For unattended automation, pass explicit defaults:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh | bash -s -- --yes --profile balanced
+curl -fsSL https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh | bash -s -- --yes --profile budget
 ```
 
 **Note:** Always use `install.sh` rather than manually copying files. The installer provides safety features such as backups, automatic rollback on failure, and plugin merging that manual copying bypasses.
@@ -200,20 +213,20 @@ Default permissions (auto-allow):
 
 YOLO mode keeps safety in the workflow instead of permission prompts: Pippy stays scoped to the objective, reports risky commands, and only pushes or creates PRs through explicit green-gate flows such as `/ship`.
 
-Pippy's primary agent coordinates and verifies. Workspace edits, file copies, config changes, bug fixes, refactors, and tests route to `pippy-build` on the selected implementation role model (`opencode-go/mimo-v2.5` for Balanced).
+Pippy's primary agent coordinates and verifies on the selected coordination role model (`opencode-go/deepseek-v4-flash` for Budget). Workspace edits, file copies, config changes, bug fixes, refactors, and tests route to `pippy-build` on the selected implementation role model (`opencode-go/mimo-v2.5` for Budget).
 
 ## Token Efficiency
 
 - **[jcodemunch-mcp](https://github.com/jgravelle/jcodemunch-mcp)** — 95%+ savings on code reading
 - **[DCP](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning)** — Dynamic context pruning
 - **Compaction** — Auto-compress long conversations
-- **Cheap model default** — Strong model only for planning/diagnosis
+- **Budget-aware routing** — Coordination and implementation run on low-cost roles by default, while strong planning is reserved for judgment-heavy design and diagnosis. Long exploration, review, `/budget`, and `/ship` work can still dominate spend, so use `/budget` after real runs.
 - **[rtk](https://github.com/rtk-ai/rtk)** — Token-efficient bash commands; when installed, Pippy forces shell commands through `rtk`
 - **[Caveman mode](https://github.com/juliusbrussee/caveman)** — Terse OpenCode responses and compressed build/verify summaries
 
 ## Budget Guidance
 
-OpenCode-recorded session usage is the authoritative source for exact token usage and cost. GeneralPippy's `/budget` command reports Coordinator (`pippy`), Planning (`pippy-plan`), Implementation (`pippy-build`), and Total rows with model, session count, input tokens, output tokens, cache-read tokens, cache-write tokens, and cost. It also audits whether Pippy used the intended low-cost routing and token-efficiency practices without estimating from conversation volume.
+OpenCode-recorded session usage is the authoritative source for exact token usage and cost. GeneralPippy's `/budget` command reads OpenCode's local session database when available, then reports Coordinator (`pippy`), Planning (`pippy-plan`), Implementation (`pippy-build`), and Total rows with model, session count, input tokens, output tokens, cache-read tokens, cache-write tokens, and cost. It also audits whether Pippy used the intended low-cost routing and token-efficiency practices without estimating from conversation volume.
 
 ## Routing Smoke Test
 

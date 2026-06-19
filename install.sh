@@ -87,10 +87,18 @@ PINNED_PLUGINS=(
   "cc-safety-net@1.0.6"
 )
 
-# Default models for the Balanced profile.
-BALANCED_PLANNING_MODEL="opencode-go/kimi-k2.7-code"
-BALANCED_IMPLEMENTATION_MODEL="opencode-go/mimo-v2.5"
-BALANCED_SYSTEM_MODEL="opencode-go/deepseek-v4-flash"
+# Default models for the Budget profile.
+BUDGET_COORDINATION_MODEL="opencode-go/deepseek-v4-flash"
+BUDGET_PLANNING_MODEL="opencode-go/kimi-k2.7-code"
+BUDGET_IMPLEMENTATION_MODEL="opencode-go/mimo-v2.5"
+BUDGET_SYSTEM_MODEL="opencode-go/deepseek-v4-flash"
+
+# Thorough preserves the old Kimi-heavy coordinator for users who prefer
+# stronger coordination over lower default spend.
+THOROUGH_COORDINATION_MODEL="opencode-go/kimi-k2.7-code"
+THOROUGH_PLANNING_MODEL="opencode-go/kimi-k2.7-code"
+THOROUGH_IMPLEMENTATION_MODEL="opencode-go/mimo-v2.5"
+THOROUGH_SYSTEM_MODEL="opencode-go/deepseek-v4-flash"
 
 usage() {
   cat <<EOF
@@ -103,13 +111,14 @@ Options:
   -v, --version           Show version
   -n, --dry-run           Show what would be done without making changes
   -y, --yes               Run unattended with defaults and skip optional prompts
-      --profile balanced  Select the Balanced model profile non-interactively
+      --profile budget    Select the Budget model profile non-interactively
+      --profile thorough  Select the Thorough model profile non-interactively
       --reconfigure       Ignore saved profile metadata and ask again
 
 Examples:
   $0
   $0 --dry-run
-  $0 --yes --profile balanced
+  $0 --yes --profile budget
 EOF
 }
 
@@ -626,11 +635,20 @@ read_required_model() {
   done
 }
 
-select_balanced_profile() {
-  SELECTED_PROFILE="Balanced"
-  SELECTED_PLANNING="$BALANCED_PLANNING_MODEL"
-  SELECTED_IMPLEMENTATION="$BALANCED_IMPLEMENTATION_MODEL"
-  SELECTED_SYSTEM="$BALANCED_SYSTEM_MODEL"
+select_budget_profile() {
+  SELECTED_PROFILE="Budget"
+  SELECTED_COORDINATION="$BUDGET_COORDINATION_MODEL"
+  SELECTED_PLANNING="$BUDGET_PLANNING_MODEL"
+  SELECTED_IMPLEMENTATION="$BUDGET_IMPLEMENTATION_MODEL"
+  SELECTED_SYSTEM="$BUDGET_SYSTEM_MODEL"
+}
+
+select_thorough_profile() {
+  SELECTED_PROFILE="Thorough"
+  SELECTED_COORDINATION="$THOROUGH_COORDINATION_MODEL"
+  SELECTED_PLANNING="$THOROUGH_PLANNING_MODEL"
+  SELECTED_IMPLEMENTATION="$THOROUGH_IMPLEMENTATION_MODEL"
+  SELECTED_SYSTEM="$THOROUGH_SYSTEM_MODEL"
 }
 
 load_saved_profile() {
@@ -640,20 +658,29 @@ load_saved_profile() {
   command -v python3 &> /dev/null || return 1
 
   local saved_profile
+  local saved_coordination
   local saved_planning
   local saved_implementation
   local saved_system
 
   saved_profile="$(json_get "$profile_file" "profile" 2>/dev/null || true)"
+  saved_coordination="$(json_get "$profile_file" "models.coordination" 2>/dev/null || true)"
   saved_planning="$(json_get "$profile_file" "models.planning" 2>/dev/null || true)"
   saved_implementation="$(json_get "$profile_file" "models.implementation" 2>/dev/null || true)"
   saved_system="$(json_get "$profile_file" "models.system" 2>/dev/null || true)"
+
+  # Backward compatibility for profile.json files written before coordination
+  # split from planning.
+  if [[ -z "$saved_coordination" && -n "$saved_planning" ]]; then
+    saved_coordination="$saved_planning"
+  fi
 
   if [[ -z "$saved_profile" || -z "$saved_planning" || -z "$saved_implementation" || -z "$saved_system" ]]; then
     return 1
   fi
 
   SELECTED_PROFILE="$saved_profile"
+  SELECTED_COORDINATION="$saved_coordination"
   SELECTED_PLANNING="$saved_planning"
   SELECTED_IMPLEMENTATION="$saved_implementation"
   SELECTED_SYSTEM="$saved_system"
@@ -662,6 +689,7 @@ load_saved_profile() {
 
 report_selected_profile() {
   success "Selected profile: $SELECTED_PROFILE"
+  log "  Coordination:   $SELECTED_COORDINATION"
   log "  Planning:       $SELECTED_PLANNING"
   log "  Implementation: $SELECTED_IMPLEMENTATION"
   log "  System tasks:   $SELECTED_SYSTEM"
@@ -669,8 +697,8 @@ report_selected_profile() {
 
 choose_model_profile() {
   # Interactive model profile selection.
-  # Sets SELECTED_PROFILE, SELECTED_PLANNING, SELECTED_IMPLEMENTATION, SELECTED_SYSTEM.
-  select_balanced_profile
+  # Sets SELECTED_PROFILE, SELECTED_COORDINATION, SELECTED_PLANNING, SELECTED_IMPLEMENTATION, SELECTED_SYSTEM.
+  select_budget_profile
 
   if [[ $DRY_RUN -eq 1 ]]; then
     info "Would select saved profile if present, otherwise prompt for model profile selection"
@@ -679,13 +707,21 @@ choose_model_profile() {
 
   if [[ -n "$PROFILE_ARG" ]]; then
     case "$PROFILE_ARG" in
-      balanced|Balanced)
-        select_balanced_profile
+      budget|Budget|balanced|Balanced)
+        select_budget_profile
+        if [[ "$PROFILE_ARG" == "balanced" || "$PROFILE_ARG" == "Balanced" ]]; then
+          warn "--profile balanced is a legacy alias for --profile budget."
+        fi
+        report_selected_profile
+        return 0
+        ;;
+      thorough|Thorough)
+        select_thorough_profile
         report_selected_profile
         return 0
         ;;
       *)
-        error "Unsupported --profile value: $PROFILE_ARG (supported: balanced)"
+        error "Unsupported --profile value: $PROFILE_ARG (supported: budget, thorough)"
         ;;
     esac
   fi
@@ -697,7 +733,7 @@ choose_model_profile() {
   fi
 
   if [[ $ASSUME_YES -eq 1 ]]; then
-    select_balanced_profile
+    select_budget_profile
     report_selected_profile
     return 0
   fi
@@ -705,11 +741,17 @@ choose_model_profile() {
   echo ""
   log "📋 Model Profiles"
   log ""
-  log "  1) Balanced (default) — Current tested defaults"
-  log "     Planning:     $BALANCED_PLANNING_MODEL"
-  log "     Implementation: $BALANCED_IMPLEMENTATION_MODEL"
-  log "     System tasks:   $BALANCED_SYSTEM_MODEL"
-  log "  2) Custom — Enter your own models"
+  log "  1) Budget (default) — Cheap coordinator, strong planner only when needed"
+  log "     Coordination:   $BUDGET_COORDINATION_MODEL"
+  log "     Planning:       $BUDGET_PLANNING_MODEL"
+  log "     Implementation: $BUDGET_IMPLEMENTATION_MODEL"
+  log "     System tasks:   $BUDGET_SYSTEM_MODEL"
+  log "  2) Thorough — Old Kimi-heavy coordination for higher-cost runs"
+  log "     Coordination:   $THOROUGH_COORDINATION_MODEL"
+  log "     Planning:       $THOROUGH_PLANNING_MODEL"
+  log "     Implementation: $THOROUGH_IMPLEMENTATION_MODEL"
+  log "     System tasks:   $THOROUGH_SYSTEM_MODEL"
+  log "  3) Custom — Enter your own models"
   log ""
 
   local choice=""
@@ -717,15 +759,21 @@ choose_model_profile() {
   choice="${choice:-1}"
 
   if [[ "$choice" == "2" ]]; then
+    select_thorough_profile
+  elif [[ "$choice" == "3" ]]; then
     SELECTED_PROFILE="Custom"
     log ""
     log "  Enter exact OpenCode-compatible model strings (provider/model-id format)."
     warn "Custom model IDs are passed through to OpenCode and are not provider-verified by GeneralPippy."
     log ""
 
+    read_required_model "Coordination model" SELECTED_COORDINATION
     read_required_model "Planning model" SELECTED_PLANNING
     read_required_model "Implementation model" SELECTED_IMPLEMENTATION
     read_required_model "System-tasks model" SELECTED_SYSTEM
+  elif [[ "$choice" != "1" ]]; then
+    warn "Unknown profile choice '$choice'; using Budget."
+    select_budget_profile
   fi
 
   log ""
@@ -734,44 +782,46 @@ choose_model_profile() {
 
 patch_installed_models() {
   # Patch installed config files to use the selected model profile.
-  local planning="$1"
-  local implementation="$2"
-  local system="$3"
+  local coordination="$1"
+  local planning="$2"
+  local implementation="$3"
+  local system="$4"
 
-  if [[ "$SELECTED_PROFILE" == "Balanced" ]]; then
-    return 0  # No patching needed; source files already have Balanced defaults.
+  if [[ "$SELECTED_PROFILE" == "Budget" ]]; then
+    return 0  # No patching needed; source files already have Budget defaults.
   fi
 
   if [[ $DRY_RUN -eq 1 ]]; then
     info "Would patch installed files with custom models:"
-    info "  opencode.jsonc: model=$planning, small_model=$system"
-    info "  agents/pippy.md: model=$planning"
+    info "  opencode.jsonc: model=$coordination, small_model=$system"
+    info "  agents/pippy.md: model=$coordination"
     info "  agents/pippy-plan.md: model=$planning"
     info "  agents/pippy-build.md: model=$implementation"
     return 0
   fi
 
   if command -v python3 &> /dev/null; then
-    python3 - "$OPENCODE_CONFIG" "$planning" "$implementation" "$system" <<'PY'
+    python3 - "$OPENCODE_CONFIG" "$coordination" "$planning" "$implementation" "$system" <<'PY'
 import re, sys
 
 config_dir = sys.argv[1]
-planning = sys.argv[2]
-implementation = sys.argv[3]
-system = sys.argv[4]
+coordination = sys.argv[2]
+planning = sys.argv[3]
+implementation = sys.argv[4]
+system = sys.argv[5]
 
 # Patch opencode.jsonc: replace model and small_model values.
 jsonc_path = f"{config_dir}/opencode.jsonc"
 with open(jsonc_path) as f:
     text = f.read()
-text = re.sub(r'"model"\s*:\s*"[^"]*"', f'"model": "{planning}"', text)
+text = re.sub(r'"model"\s*:\s*"[^"]*"', f'"model": "{coordination}"', text)
 text = re.sub(r'"small_model"\s*:\s*"[^"]*"', f'"small_model": "{system}"', text)
 with open(jsonc_path, 'w') as f:
     f.write(text)
 
 # Patch agent markdown files: replace model: frontmatter value.
 agent_models = {
-    f"{config_dir}/agents/pippy.md": planning,
+    f"{config_dir}/agents/pippy.md": coordination,
     f"{config_dir}/agents/pippy-plan.md": planning,
     f"{config_dir}/agents/pippy-build.md": implementation,
 }
@@ -784,23 +834,25 @@ for path, model in agent_models.items():
 PY
   elif command -v perl &> /dev/null; then
     # Fallback: perl-based replacement.
+    perl -i -pe "s/^model:\s*\S+/model: $coordination/ if \$. == 4" \
+      "$OPENCODE_CONFIG/agents/pippy.md"
     perl -i -pe "s/^model:\s*\S+/model: $planning/ if \$. == 4" \
-      "$OPENCODE_CONFIG/agents/pippy.md" \
       "$OPENCODE_CONFIG/agents/pippy-plan.md"
     perl -i -pe "s/^model:\s*\S+/model: $implementation/ if \$. == 4" \
       "$OPENCODE_CONFIG/agents/pippy-build.md"
-    perl -i -pe "s/\"model\"\s*:\s*\"[^\"]*\"/\"model\": \"$planning\"/" \
+    perl -i -pe "s/\"model\"\s*:\s*\"[^\"]*\"/\"model\": \"$coordination\"/" \
       "$OPENCODE_CONFIG/opencode.jsonc"
     perl -i -pe "s/\"small_model\"\s*:\s*\"[^\"]*\"/\"small_model\": \"$system\"/" \
       "$OPENCODE_CONFIG/opencode.jsonc"
   else
     # Last resort: sed (less reliable for multiline).
+    sed -i "s|^model: .*|model: $coordination|" \
+      "$OPENCODE_CONFIG/agents/pippy.md"
     sed -i "s|^model: .*|model: $planning|" \
-      "$OPENCODE_CONFIG/agents/pippy.md" \
       "$OPENCODE_CONFIG/agents/pippy-plan.md"
     sed -i "s|^model: .*|model: $implementation|" \
       "$OPENCODE_CONFIG/agents/pippy-build.md"
-    sed -i "s|\"model\": \"[^\"]*\"|\"model\": \"$planning\"|" \
+    sed -i "s|\"model\": \"[^\"]*\"|\"model\": \"$coordination\"|" \
       "$OPENCODE_CONFIG/opencode.jsonc"
     sed -i "s|\"small_model\": \"[^\"]*\"|\"small_model\": \"$system\"|" \
       "$OPENCODE_CONFIG/opencode.jsonc"
@@ -812,9 +864,10 @@ PY
 write_profile_metadata() {
   # Write profile metadata to generalpippy/profile.json.
   local profile="$1"
-  local planning="$2"
-  local implementation="$3"
-  local system="$4"
+  local coordination="$2"
+  local planning="$3"
+  local implementation="$4"
+  local system="$5"
 
   if [[ $DRY_RUN -eq 1 ]]; then
     info "Would write profile metadata to $GENERALPIPPY_DIR/profile.json"
@@ -822,7 +875,7 @@ write_profile_metadata() {
   fi
 
   mkdir -p "$GENERALPIPPY_DIR"
-  write_profile_json "$profile" "$planning" "$implementation" "$system"
+  write_profile_json "$profile" "$coordination" "$planning" "$implementation" "$system"
   success "Profile metadata written to $GENERALPIPPY_DIR/profile.json"
 }
 
@@ -924,11 +977,11 @@ main() {
   log ""
 
   log "🔧 Patching installed files with selected models..."
-  patch_installed_models "$SELECTED_PLANNING" "$SELECTED_IMPLEMENTATION" "$SELECTED_SYSTEM"
+  patch_installed_models "$SELECTED_COORDINATION" "$SELECTED_PLANNING" "$SELECTED_IMPLEMENTATION" "$SELECTED_SYSTEM"
   log ""
 
   log "💾 Writing profile metadata..."
-  write_profile_metadata "$SELECTED_PROFILE" "$SELECTED_PLANNING" "$SELECTED_IMPLEMENTATION" "$SELECTED_SYSTEM"
+  write_profile_metadata "$SELECTED_PROFILE" "$SELECTED_COORDINATION" "$SELECTED_PLANNING" "$SELECTED_IMPLEMENTATION" "$SELECTED_SYSTEM"
   log ""
 
   log "💾 Writing version metadata..."
@@ -964,6 +1017,7 @@ main() {
   log "  6. Use /pippy-update to check for GeneralPippy updates manually"
   log ""
   log "Model profile: $SELECTED_PROFILE"
+  log "  • Coordination:   $SELECTED_COORDINATION"
   log "  • Planning:       $SELECTED_PLANNING"
   log "  • Implementation: $SELECTED_IMPLEMENTATION"
   log "  • System tasks:   $SELECTED_SYSTEM"

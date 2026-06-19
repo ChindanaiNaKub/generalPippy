@@ -258,6 +258,9 @@ else
      grep -q "Planning (\`pippy-plan\`)" "$budget" &&
      grep -q "Implementation (\`pippy-build\`)" "$budget" &&
      grep -q "Total" "$budget" &&
+     grep -q "| Role | Model | Sessions | Input Tokens | Output Tokens | Cache-Read Tokens | Cache-Write Tokens | Cost |" "$budget" &&
+     grep -q "Do not omit \`Cost\`" "$budget" &&
+     grep -q "Do \\*\\*not\\*\\* say implementation happened directly on a strong model merely because Coordinator cost is high" "$budget" &&
      grep -qi "input tokens" "$budget" &&
      grep -qi "output tokens" "$budget" &&
      grep -qi "cache-read tokens" "$budget" &&
@@ -275,6 +278,15 @@ else
     ok "budget documents explicit session ids and ambiguous auto-detection"
   else
     error "budget must document /budget <session-id> and ambiguous auto-detection"
+  fi
+
+  if grep -q "opencode db path" "$budget" &&
+     grep -q "opencode db --format json" "$budget" &&
+     grep -q "from session" "$budget" &&
+     grep -q "parent_id = '<root-session-id>'" "$budget"; then
+    ok "budget reads OpenCode session DB before blocking"
+  else
+    error "budget must query OpenCode's session DB before reporting exact accounting as blocked"
   fi
 
   # ponytail constraint vs ponytail plugin
@@ -309,8 +321,9 @@ fi
 # --- 7. Model profiles ---
 section "Model profiles"
 
-profile_json="$REPO_ROOT/config/model-profiles/balanced.json"
-expected_profile="Balanced"
+profile_json="$REPO_ROOT/config/model-profiles/budget.json"
+expected_profile="Budget"
+expected_coordination=""
 expected_planning=""
 expected_implementation=""
 expected_system=""
@@ -318,28 +331,38 @@ expected_system=""
 if [[ -n "$PROFILE_METADATA" ]]; then
   ok "profile metadata exists: $PROFILE_METADATA"
   expected_profile="$(json_get "$PROFILE_METADATA" "profile" 2>/dev/null || true)"
+  expected_coordination="$(json_get "$PROFILE_METADATA" "models.coordination" 2>/dev/null || true)"
   expected_planning="$(json_get "$PROFILE_METADATA" "models.planning" 2>/dev/null || true)"
   expected_implementation="$(json_get "$PROFILE_METADATA" "models.implementation" 2>/dev/null || true)"
   expected_system="$(json_get "$PROFILE_METADATA" "models.system" 2>/dev/null || true)"
+  if [[ -z "$expected_coordination" && -n "$expected_planning" ]]; then
+    expected_coordination="$expected_planning"
+  fi
 else
   if [[ ! -f "$profile_json" ]]; then
-    error "config/model-profiles/balanced.json missing"
+    error "config/model-profiles/budget.json missing"
   else
-    ok "model-profiles/balanced.json exists"
+    ok "model-profiles/budget.json exists"
+    expected_coordination="$(json_get "$profile_json" "models.coordination" 2>/dev/null || true)"
     expected_planning="$(json_get "$profile_json" "models.planning" 2>/dev/null || true)"
     expected_implementation="$(json_get "$profile_json" "models.implementation" 2>/dev/null || true)"
     expected_system="$(json_get "$profile_json" "models.system" 2>/dev/null || true)"
   fi
 fi
 
-if [[ -z "$expected_profile" || -z "$expected_planning" || -z "$expected_implementation" || -z "$expected_system" ]]; then
-  error "model profile metadata must include profile, planning, implementation, and system values"
+if [[ -z "$expected_profile" || -z "$expected_coordination" || -z "$expected_planning" || -z "$expected_implementation" || -z "$expected_system" ]]; then
+  error "model profile metadata must include profile, coordination, planning, implementation, and system values"
 else
   ok "model profile resolved: $expected_profile"
 
-  if [[ "$(model_frontmatter "$pippy")" == "$expected_planning" ]] &&
-     [[ "$(model_frontmatter "$pippy_plan")" == "$expected_planning" ]] &&
-     [[ "$(jsonc_model_value "$opencode_config" "model")" == "$expected_planning" ]]; then
+  if [[ "$(model_frontmatter "$pippy")" == "$expected_coordination" ]] &&
+     [[ "$(jsonc_model_value "$opencode_config" "model")" == "$expected_coordination" ]]; then
+    ok "coordination role renders as $expected_coordination"
+  else
+    error "coordination role must render as $expected_coordination"
+  fi
+
+  if [[ "$(model_frontmatter "$pippy_plan")" == "$expected_planning" ]]; then
     ok "planning role renders as $expected_planning"
   else
     error "planning role must render as $expected_planning"

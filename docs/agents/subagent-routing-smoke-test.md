@@ -17,7 +17,8 @@ GeneralPippy keeps the primary `pippy` session in a coordinator role:
 - Primary Pippy must not have auto edit permissions.
 - Primary bash is unrestricted for YOLO mode, so git, gh, make, and repo-local commands run without approval prompts.
 - `pippy-plan` remains read-only.
-- `pippy-build` remains the implementation subagent and uses the implementation role model from `~/.config/opencode/generalpippy/profile.json` (`opencode-go/mimo-v2.5` for Balanced).
+- `pippy` uses the coordination role model from `~/.config/opencode/generalpippy/profile.json` (`opencode-go/deepseek-v4-flash` for Budget).
+- `pippy-build` remains the implementation subagent and uses the implementation role model from `~/.config/opencode/generalpippy/profile.json` (`opencode-go/mimo-v2.5` for Budget).
 
 ## Test
 
