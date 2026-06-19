@@ -560,6 +560,18 @@ test_goal_output_format() {
     fi
   done
 
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -qi "malformed or unavailable tool calls" "$file" &&
+       grep -q "rtk git ..." "$file" &&
+       grep -qi "Pippy-owned friction" "$file"; then
+      pass "$label Improvement Signal covers malformed tool calls"
+    else
+      fail "$label must report malformed or unavailable tool calls as Pippy-owned friction"
+    fi
+  done
+
   # Run evidence must stay compact and report-local, not become telemetry.
   for file in "$goal" "$pippy" "$skill" "$improvement_loop"; do
     local label
@@ -681,6 +693,51 @@ test_goal_rtk_force() {
     pass "goal-run evals catch raw git after rtk detection"
   else
     fail "goal-run evals must catch raw git/probe/baseline commands after rtk detection"
+  fi
+}
+
+test_goal_verifier_templates() {
+  run_test "/goal defines task-type Verifier templates"
+  local context="$REPO_ROOT/CONTEXT.md"
+  local goal="$REPO_ROOT/config/commands/goal.md"
+  local pippy="$REPO_ROOT/config/agents/pippy.md"
+  local skill="$REPO_ROOT/config/skills/pippy/SKILL.md"
+  local evals="$REPO_ROOT/docs/agents/goal-run-evals.md"
+
+  if grep -q "Verifier template" "$context" &&
+     grep -q "task-type-specific evidence checklist" "$context" &&
+     grep -q "without becoming separate modes or commands" "$context"; then
+    pass "CONTEXT.md defines Verifier template"
+  else
+    fail "CONTEXT.md must define Verifier template as a task-type evidence checklist"
+  fi
+
+  for file in "$goal" "$pippy" "$skill"; do
+    local label
+    label="$(basename "$file")"
+    if grep -q "Verifier template" "$file" &&
+       grep -q "Docs-only" "$file" &&
+       grep -q "Code change" "$file" &&
+       grep -q "Installer/config" "$file" &&
+       grep -q "Public docs/config" "$file" &&
+       grep -q "Security/data-loss" "$file" &&
+       grep -q "Mixed/unclear" "$file" &&
+       grep -q "strictest applicable template" "$file" &&
+       grep -q "which Verifier template was selected" "$file" &&
+       grep -q "Do not add a separate Verifier template" "$file"; then
+      pass "$label defines and reports Verifier templates"
+    else
+      fail "$label must define task-type Verifier templates and require Plan reporting"
+    fi
+  done
+
+  if grep -q "Eval 11: Verifier Template Selection" "$evals" &&
+     grep -q "Docs-only Verifier template" "$evals" &&
+     grep -q "strictest applicable template" "$evals" &&
+     grep -q "fifth report field" "$evals"; then
+    pass "goal-run evals cover Verifier template selection"
+  else
+    fail "goal-run evals must cover Verifier template selection"
   fi
 }
 
@@ -1579,7 +1636,7 @@ test_pippy_harness_doc() {
     fail "harness doc must preserve config-only boundary"
   fi
 
-  for term in "Agent prompts" "Slash commands" "Skills" "Context assembly" "Subagent routing" "Verification gates" "Reporting" "Goal-run evals" "Improvement loop"; do
+  for term in "Agent prompts" "Slash commands" "Skills" "Context assembly" "Subagent routing" "Verification gates" "Verifier templates" "Reporting" "Goal-run evals" "Improvement loop"; do
     if grep -q "$term" "$doc"; then
       pass "harness doc includes $term"
     else
@@ -1917,6 +1974,7 @@ main() {
   test_goal_output_format
   test_cross_run_memory
   test_goal_rtk_force
+  test_goal_verifier_templates
   test_verify_is_part_of_goal
   test_assumption_audit_review_gate
   test_ship_guidance

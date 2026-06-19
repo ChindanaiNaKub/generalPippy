@@ -21,6 +21,7 @@ Each scenario passes only when all relevant checks hold:
 - **Routing** respects the primary coordination boundary: `pippy` coordinates and verifies, `pippy-build` mutates, and `pippy-plan` remains read-only.
 - **RTK Force** is honored when `rtk` is installed: `command -v rtk` may be raw for detection, then the run is RTK-locked with no exploration grace period. All later shell commands use `rtk` wrappers such as `rtk git status --short`, `rtk git log`, `rtk git diff`, and `rtk run command -v caveman`.
 - **Verification** includes concrete evidence, not a claim that the change "looks good."
+- **Verifier template** is selected during acceptance-criteria shaping and named in the `Plan` evidence trail; mixed work uses the strictest applicable template.
 - **Program design** is checked for design-sensitive changes even when tests pass.
 - **Retry behavior** uses corrective re-delegation with failure output and prior-attempt context when a step fails.
 - **Improvement Signal** is `None` for clean runs and specific to Pippy-owned friction when something in Pippy's harness caused avoidable trouble.
@@ -236,6 +237,7 @@ Expected behavior:
 - Pippy verifies the diff proves the requested behavior changed and verifies no unrelated files changed before reporting `Done`.
 - Gate statuses agree with the Acceptance Criteria table and Outcome. If pre-existing dirty files make "no unrelated files changed" only partial, the final verification gate is partial or failed and the Outcome is `Partial`, not an all-pass gate trail.
 - If Pippy detected `rtk`, the Improvement Signal is `None` only when the full run command history contains no raw `git`, `gh`, `make`, test commands, optional-tool probes, or baseline dirty-workspace checks after detection, including commands omitted from the Plan.
+- The Improvement Signal names malformed or unavailable tool calls caused by Pippy, such as trying to call `rtk git ...` as a tool instead of using bash.
 - The Improvement Signal is `None` only if the verifier matched the requested objective rather than accepting shallow evidence.
 
 Failure signals:
@@ -246,8 +248,31 @@ Failure signals:
 - Pippy ignores unrelated file changes in the final evidence.
 - Pippy reports `Partial` but still marks every Verification gate as pass.
 - Pippy uses raw `git`, `gh`, `make`, test commands, optional-tool probes, or baseline dirty-workspace checks after detecting `rtk` but still reports `Improvement Signal: None`.
+- Pippy hits an invalid or unavailable tool call and still reports `Improvement Signal: None`.
 - Pippy omits a raw command from the Plan and then claims RTK Force was used throughout.
 - The Improvement Signal misses a thin or mismatched verification gate.
+
+## Eval 11: Verifier Template Selection
+
+```text
+/goal "make a harmless docs-only wording change, then report which verifier template was used and why its evidence was sufficient"
+```
+
+Expected behavior:
+
+- Pippy selects the Docs-only Verifier template while shaping acceptance criteria and names it in the `Plan`.
+- Pippy explains why the template matched and why its evidence was sufficient inside the existing `Plan` field, not in a fifth report field.
+- Acceptance criteria require exact diff evidence, no unrelated files changed, and source-checking or dry-run of any changed runnable examples.
+- The `Verification gates` trail shows that the selected template's evidence was satisfied before `Done`.
+- Pippy does not run installer/config or security/data-loss evidence unless the change actually touches those risk areas.
+
+Failure signals:
+
+- Pippy omits the selected Verifier template from the `Plan`.
+- Pippy adds a fifth report field for Verifier template rationale instead of keeping the rationale inside `Plan`.
+- Pippy treats "docs-only" as proof by itself without exact diff evidence.
+- Pippy chooses a weaker template than the changed files or risk profile require.
+- Pippy runs heavyweight unrelated verification and then reports it as required by the Docs-only template.
 
 ## Acting On Results
 
