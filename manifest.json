@@ -2,10 +2,10 @@
   "schema_version": 1,
   "name": "generalPippy",
   "stable": {
-    "version": "3.0.0",
+    "version": "3.1.0",
     "minimum_opencode_version": "0.0.0",
     "install_url": "https://raw.githubusercontent.com/ChindanaiNaKub/generalPippy/main/install.sh",
-    "release_url": "https://github.com/ChindanaiNaKub/generalPippy/releases/tag/v3.0.0"
+    "release_url": "https://github.com/ChindanaiNaKub/generalPippy/releases/tag/v3.1.0"
   },
   "prerelease": null
 }

@@ -7,13 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-06-19
+
 ### Added
 - ADR-0014 documenting the shift to `/budget` Role usage accounting and `/ship` Green-gate PR creation.
 - Goal-run eval coverage for Assumption audit evidence and the `rtk proxy git diff -- <paths>` fallback.
+- Consent-based Pippy update checks, including `/pippy-update`, startup update notices, release `manifest.json`, installed version metadata, update-state handling, and ADR-0015.
 
 ### Changed
 - `/budget` now reports OpenCode-recorded role usage accounting for Coordinator (`pippy`), Planning (`pippy-plan`), Implementation (`pippy-build`), and Total rows, with explicit `/budget <session-id>` handling and ambiguous auto-detection safeguards.
 - `/ship` is now a green-gate PR workflow that can push and create a non-interactive GitHub PR only after review, verification, clean-tree, branch-safety, GitHub-readiness, and existing-PR gates pass.
+- The installer now preserves saved model profile metadata by default during updates and installs the local update-check helper, startup plugin, and manifest.
+
+### Fixed
+- Resolved an installer bootstrap shellcheck warning in the `curl | bash` archive path.
 
 ## [3.0.0] - 2026-06-18
 
