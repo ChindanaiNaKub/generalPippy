@@ -2,7 +2,7 @@
 
 Use these repeatable `/goal` scenarios when changing Pippy's harness: prompts, slash commands, skills, context assembly, subagent routing, verification gates, reporting, installer defaults, or optional efficiency-tool guidance.
 
-These evals are manual by design. GeneralPippy stays config-only; this document gives maintainers a shared checklist for judging goal-run behavior without adding a runtime evaluator.
+These evals are manual by design. GeneralPippy stays config-only; this document gives maintainers a shared checklist for judging goal-run behavior without adding a runtime evaluator. Eval 10 and Eval 11 also have an optional executable smoke wrapper for quick regression checks.
 
 ## How To Run
 
@@ -11,6 +11,23 @@ These evals are manual by design. GeneralPippy stays config-only; this document 
 3. Run each scenario in a fresh or clearly separated session.
 4. Record the final goal run report and any visible child-session routing.
 5. Treat a failed eval as either ordinary project failure or a Pippy-owned improvement signal.
+
+## Executable Smoke Wrapper
+
+Use the smoke wrapper when changing verification gates, Verifier templates, or report-shape rules:
+
+```bash
+scripts/goal-run-smoke-evals.sh --dry-run
+```
+
+Dry-run mode prints the Eval 10 and Eval 11 prompts without installing or spending model budget. Live mode installs the current checkout, runs each selected eval in a temporary git worktree, strips ANSI output, and checks the final report for the four required sections plus the key verifier signals:
+
+```bash
+scripts/goal-run-smoke-evals.sh --live
+scripts/goal-run-smoke-evals.sh --live --eval 11
+```
+
+Live mode is intentionally a smoke check, not a replacement for human review. It catches report-shape and verifier-template regressions quickly; maintainers still read the final report before treating an eval as passed.
 
 ## Scoring Rubric
 

@@ -1553,6 +1553,7 @@ test_goal_run_evals_doc() {
   local doc="$REPO_ROOT/docs/agents/goal-run-evals.md"
   local readme="$REPO_ROOT/README.md"
   local context="$REPO_ROOT/CONTEXT.md"
+  local smoke="$REPO_ROOT/scripts/goal-run-smoke-evals.sh"
 
   if [[ ! -f "$doc" ]]; then
     fail "docs/agents/goal-run-evals.md does not exist"
@@ -1615,6 +1616,30 @@ test_goal_run_evals_doc() {
   else
     fail "CONTEXT.md must define Goal-run eval suite"
   fi
+
+  if [[ -x "$smoke" ]]; then
+    pass "goal-run smoke eval runner is executable"
+  else
+    fail "scripts/goal-run-smoke-evals.sh must exist and be executable"
+  fi
+
+  if grep -q "Eval 10" "$smoke" &&
+     grep -q "Eval 11" "$smoke" &&
+     grep -q -- "--live" "$smoke" &&
+     grep -q "Verification gates" "$smoke" &&
+     grep -q "Docs-only" "$smoke"; then
+    pass "goal-run smoke eval runner covers Eval 10 and Eval 11"
+  else
+    fail "goal-run smoke eval runner must cover Eval 10/11 verifier smoke checks"
+  fi
+
+  if grep -q "goal-run-smoke-evals.sh --dry-run" "$doc" &&
+     grep -q "goal-run-smoke-evals.sh --live" "$doc" &&
+     grep -q "goal-run-smoke-evals.sh --live" "$readme"; then
+    pass "docs describe executable goal-run smoke evals"
+  else
+    fail "docs must describe dry-run and live goal-run smoke evals"
+  fi
 }
 
 test_pippy_harness_doc() {
@@ -1643,6 +1668,12 @@ test_pippy_harness_doc() {
       fail "harness doc must include $term"
     fi
   done
+
+  if grep -q "scripts/goal-run-smoke-evals.sh" "$doc"; then
+    pass "harness doc registers goal-run smoke eval runner"
+  else
+    fail "harness doc must register scripts/goal-run-smoke-evals.sh in the Goal-run evals inventory row"
+  fi
 
   if grep -q "pippy-harness.md" "$readme"; then
     pass "README links pippy harness doc"

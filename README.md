@@ -202,7 +202,7 @@ GeneralPippy stays config-only, but frames Pippy as a stack of useful loops:
 - **Self-driving loop** — `/goal` plans, executes, verifies, retries, reviews, runs final verification, and reports.
 - **Verification feedback** — acceptance criteria, verification evidence, and retry context keep each run grounded.
 - **Pippy harness** — the prompts, commands, skills, context assembly, routing, verification gates, reports, evals, and improvement-loop docs maintainers tune. See [pippy-harness.md](docs/agents/pippy-harness.md).
-- **Goal-run evals** — repeatable manual `/goal` scenarios check trajectory, routing, verification, retry behavior, and improvement-signal quality. See [goal-run-evals.md](docs/agents/goal-run-evals.md).
+- **Goal-run evals** — repeatable `/goal` scenarios check trajectory, routing, verification, retry behavior, and improvement-signal quality; Eval 10/11 can be smoke-run with `scripts/goal-run-smoke-evals.sh --live`. See [goal-run-evals.md](docs/agents/goal-run-evals.md).
 - **External trigger recipes** — cron, CI, or shell workflows invoking `/goal` from outside Pippy. See [external-trigger-recipe.md](docs/agents/external-trigger-recipe.md).
 - **Pippy improvement loop** — goal run reports expose human-reviewed improvement signals for better prompts, routing, and verification habits. See [pippy-improvement-loop.md](docs/agents/pippy-improvement-loop.md).
 
@@ -244,7 +244,7 @@ Use [docs/agents/manual-smoke-tests.md](docs/agents/manual-smoke-tests.md) for a
 
 Use [docs/agents/pippy-harness.md](docs/agents/pippy-harness.md) when changing Pippy behavior and you need to identify which harness component owns the change.
 
-Use [docs/agents/goal-run-evals.md](docs/agents/goal-run-evals.md) when changing Pippy's harness and you need repeatable goal-run scenarios for trajectory, routing, verification, retry behavior, and improvement-signal quality.
+Use [docs/agents/goal-run-evals.md](docs/agents/goal-run-evals.md) when changing Pippy's harness and you need repeatable goal-run scenarios for trajectory, routing, verification, retry behavior, and improvement-signal quality. Run `scripts/goal-run-smoke-evals.sh --dry-run` to preview the executable Eval 10/11 smoke checks, or `scripts/goal-run-smoke-evals.sh --live` when you want the live OpenCode regression check.
 
 ## License
 
