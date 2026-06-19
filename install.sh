@@ -4,17 +4,44 @@
 
 set -euo pipefail
 
-# Resolve repo root for sourcing shared utilities.
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib/utils.sh
-source "$REPO_ROOT/lib/utils.sh"
-
 VERSION="3.0.0"
 DRY_RUN=0
+ASSUME_YES=0
+PROFILE_ARG=""
+RECONFIGURE=0
+REPO_OWNER="ChindanaiNaKub"
+REPO_NAME="generalPippy"
+REPO_REF="${GENERALPIPPY_INSTALL_REF:-main}"
+
+# Resolve repo root for sourcing shared utilities. When this script is executed
+# through `curl | bash`, there is no local checkout beside the script, so
+# bootstrap a temporary repo archive and re-run the real installer from there.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ ! -f "$REPO_ROOT/lib/utils.sh" ]]; then
+  command -v curl >/dev/null 2>&1 || { echo "curl is required for one-command install" >&2; exit 1; }
+  command -v tar >/dev/null 2>&1 || { echo "tar is required for one-command install" >&2; exit 1; }
+
+  tmp_repo="$(mktemp -d)"
+  cleanup_bootstrap() {
+    rm -rf "$tmp_repo"
+  }
+  trap cleanup_bootstrap EXIT
+
+  archive_url="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/${REPO_REF}.tar.gz"
+  echo "Downloading GeneralPippy ${REPO_REF}..." >&2
+  curl -fsSL "$archive_url" | tar -xz -C "$tmp_repo" --strip-components=1
+  bash "$tmp_repo/install.sh" "$@"
+  exit $?
+fi
+
+# shellcheck source=lib/utils.sh
+source "$REPO_ROOT/lib/utils.sh"
 
 # XDG Base Directory support: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 OPENCODE_CONFIG="$CONFIG_HOME/opencode"
+# Metadata directory under OPENCODE_CONFIG.
+GENERALPIPPY_DIR="$OPENCODE_CONFIG/generalpippy"
 
 # Files copied by this installer. Order matters for rollback: backups first, then targets.
 declare -a COPY_TARGETS=(
@@ -26,9 +53,13 @@ declare -a COPY_TARGETS=(
   "config/commands/ship.md:$OPENCODE_CONFIG/commands/ship.md"
   "config/commands/budget.md:$OPENCODE_CONFIG/commands/budget.md"
   "config/commands/grill-to-goal.md:$OPENCODE_CONFIG/commands/grill-to-goal.md"
+  "config/commands/pippy-update.md:$OPENCODE_CONFIG/commands/pippy-update.md"
   "config/skills/pippy/SKILL.md:$OPENCODE_CONFIG/skills/pippy/SKILL.md"
   "config/skills/grill-to-goal/SKILL.md:$OPENCODE_CONFIG/skills/grill-to-goal/SKILL.md"
   "config/references/opencode/REFERENCE.md:$OPENCODE_CONFIG/references/opencode/REFERENCE.md"
+  "config/plugins/generalpippy-update-check.js:$OPENCODE_CONFIG/plugins/generalpippy-update-check.js"
+  "config/generalpippy/update-check.mjs:$GENERALPIPPY_DIR/update-check.mjs"
+  "manifest.json:$GENERALPIPPY_DIR/manifest.json"
 )
 
 # v1.0 files to remove
@@ -64,9 +95,6 @@ BALANCED_PLANNING_MODEL="opencode-go/kimi-k2.7-code"
 BALANCED_IMPLEMENTATION_MODEL="opencode-go/mimo-v2.5"
 BALANCED_SYSTEM_MODEL="opencode-go/deepseek-v4-flash"
 
-# Metadata directory under OPENCODE_CONFIG.
-GENERALPIPPY_DIR="$OPENCODE_CONFIG/generalpippy"
-
 usage() {
   cat <<EOF
 Usage: $0 [OPTIONS]
@@ -74,13 +102,17 @@ Usage: $0 [OPTIONS]
 Install GeneralPippy configuration for OpenCode.
 
 Options:
-  -h, --help      Show this help message
-  -v, --version   Show version
-  -n, --dry-run   Show what would be done without making changes
+  -h, --help              Show this help message
+  -v, --version           Show version
+  -n, --dry-run           Show what would be done without making changes
+  -y, --yes               Run unattended with defaults and skip optional prompts
+      --profile balanced  Select the Balanced model profile non-interactively
+      --reconfigure       Ignore saved profile metadata and ask again
 
 Examples:
   $0
   $0 --dry-run
+  $0 --yes --profile balanced
 EOF
 }
 
@@ -122,6 +154,21 @@ parse_args() {
         ;;
       -n|--dry-run)
         DRY_RUN=1
+        shift
+        ;;
+      -y|--yes)
+        ASSUME_YES=1
+        shift
+        ;;
+      --profile)
+        if [[ $# -lt 2 ]]; then
+          error "--profile requires a value"
+        fi
+        PROFILE_ARG="$2"
+        shift 2
+        ;;
+      --reconfigure)
+        RECONFIGURE=1
         shift
         ;;
       *)
@@ -514,6 +561,11 @@ install_optional() {
     return 0
   fi
 
+  if [[ $ASSUME_YES -eq 1 ]]; then
+    info "Skipping $name in unattended mode — Pippy will degrade gracefully"
+    return 0
+  fi
+
   if prompt_yes_no "   Install $name? (y/N) "; then
     log "   Installing $name..."
     if "$install_fn"; then
@@ -577,16 +629,79 @@ read_required_model() {
   done
 }
 
-choose_model_profile() {
-  # Interactive model profile selection.
-  # Sets SELECTED_PROFILE, SELECTED_PLANNING, SELECTED_IMPLEMENTATION, SELECTED_SYSTEM.
+select_balanced_profile() {
   SELECTED_PROFILE="Balanced"
   SELECTED_PLANNING="$BALANCED_PLANNING_MODEL"
   SELECTED_IMPLEMENTATION="$BALANCED_IMPLEMENTATION_MODEL"
   SELECTED_SYSTEM="$BALANCED_SYSTEM_MODEL"
+}
+
+load_saved_profile() {
+  local profile_file="$GENERALPIPPY_DIR/profile.json"
+
+  [[ -f "$profile_file" ]] || return 1
+  command -v python3 &> /dev/null || return 1
+
+  local saved_profile
+  local saved_planning
+  local saved_implementation
+  local saved_system
+
+  saved_profile="$(json_get "$profile_file" "profile" 2>/dev/null || true)"
+  saved_planning="$(json_get "$profile_file" "models.planning" 2>/dev/null || true)"
+  saved_implementation="$(json_get "$profile_file" "models.implementation" 2>/dev/null || true)"
+  saved_system="$(json_get "$profile_file" "models.system" 2>/dev/null || true)"
+
+  if [[ -z "$saved_profile" || -z "$saved_planning" || -z "$saved_implementation" || -z "$saved_system" ]]; then
+    return 1
+  fi
+
+  SELECTED_PROFILE="$saved_profile"
+  SELECTED_PLANNING="$saved_planning"
+  SELECTED_IMPLEMENTATION="$saved_implementation"
+  SELECTED_SYSTEM="$saved_system"
+  return 0
+}
+
+report_selected_profile() {
+  success "Selected profile: $SELECTED_PROFILE"
+  log "  Planning:       $SELECTED_PLANNING"
+  log "  Implementation: $SELECTED_IMPLEMENTATION"
+  log "  System tasks:   $SELECTED_SYSTEM"
+}
+
+choose_model_profile() {
+  # Interactive model profile selection.
+  # Sets SELECTED_PROFILE, SELECTED_PLANNING, SELECTED_IMPLEMENTATION, SELECTED_SYSTEM.
+  select_balanced_profile
 
   if [[ $DRY_RUN -eq 1 ]]; then
-    info "Would prompt for model profile selection (default: Balanced)"
+    info "Would select saved profile if present, otherwise prompt for model profile selection"
+    return 0
+  fi
+
+  if [[ -n "$PROFILE_ARG" ]]; then
+    case "$PROFILE_ARG" in
+      balanced|Balanced)
+        select_balanced_profile
+        report_selected_profile
+        return 0
+        ;;
+      *)
+        error "Unsupported --profile value: $PROFILE_ARG (supported: balanced)"
+        ;;
+    esac
+  fi
+
+  if [[ $RECONFIGURE -eq 0 ]] && load_saved_profile; then
+    success "Using saved profile from $GENERALPIPPY_DIR/profile.json"
+    report_selected_profile
+    return 0
+  fi
+
+  if [[ $ASSUME_YES -eq 1 ]]; then
+    select_balanced_profile
+    report_selected_profile
     return 0
   fi
 
@@ -617,10 +732,7 @@ choose_model_profile() {
   fi
 
   log ""
-  success "Selected profile: $SELECTED_PROFILE"
-  log "  Planning:       $SELECTED_PLANNING"
-  log "  Implementation: $SELECTED_IMPLEMENTATION"
-  log "  System tasks:   $SELECTED_SYSTEM"
+  report_selected_profile
 }
 
 patch_installed_models() {
@@ -717,8 +829,50 @@ write_profile_metadata() {
   success "Profile metadata written to $GENERALPIPPY_DIR/profile.json"
 }
 
+write_version_metadata() {
+  if [[ $DRY_RUN -eq 1 ]]; then
+    info "Would write version metadata to $GENERALPIPPY_DIR/version.json"
+    return 0
+  fi
+
+  mkdir -p "$GENERALPIPPY_DIR"
+  if command -v python3 &> /dev/null; then
+    python3 - "$GENERALPIPPY_DIR/version.json" "$VERSION" "$REPO_REF" <<'PY'
+import datetime
+import json
+import sys
+
+path = sys.argv[1]
+version = sys.argv[2]
+source_ref = sys.argv[3]
+
+data = {
+    "version": version,
+    "installed_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+    "source_ref": source_ref,
+}
+
+with open(path, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+PY
+  else
+    local installed_at
+    installed_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    cat > "$GENERALPIPPY_DIR/version.json" <<EOF
+{
+  "version": "$VERSION",
+  "installed_at": "$installed_at",
+  "source_ref": "$REPO_REF"
+}
+EOF
+  fi
+  success "Version metadata written to $GENERALPIPPY_DIR/version.json"
+}
+
 main() {
   parse_args "$@"
+  cd "$REPO_ROOT"
 
   log "🐱 GeneralPippy v$VERSION — Installing Self-Driving Goal Agent..."
   log ""
@@ -737,12 +891,13 @@ main() {
 
   log "📁 Preparing directories..."
   if [[ $DRY_RUN -eq 1 ]]; then
-    info "Would create: $OPENCODE_CONFIG/{agents,commands,skills/pippy,skills/grill-to-goal,generalpippy}"
+    info "Would create: $OPENCODE_CONFIG/{agents,commands,plugins,skills/pippy,skills/grill-to-goal,references/opencode,generalpippy}"
   else
     local _dirs=(
       "$OPENCODE_CONFIG"
       "$OPENCODE_CONFIG/agents"
       "$OPENCODE_CONFIG/commands"
+      "$OPENCODE_CONFIG/plugins"
       "$OPENCODE_CONFIG/skills/pippy"
       "$OPENCODE_CONFIG/skills/grill-to-goal"
       "$OPENCODE_CONFIG/references/opencode"
@@ -779,6 +934,10 @@ main() {
   write_profile_metadata "$SELECTED_PROFILE" "$SELECTED_PLANNING" "$SELECTED_IMPLEMENTATION" "$SELECTED_SYSTEM"
   log ""
 
+  log "💾 Writing version metadata..."
+  write_version_metadata
+  log ""
+
   log "🧹 Cleaning up obsolete v1.0 files..."
   cleanup_obsolete
   log ""
@@ -805,6 +964,7 @@ main() {
   log "  3. Use /goal \"<objective>\" to start a self-driving task"
   log "  4. Use /ship to create a green-gate PR"
   log "  5. Use /budget for exact role usage accounting and routing guidance"
+  log "  6. Use /pippy-update to check for GeneralPippy updates manually"
   log ""
   log "Model profile: $SELECTED_PROFILE"
   log "  • Planning:       $SELECTED_PLANNING"
@@ -815,6 +975,7 @@ main() {
   log "  • jcodemunch-mcp — AST code indexing"
   log "  • opencode-dcp — Dynamic context pruning"
   log "  • cc-safety-net — Destructive-command guardrail plugin (default mode)"
+  log "  • generalpippy-update-check — Local startup update notice"
   log "  • opencode-docs reference — Config, provider, reference, and troubleshooting guidance"
   log "OpenCode defaults:"
   log "  • formatter — Built-in formatters enabled"
