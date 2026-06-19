@@ -1,10 +1,10 @@
 #!/bin/bash
-# GeneralPippy v3.3.0 — Self-Driving Goal Agent for OpenCode
+# GeneralPippy v3.3.1 — Self-Driving Goal Agent for OpenCode
 # Install script: copies config files to ~/.config/opencode/
 
 set -euo pipefail
 
-VERSION="3.3.0"
+VERSION="3.3.1"
 DRY_RUN=0
 ASSUME_YES=0
 PROFILE_ARG=""

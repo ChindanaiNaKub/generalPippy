@@ -7,15 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-06-20
+
 ### Added
 - Clean SVG Pippy logo for README/package surfaces.
 - `docs/agents/model-profiles.md` as the detailed home for Budget, Thorough, and Custom profile routing.
 
 ### Changed
 - Rewrote the README as a concise human front door with a vertical self-driving loop diagram and a short Pippy vs goal-state plugins explanation.
+- Set the stable release compatibility floor to OpenCode 1.17.8.
 
 ### Removed
 - Unused generated Pippy portrait PNG assets now that README uses the SVG logo.
+
+### Fixed
+- Made the live goal-run smoke eval parser accept the normal `## Report` heading casing.
 
 ## [3.3.0] - 2026-06-20
 
