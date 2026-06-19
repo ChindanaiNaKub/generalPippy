@@ -45,16 +45,19 @@ GeneralPippy is a configuration package that turns [OpenCode](https://opencode.a
 | **OpenCode reference pack** | A packaged local `references/opencode` directory registered as `@opencode-docs`, used when Pippy edits OpenCode config, provider, reference, permission, troubleshooting, or installer behavior. _Avoid_: web-only dependency, hidden prompt memory |
 | **Self-driving loop** | The fixed workflow `RECALL → UNDERSTAND → EXPLORE → PLAN → [EXECUTE → VERIFY → RETRY?] → REVIEW → FINAL → REPORT`. |
 | **Verification rigor** | The amount of evidence Pippy requires before reporting success, scaled to task risk during acceptance-criteria shaping. Higher rigor is expected for release prep, auth, security, data loss, installer behavior, permissions, and public docs/config; lightweight evidence is acceptable for low-risk prototype or documentation work. _Avoid_: new mode flag, separate command |
+| **Verification gate** | An evidence-backed decision point that determines whether a `/goal` run may continue, retry, escalate, or report `Done`. It covers acceptance criteria, step verification, REVIEW, Assumption audit, and final verification rather than only tests. _Avoid_: tests, review step, verify box |
+| **Verifier mismatch** | A Pippy-owned failure where a Verification gate uses evidence that is real but does not prove the acceptance criterion or claim it is attached to. _Avoid_: flaky test, ordinary project failure, weak confidence |
 | **YOLO mode** | Default permission mode that auto-allows file reads, subagent routing, unrestricted bash, and implementation edits inside `pippy-build`. Safety comes from scoped agent workflow and reporting, not command approval prompts. |
 | **Hard limits** | The safety bounds: 50 iterations, 30 minutes wall time, 5 consecutive failures before escalation. |
 | **jcodemunch** | The MCP server that indexes the codebase for token-efficient navigation. |
 | **Caveman mode** | An OpenCode prompt/command compression mode that makes Pippy and its subagents communicate tersely while preserving technical accuracy. _Avoid_: caveman CLI, build-output compressor |
 | **Caveman CLI** | An optional shell executable named `caveman`, if a user installs one separately. It is not required for Caveman mode. |
+| **Closed goal loop** | The bounded `/goal` workflow where Pippy turns a verifiable objective into ordered steps, runs Verification gates after each step, retries within limits, and escalates when evidence or shared intent is insufficient. _Avoid_: open-ended agent run, autonomous wander |
 | **rtk / ponytail** | Optional efficiency tools: token-compressed bash and stdlib-reuse planning constraint. |
 
 ## Invariants
 
-1. **Prompts are the product.** The repo's value is in the agent/command/skill prompts and the installer that places them in `~/.config/opencode/`.
+1. **The harness is the product.** The repo's value is in the agent prompts, slash commands, skills, verification gates, evals, reporting contracts, memory guidance, guardrails, and installer that together make `/goal` self-driving.
 2. **No long-running runtime service.** GeneralPippy ships configuration consumed by OpenCode; reviewed local OpenCode plugins are allowed only for specific accepted harness exceptions such as guardrails or update notices.
 3. **Graceful degradation.** Optional tools and modes (rtk, Caveman mode, Caveman CLI, ponytail) improve efficiency but are not required.
 4. **Autonomy with scoped reporting.** Auto-allow commands so Pippy can drive without approval friction, but keep work scoped to the objective, route implementation edits to `pippy-build`, and report risky actions clearly.

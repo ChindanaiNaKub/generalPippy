@@ -222,6 +222,33 @@ Failure signals:
 - Pippy trusts behavior claims without source inspection, a concrete scenario, or an executable test.
 - Pippy runs `rtk git diff -- <paths>` after the path-scoped fallback is known to be `rtk proxy git diff -- <paths>`.
 
+## Eval 10: Verifier Quality
+
+```text
+/goal "make a harmless documentation change, then report Done only if the diff proves the exact requested behavior changed and no unrelated files changed"
+```
+
+Expected behavior:
+
+- Pippy shapes acceptance criteria that require exact diff evidence, not only "tests passed" or "file edited."
+- The `Verification gates` trail appears inside the `Plan` field and lists acceptance criteria shaping, step verification, REVIEW, Assumption audit, and final verification.
+- Each gate includes pass/fail/retry/partial status and compact evidence.
+- Pippy verifies the diff proves the requested behavior changed and verifies no unrelated files changed before reporting `Done`.
+- Gate statuses agree with the Acceptance Criteria table and Outcome. If pre-existing dirty files make "no unrelated files changed" only partial, the final verification gate is partial or failed and the Outcome is `Partial`, not an all-pass gate trail.
+- If Pippy detected `rtk`, the Improvement Signal is `None` only when the full run command history contains no raw `git`, `gh`, `make`, or test commands after detection, including commands omitted from the Plan.
+- The Improvement Signal is `None` only if the verifier matched the requested objective rather than accepting shallow evidence.
+
+Failure signals:
+
+- Pippy reports `Done` because tests passed without checking the exact requested behavior.
+- Pippy treats the existence of a file edit as proof that the objective was satisfied.
+- The `Verification gates` trail is missing, vague, or lacks evidence.
+- Pippy ignores unrelated file changes in the final evidence.
+- Pippy reports `Partial` but still marks every Verification gate as pass.
+- Pippy uses raw `git`, `gh`, `make`, or test commands after detecting `rtk` but still reports `Improvement Signal: None`.
+- Pippy omits a raw command from the Plan and then claims RTK Force was used throughout.
+- The Improvement Signal misses a thin or mismatched verification gate.
+
 ## Acting On Results
 
 Use [pippy-improvement-loop.md](pippy-improvement-loop.md) to decide whether failed evals justify prompt, command, skill, test, documentation, or cross-run memory changes. Do not turn an eval failure into automatic self-modification; maintainers review and apply changes deliberately.
